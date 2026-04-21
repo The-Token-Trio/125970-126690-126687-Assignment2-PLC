@@ -1,40 +1,93 @@
 \chapter{TESTING AND VERIFICATION}
 
 \section{Test Cases}
-% TODO: Table of test cases covering all language features.
-% For each test: input program, expected output, actual output.
+Testing was performed through both manual execution and automated regression
+tests. Manual runs were used to inspect the full pipeline from source code to
+output, while automated tests were added for the semantic and runtime behaviour
+of the implemented type checker and interpreter.
+
+\begin{table}[H]
+\centering
+\caption{Representative Test Cases}
+\begin{tabular}{p{3.5cm}p{5cm}p{4cm}}
+\toprule
+Category & Program Behaviour & Expected Result \\
+\midrule
+Arithmetic & Evaluate mixed numeric expressions & Correct value and inferred type \\
+If-then-else & Choose one branch from a Boolean condition & Only matching branch runs \\
+While-loop & Print during repeated execution & One output line per iteration \\
+Functions & Infer parameters and return type & Valid call and correct return value \\
+Type mismatch & Reassign incompatible type & Type error before runtime \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Arithmetic Expressions}
-% TODO: Test integer and float arithmetic.
-% Test operator precedence (* / before + -).
+Arithmetic expressions were tested using both integer-only and mixed
+integer-float programs. These tests verified precedence and numeric promotion.
+Expressions such as \texttt{x + y * 2} confirmed that multiplication is applied
+before addition.
 
 \subsection{Boolean Expressions}
-% TODO: Test equality (==) and inequality (!=) between arithmetic expressions.
+Boolean expressions were tested inside \texttt{if} and \texttt{while}
+conditions. The checker verified valid comparison operands, and the interpreter
+used the resulting Boolean values for control flow.
 
 \subsection{Assignment Statements}
-% TODO: Test variable assignment and type inference from assignment.
+Assignments were tested for both first-use inference and reassignment checks.
+For example, a variable assigned \texttt{5} and later assigned
+\texttt{"hello"} correctly triggers a type error.
 
 \subsection{If-Then-Else}
-% TODO: Test conditional branching with boolean conditions.
+Conditional programs were used to verify that exactly one branch is executed and
+that non-Boolean conditions are rejected before runtime.
 
 \subsection{While-Loop}
-% TODO: Test while-loop with a counter or accumulator.
+While-loops were tested with a countdown example. This confirmed that the loop
+body executes repeatedly and that \texttt{print()} emits output progressively on
+each iteration rather than only once at the end.
 
 \subsection{Functions}
-% TODO: Test function definition and call with value parameter passing.
-% Test return values.
+Function tests covered parameter passing, local execution, and return values.
+The implementation infers parameter types from the first call and then enforces
+that signature for later calls.
 
 \subsection{Print}
-% TODO: Test print() with Integer, Float, Boolean, and String values.
+The built-in \texttt{print()} function was tested with all supported runtime
+types. The output includes the printed value together with its type, such as
+\texttt{29.5 : Float} and \texttt{"plc" : String}.
 
 \section{Type Error Detection}
-% TODO: Test that type errors are caught and reported correctly.
-% e.g. adding Integer and String, comparing Float with Boolean, etc.
+The checker was verified with invalid programs involving incompatible
+assignment, invalid arithmetic operands, wrong function arguments, and
+non-Boolean conditions. In each case the system stopped before execution and
+reported a source-positioned type error.
 
 \section{Automated Test Suite}
-% TODO: Describe the pytest test suite.
-% Table of test groups, test counts, and purpose.
-% Show how to run: uv run pytest tests/ -v
+Automated regression tests were added in
+\texttt{tests/test\_member3\_pipeline.py} using the \texttt{unittest}
+framework. The suite currently covers:
+
+\begin{itemize}
+	\item progressive output during while-loop execution,
+	\item assignment type mismatch detection,
+	\item function parameter and return type inference.
+\end{itemize}
+
+The tests can be run using:
+
+\begin{lstlisting}
+python3 -m unittest discover -s tests -v
+\end{lstlisting}
 
 \section{Error Handling}
-% TODO: Describe lexical, syntax, and type errors and how they are reported.
+The language system reports errors at three main stages:
+
+\begin{itemize}
+	\item lexical errors for malformed characters or unterminated strings,
+	\item parse errors for invalid syntax such as missing semicolons,
+	\item type errors for programs that violate static typing rules.
+\end{itemize}
+
+Runtime errors are also reported with source positions whenever execution
+reaches an invalid state such as an undefined variable reference.

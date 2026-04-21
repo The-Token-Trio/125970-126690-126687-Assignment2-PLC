@@ -164,8 +164,7 @@
     \phantomsection
     \addcontentsline{toc}{chapter}{ABSTRACT}
     \chapter*{ABSTRACT}
-    % TODO: Write abstract after implementation is complete.
-    This report presents the design and implementation of a statically-typed programming language built as a compiler front-end project. The language supports four primitive types --- Integer, Float, Boolean, and String --- with type inference, arithmetic and boolean expressions, assignment statements, if-then-else and while-loop control flow, function abstraction with value parameter passing, and a built-in \texttt{print()} function. The implementation follows a classical compiler pipeline: lexical analysis, LALR(1) parsing with syntax-directed AST construction, static type checking via a type inference algorithm, and an interpreter for execution. The report provides a detailed description of the context-free grammar and the type inference rules used.
+    This report presents the design and implementation of a statically-typed programming language developed for a programming languages and compilers assignment. The language supports four primitive types --- Integer, Float, Boolean, and String --- with type inference, arithmetic and boolean expressions, assignment statements, if-then-else and while-loop control flow, function abstraction with value parameter passing, and a built-in \texttt{print()} function. The implementation follows a classical compiler pipeline consisting of lexical analysis, recursive-descent parsing, abstract syntax tree construction, static type checking, and tree-walking interpretation. A command-line runner and a desktop user interface are provided so that script files can be loaded, executed, and inspected. The report describes the language grammar, the type inference algorithm, the implementation structure, and the testing used to validate the system.
 
     \clearpage
     \phantomsection
@@ -196,11 +195,14 @@
     \renewcommand{\bibsection}{%
       \chapter*{REFERENCES}%
     }
+    \nocite{aho2006compilers,nystrom2021crafting,pythonDocsTkinter,pythonDocsUnittest,pythonDocsDataclasses}
     \bibliographystyle{plainnat}
     \bibliography{references}
 
     % ---- Appendices ----
     \newpage
     \input{7_-_appendix_source}
+    \newpage
+    \input{8_-_appendix_contact}
 
 \end{document}

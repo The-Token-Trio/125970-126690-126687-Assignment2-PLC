@@ -1,0 +1,40 @@
+\begin{thebibliography}{5}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aho et~al.(2006)Aho, Lam, Sethi, and Ullman]{aho2006compilers}
+Alfred~V. Aho, Monica~S. Lam, Ravi Sethi, and Jeffrey~D. Ullman.
+\newblock \emph{Compilers: Principles, Techniques, and Tools}.
+\newblock Addison-Wesley, Boston, MA, 2nd edition, 2006.
+
+\bibitem[Nystrom(2021)]{nystrom2021crafting}
+Robert Nystrom.
+\newblock \emph{Crafting Interpreters}.
+\newblock Genever Benning, Seattle, WA, 2021.
+
+\bibitem[{Python Software
+  Foundation}(2026{\natexlab{a}})]{pythonDocsDataclasses}
+{Python Software Foundation}.
+\newblock Python documentation: dataclasses --- data classes.
+\newblock \url{https://docs.python.org/3/library/dataclasses.html},
+  2026{\natexlab{a}}.
+\newblock Accessed: April 2026.
+
+\bibitem[{Python Software Foundation}(2026{\natexlab{b}})]{pythonDocsTkinter}
+{Python Software Foundation}.
+\newblock Python documentation: Tkinter --- python interface to tcl/tk.
+\newblock \url{https://docs.python.org/3/library/tkinter.html},
+  2026{\natexlab{b}}.
+\newblock Accessed: April 2026.
+
+\bibitem[{Python Software Foundation}(2026{\natexlab{c}})]{pythonDocsUnittest}
+{Python Software Foundation}.
+\newblock Python documentation: unittest --- unit testing framework.
+\newblock \url{https://docs.python.org/3/library/unittest.html},
+  2026{\natexlab{c}}.
+\newblock Accessed: April 2026.
+
+\end{thebibliography}

@@ -1,22 +1,28 @@
 \chapter{CONCLUSION}
 
-% TODO: Summarise what was built:
-%   - A statically-typed programming language with four types
-%   - LALR(1) parser built with SLY
-%   - Type inference algorithm (no explicit type declarations)
-%   - Full instruction set: assignment, if-then-else, while-loop
-%   - Function abstraction with value parameter passing
-%   - Built-in print() function
+This project delivered a working statically-typed programming language with the
+required primitive types: Integer, Float, Boolean, and String. The language
+supports arithmetic expressions, equality and inequality checks, assignments,
+if-then-else statements, while-loops, function abstraction with value parameter
+passing, return statements, and the built-in \texttt{print()} function.
 
-% TODO: Highlight key design decisions:
-%   - Using LALR(1) for efficient, declarative parsing
-%   - AST as intermediate representation decoupling parsing from type checking
-%   - Type inference via environment-based constraint propagation
+The final system follows a clean compiler-style architecture. The lexer creates
+tokens, the parser builds the AST, the type checker performs static inference
+and validation, and the interpreter executes the program. This staged design
+made it easier to isolate syntax errors, type errors, and runtime behaviour.
 
-% TODO: Mention test results (all test cases pass).
+One of the main outcomes of the project is the successful implementation of
+static typing without explicit declarations. Variable types are inferred from
+assignments, and function signatures are inferred from calls and return
+statements. Invalid programs are rejected before runtime. In addition, the
+system includes both a command-line runner and a desktop UI so that scripts can
+be entered, loaded, executed, and inspected conveniently.
 
-% TODO: Suggest future extensions:
-%   - Additional types (List, Dictionary)
-%   - Reference parameter passing
-%   - Recursive functions
-%   - Code generation (bytecode or native)
+The automated tests added for the semantic and runtime stage pass successfully and confirm correct
+behaviour for loop execution, assignment mismatch detection, and function type
+inference. These checks provide a baseline for future extensions.
+
+Future work could include recursive functions, richer data structures,
+additional operators, and code generation to a lower-level target. However, the
+current implementation already satisfies the main functional requirements of the
+assignment.

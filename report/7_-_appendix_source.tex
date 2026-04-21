@@ -1,20 +1,24 @@
 \chapter*{APPENDIX A: SOURCE CODE AVAILABILITY}
 \addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}
 
-% TODO: Add GitHub repository link once the project is published.
-
 The complete source code for this project is available on GitHub:
 
 \begin{center}
-\textbf{[GitHub repository link --- to be added]}
+\textbf{https://github.com/The-Token-Trio/125970-126690-126687-Assignment2-PLC}
 \end{center}
 
-% TODO: Add repository structure and how-to-run instructions.
+The repository contains the lexer, parser, AST nodes, symbol table, type
+checker, interpreter, shared execution pipeline, user interface, tests, and the
+full report source. The project can be run either from the command line through
+\texttt{main.py} or from the desktop UI through \texttt{ui.py}.
 
-% TODO: Add key source code listings once implementation is complete:
-%   A.1 Lexical Analyser
-%   A.2 Parser
-%   A.3 AST Node Classes
-%   A.4 Type Checker
-%   A.5 Interpreter
-%   A.6 Main Entry Point
+The main execution commands are:
+
+\begin{lstlisting}
+python3 main.py
+python3 ui.py
+python3 -m unittest discover -s tests -v
+\end{lstlisting}
+
+No external Python dependencies are required for the implementation. The Python
+side of the project uses only the standard library.

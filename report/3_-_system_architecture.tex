@@ -1,57 +1,129 @@
 \chapter{TYPE INFERENCE ALGORITHM}
 
 \section{Overview}
-% TODO: Explain what type inference means in this context.
-% No explicit type annotations --- the compiler infers types
-% from usage (literals, operations, assignments).
+Type inference in this project means that the programmer does not write explicit
+type declarations for variables or functions. Instead, the compiler infers
+types from assignments, literals, operations, function calls, and return
+statements. This keeps the language simple while still preserving static type
+safety.
+
+The type checker runs after parsing. It receives the AST and validates the
+program before execution. Any inconsistent use of types is reported as a type
+error, and execution is stopped.
 
 \section{Type Environment}
-% TODO: Define the type environment (symbol table) \Gamma:
-%   \Gamma : Identifier -> Type
-% Explain how it is built up during parsing/checking.
+The type environment is represented by the symbol table. Conceptually, it is a
+mapping
+
+\begin{center}
+$\Gamma : \textit{Identifier} \rightarrow \textit{Type}$
+\end{center}
+
+The environment grows as the checker visits the AST. On first assignment, a
+variable name is inserted with its inferred type. When a new block or a
+function call is entered, a child environment is created so that nested scopes
+can be checked independently while still accessing outer bindings when needed.
 
 \section{Inference Rules}
 
 \subsection{Literals}
-% TODO: Inference rules for integer, float, boolean, string literals.
-%   e.g.  \Gamma |- 42 : Integer
-%         \Gamma |- 3.14 : Float
-%         \Gamma |- true : Boolean
-%         \Gamma |- "hi" : String
+Literal nodes have direct types:
+
+\begin{align*}
+\Gamma \vdash 42 &: \texttt{Integer} \\
+\Gamma \vdash 3.14 &: \texttt{Float} \\
+\Gamma \vdash \texttt{true} &: \texttt{Boolean} \\
+\Gamma \vdash \texttt{``hi''} &: \texttt{String}
+\end{align*}
 
 \subsection{Arithmetic Expressions}
-% TODO: Inference rules for +, -, *, /
-% Cover both Integer and Float cases.
-% Note: no overloading --- operands must have the same type.
+The arithmetic operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
+accept only numeric operands. If both operands are \texttt{Integer}, the result
+is \texttt{Integer}, except for division, which produces \texttt{Float}. If at
+least one operand is \texttt{Float}, the result is \texttt{Float}. Any
+non-numeric operand causes a type error.
 
 \subsection{Boolean Expressions}
-% TODO: Inference rules for == and !=
-% Both sides must be arithmetic expressions of the same type.
-% Result type is always Boolean.
+The comparison operators \texttt{==} and \texttt{!=} always produce
+\texttt{Boolean}. Numeric comparison is allowed for arithmetic expressions. The
+current implementation also permits Boolean-to-Boolean comparison because the
+sample programs use \texttt{flag!=false}. Other combinations are rejected.
 
 \subsection{Assignment Statement}
-% TODO: Inference rule for x = expr
-% If x not in \Gamma: infer type from expr and add to \Gamma.
-% If x in \Gamma: check that expr type matches stored type.
+Assignments define variable types on first use. If a variable does not yet
+exist in the type environment, the checker infers the type of the right-hand
+side and inserts the variable into the environment. If the variable already
+exists, the new value must have the same type.
+
+\begin{center}
+If $x \notin \Gamma$ and $\Gamma \vdash e : T$, then $\Gamma, x:T \vdash x = e$
+\end{center}
+
+\begin{center}
+If $x:T \in \Gamma$ and $\Gamma \vdash e : T$, then $\Gamma \vdash x = e$
+\end{center}
 
 \subsection{If-Then-Else}
-% TODO: Inference rule for if-then-else.
-% Condition must be Boolean; both branches are type-checked independently.
+The condition of an \texttt{if} statement must be \texttt{Boolean}. The
+then-block and else-block are checked in child scopes so that local operations
+can be validated cleanly.
 
 \subsection{While-Loop}
-% TODO: Inference rule for while-loop.
-% Condition must be Boolean; body is type-checked.
+The condition of a \texttt{while} loop must also be \texttt{Boolean}. The loop
+body is checked in a child scope and must not violate the types of variables
+already introduced in the surrounding environment.
 
 \subsection{Function Definition and Call}
-% TODO: Inference rules for function definition (parameter types inferred
-% from body) and function call (argument types must match parameter types).
+Function parameter types are inferred from the first call to the function.
+After that first call, subsequent calls must use arguments of the same types.
+The return type is inferred from the \texttt{return} statements in the function
+body. If the function returns inconsistent types, the checker reports an error.
+
+Recursive calls are intentionally rejected in this implementation because they
+were not required by the assignment and would require additional inference and
+control-flow analysis.
 
 \section{Type Error Reporting}
-% TODO: Describe how type errors are detected and reported to the user.
-% e.g. type mismatch in arithmetic, incompatible comparison types, etc.
+Type errors are reported with source positions so that the user can locate the
+problem quickly. The format used by the system is:
+
+\begin{center}
+\texttt{[line X, col Y] TypeError: message}
+\end{center}
+
+Examples include assigning a \texttt{String} to an \texttt{Integer} variable,
+using a non-Boolean condition in an \texttt{if} statement, or supplying the
+wrong argument type to a function.
 
 \section{Example Type Inference Traces}
-% TODO: Walk through 2--3 examples showing step-by-step type inference.
-% Example 1: simple arithmetic
-% Example 2: if-then-else with boolean condition
-% Example 3: function call
+Consider the following program fragment:
+
+\begin{lstlisting}
+x = 10;
+y = 20.5;
+z = x + y;
+print(z);
+\end{lstlisting}
+
+The checker infers:
+\begin{itemize}
+	\item \texttt{x: Integer}
+	\item \texttt{y: Float}
+	\item \texttt{x + y: Float}
+	\item \texttt{z: Float}
+\end{itemize}
+
+For a function example:
+
+\begin{lstlisting}
+def add(a, b) {
+		return a + b;
+}
+
+result = add(2, 3.5);
+\end{lstlisting}
+
+The first function call infers \texttt{a: Integer} and \texttt{b: Float}. The
+expression \texttt{a + b} is therefore \texttt{Float}, so the function return
+type is inferred as \texttt{Float}. The variable \texttt{result} is also
+inferred as \texttt{Float}.

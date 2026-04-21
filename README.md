@@ -13,6 +13,14 @@ Assignment 2 | Asian Institute of Technology
 | Applegate Tun Oo | st126690 |
 | Win Htut Naing | st126687 |
 
+## Contribution Table
+
+| Name | Student ID | Assignment Scope |
+| --- | --- | --- |
+| Applegate Tun Oo | st126690 | Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
+| Win Htut Naing | st126687 | Arithmetic expressions; Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970 | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution |
+
 ---
 
 ## Project Description
@@ -27,13 +35,9 @@ Building a statically-typed programming language with the following features:
 * **Functions:** Function abstraction with value parameter passing
 * **Built-in:** `print()` function
 
----
+**Dependencies:** No external Python dependencies are required. The project uses only the Python standard library on the implementation side.
 
-## Submission
-
-* **Submission:** 09 May 2025
-* **Project Checking:** 10 May 2025
-* **Presentation:** 11 May 2025, 1pm
+**GitHub Repository:** https://github.com/The-Token-Trio/125970-126690-126687-Assignment2-PLC
 
 ---
 
@@ -41,14 +45,14 @@ Building a statically-typed programming language with the following features:
 
 ```
 components/
-├── tokens.py        - Token model and TokenType enum         [Member 1]
-├── lexica.py        - Lexer: source → list[Token]            [Member 1]
-├── symbol_table.py  - Scoped symbol/type storage             [Member 1]
-├── ast_nodes.py     - AST node dataclasses                   [Member 2]
-├── parser.py        - Recursive-descent parser               [Member 2]
-├── ast_printer.py   - AST pretty-printer for debug/report    [Member 2]
-├── type_checker.py  - Static typing and inference            [Member 3]
-├── interpreter.py   - Tree-walking interpreter               [Member 3]
+├── tokens.py        - Token model and TokenType enum
+├── lexica.py        - Lexer: source → list[Token]
+├── symbol_table.py  - Scoped symbol/type storage
+├── ast_nodes.py     - AST node dataclasses
+├── parser.py        - Recursive-descent parser
+├── ast_printer.py   - AST pretty-printer for debug/report
+├── type_checker.py  - Static typing and inference
+├── interpreter.py   - Tree-walking interpreter
 └── pipeline.py      - Shared runner for CLI/UI/tests
 main.py              - CLI runner for demo or script files
 ui.py                - Tkinter UI for script input/output
@@ -57,7 +61,7 @@ tests/               - Automated regression tests
 
 ---
 
-## Member 1 Deliverables — Lexer + Symbol/Type Storage
+## Lexer And Symbol Table
 
 Stable base for:
 
@@ -67,7 +71,7 @@ Stable base for:
 * **Variable/function storage** — scoped `SymbolTable` in `components/symbol_table.py` with duplicate detection and lookup.
 * **Type storage** — `LanguageType` enum (`Integer`, `Float`, `Boolean`, `String`, `Void`) attached to variables and function signatures.
 
-### Stable APIs — Member 1
+### Stable APIs
 
 `components/lexica.py`:
 * `Lexer(source: str).tokenize() -> list[Token]`
@@ -85,20 +89,20 @@ Stable base for:
 
 ---
 
-## Member 2 Deliverables — Parser + AST
+## Parser And AST
 
-Builds on Member 1's lexer output to produce a full Abstract Syntax Tree (AST).
+Builds on the lexer output to produce a full Abstract Syntax Tree (AST).
 
-* **AST node definitions** — all node dataclasses in `components/ast_nodes.py`. Every node carries `line` and `column` for diagnostics, matching Member 1's error format.
+* **AST node definitions** — all node dataclasses in `components/ast_nodes.py`. Every node carries `line` and `column` for diagnostics, matching the lexer's error format.
 * **Recursive-descent parser** — `components/parser.py` consumes `list[Token]` from the lexer and returns a `Program` node. Implements the full grammar from `HANDOFF_SPEC.md` including operator precedence, if/else, while, function definitions, function calls, and all literal types.
 * **AST pretty-printer** — `components/ast_printer.py` walks the AST and renders an indented, human-readable tree. Used for debugging and the project report.
 
-### Stable APIs — Member 2
+### Stable APIs
 
 `components/parser.py`:
 * `Parser(tokens: list[Token]).parse() -> Program`
 
-`components/ast_nodes.py` — node classes consumed by Member 3:
+`components/ast_nodes.py` — node classes consumed by the type checker and interpreter:
 * `Program(statements)`
 * `Assign(name, value)`
 * `If(condition, then_block, else_block)`
@@ -115,20 +119,25 @@ Builds on Member 1's lexer output to produce a full Abstract Syntax Tree (AST).
 `components/ast_printer.py`:
 * `ASTPrinter().print(node: ASTNode) -> str`
 
-### Error format — Member 2
+### Error Format
 
-Parser errors follow Member 1's convention:
+Parser errors follow the lexer's convention:
 * `[line X, col Y] ParseError: <message>`
 
 ---
 
-## Member 3 Deliverables — Type Checker + Interpreter
+## Type Checker And Interpreter
 
 Completed components:
 
-* **Static type checking with inference** — `components/type_checker.py` infers variable types from first assignment, checks control-flow conditions, validates arithmetic and comparisons, infers function parameter types from first call, and infers function return types from `return` statements.
-* **Interpreter/runtime execution** — `components/interpreter.py` executes assignments, `if`, `while`, functions, returns, and `print()` with immediate line-by-line output.
-* **Reusable pipeline** — `components/pipeline.py` powers the CLI runner, desktop UI, and tests from one execution path.
+* **Static typing rules** — arithmetic expressions require numeric operands, conditions must be Boolean, assignments must remain type-consistent, and function calls must match inferred parameter types.
+* **Type checking** — `components/type_checker.py` infers variable types from first assignment, validates arithmetic and comparisons, checks control-flow conditions, infers function parameter types from the first call, and infers function return types from `return` statements.
+* **Assignment execution** — runtime assignment stores values in the active lexical environment while preserving inferred types from the checking stage.
+* **If execution** — the interpreter evaluates the condition and runs only the selected branch.
+* **While execution** — loop conditions are re-evaluated every iteration and `print()` output appears progressively during execution.
+* **Function execution** — `components/interpreter.py` supports value parameter passing, local function scope, and return propagation.
+* **`print()` execution** — the built-in print emits the runtime value together with its type, for example `29.5 : Float`.
+* **Reusable pipeline and system wiring** — `components/pipeline.py`, `main.py`, `ui.py`, and the automated tests connect the type checker and interpreter into the CLI runner, desktop UI, and regression checks.
 
 ---
 

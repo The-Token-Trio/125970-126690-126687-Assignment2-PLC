@@ -1,69 +1,137 @@
 \chapter{LANGUAGE DESIGN AND GRAMMAR}
 
 \section{Types}
-% TODO: Describe the four primitive types supported by the language.
+The language supports four primitive types. These types are sufficient to cover
+the assignment requirements while keeping the semantics simple and predictable.
 
 \subsection{Integer}
-% TODO: Define Integer type, literals, range.
+The Integer type represents whole numbers such as \texttt{0}, \texttt{7}, and
+\texttt{42}. Integer literals are written as one or more decimal digits without
+quotation marks or a decimal point.
 
 \subsection{Float}
-% TODO: Define Float type, literals (e.g. 3.14).
+The Float type represents real-valued numbers written with a decimal point, such
+as \texttt{3.14} or \texttt{20.5}. Float values are used in arithmetic
+expressions and may also arise through numeric promotion.
 
 \subsection{Boolean}
-% TODO: Define Boolean type, literals (true / false).
+The Boolean type represents logical truth values. The two Boolean literals are
+\texttt{true} and \texttt{false}. Boolean values are used in conditions and as
+results of comparison expressions.
 
 \subsection{String}
-% TODO: Define String type, literals (e.g. "hello").
+The String type represents sequences of characters enclosed in double quotes,
+for example \texttt{"hello"}. Strings can be assigned to variables and printed
+through the built-in \texttt{print()} function.
 
 \section{Static Typing}
-% TODO: Explain static typing: types are checked at compile/parse time,
-% not at runtime. No explicit type declaration --- types are inferred.
+The language uses static typing, which means type errors are detected before
+execution rather than during program execution. No explicit variable type
+declarations are required. Instead, the type checker infers types from literals,
+assignments, operations, function calls, and return statements. Once a variable
+type is established, later assignments must remain consistent with that type.
 
 \section{Token Specification}
-% TODO: Table of all tokens with regex patterns:
-%   - INT_LITERAL, FLOAT_LITERAL, BOOL_LITERAL, STRING_LITERAL
-%   - Identifiers (variable/function names)
-%   - Arithmetic operators: +, -, *, /
-%   - Comparison operators: ==, !=
-%   - Assignment: =
-%   - Keywords: if, else, while, def, return, print
-%   - Delimiters: (, ), {, }, ,, ;
+Table \ref{tab:token-specification} summarises the major token classes used by
+the language.
+
+\begin{table}[H]
+\centering
+\caption{Token Specification}
+\label{tab:token-specification}
+\begin{tabular}{ll}
+\toprule
+Token Category & Example Lexemes \\
+\midrule
+\texttt{INT\_LITERAL} & \texttt{0}, \texttt{10}, \texttt{42} \\
+\texttt{FLOAT\_LITERAL} & \texttt{3.14}, \texttt{20.5} \\
+\texttt{BOOL\_LITERAL} & \texttt{true}, \texttt{false} \\
+\texttt{STRING\_LITERAL} & \texttt{"hello"} \\
+\texttt{IDENTIFIER} & variable and function names such as \texttt{x}, \texttt{add} \\
+Arithmetic operators & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
+Comparison operators & \texttt{==}, \texttt{!=} \\
+Assignment operator & \texttt{=} \\
+Keywords & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print} \\
+Delimiters & \texttt{( ) \{ \} , ;} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Context-Free Grammar}
-% TODO: Define the formal CFG:
-%   G = (V_N, V_T, P, S)
-% List all non-terminals and terminals.
+The language grammar can be described by the context-free grammar
+$G = (V_N, V_T, P, S)$, where $V_N$ is the set of non-terminals, $V_T$ is the
+set of terminals, $P$ is the set of production rules, and $S$ is the start
+symbol \texttt{program}. The grammar is implemented through recursive-descent
+parsing functions.
 
 \subsection{Program Structure}
-% TODO: Top-level production rules (program, statement list, etc.)
+\begin{lstlisting}
+program   -> statement* EOF
+statement -> assignment ';'
+	   | if_stmt
+	   | while_stmt
+	   | func_def
+	   | print_stmt ';'
+	   | return_stmt ';'
+	   | expr ';'
+\end{lstlisting}
 
 \subsection{Arithmetic Expressions}
-% TODO: Grammar rules for arithmetic expressions with precedence:
-%   expr   -> expr + term | expr - term | term
-%   term   -> term * factor | term / factor | factor
-%   factor -> INT_LITERAL | FLOAT_LITERAL | IDENTIFIER | ( expr )
+\begin{lstlisting}
+expr   -> term (('+' | '-') term)*
+term   -> factor (('*' | '/') factor)*
+factor -> INT_LITERAL
+	| FLOAT_LITERAL
+	| STRING_LITERAL
+	| BOOL_LITERAL
+	| IDENTIFIER
+	| IDENTIFIER '(' args? ')'
+	| '(' expr ')'
+\end{lstlisting}
 
 \subsection{Boolean Expressions}
-% TODO: Grammar rules for boolean expressions (equality and inequality):
-%   bool_expr -> expr == expr
-%             | expr != expr
-%             | BOOL_LITERAL
+\begin{lstlisting}
+bool_expr -> expr '==' expr
+	   | expr '!=' expr
+	   | BOOL_LITERAL
+\end{lstlisting}
 
 \subsection{Statements}
-% TODO: Grammar rules for:
-%   - Assignment:    IDENTIFIER = expr
-%   - If-then-else:  if ( bool_expr ) { stmts } else { stmts }
-%   - While-loop:    while ( bool_expr ) { stmts }
-%   - Print:         print( expr )
-%   - Return:        return expr
+\begin{lstlisting}
+assignment  -> IDENTIFIER '=' expr
+if_stmt     -> 'if' '(' bool_expr ')' block ('else' block)?
+while_stmt  -> 'while' '(' bool_expr ')' block
+print_stmt  -> 'print' '(' expr ')'
+return_stmt -> 'return' expr
+block       -> '{' statement* '}'
+\end{lstlisting}
 
 \subsection{Function Definitions and Calls}
-% TODO: Grammar rules for function definition (def keyword, parameter list)
-% and function call with value parameter passing.
+\begin{lstlisting}
+func_def -> 'def' IDENTIFIER '(' params? ')' block
+params   -> IDENTIFIER (',' IDENTIFIER)*
+args     -> expr (',' expr)*
+\end{lstlisting}
+
+Function calls use value parameter passing. This means the argument values are
+evaluated before the call and copied into the function's local environment.
 
 \section{Operator Precedence and Associativity}
-% TODO: Table of operator precedence levels (low to high):
-%   Level 1: == , !=   (comparison, non-associative)
-%   Level 2: + , -     (addition/subtraction, left)
-%   Level 3: * , /     (multiplication/division, left)
-% Explain how precedence is encoded in the LALR(1) parser.
+Operator precedence is encoded structurally in the recursive-descent parser.
+Comparison is lowest, addition and subtraction are next, and multiplication and
+division have the highest precedence among binary operators. Arithmetic
+operators are left-associative.
+
+\begin{table}[H]
+\centering
+\caption{Operator Precedence and Associativity}
+\begin{tabular}{lll}
+\toprule
+Level & Operators & Associativity \\
+\midrule
+1 & \texttt{==}, \texttt{!=} & comparison level \\
+2 & \texttt{+}, \texttt{-} & left-associative \\
+3 & \texttt{*}, \texttt{/} & left-associative \\
+\bottomrule
+\end{tabular}
+\end{table}

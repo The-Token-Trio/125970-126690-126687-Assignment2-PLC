@@ -1,25 +1,40 @@
 \chapter{INTRODUCTION}
 
 \section{Background and Motivation}
-% TODO: Introduce programming languages, compiler theory context.
-% Explain the motivation for building a statically-typed language.
-% Reference compiler front-end techniques.
+Programming languages provide the formal structure through which algorithms are
+expressed and executed. A compiler or language processor is responsible for
+turning source code into a form that can be analysed or executed while also
+detecting errors as early as possible. Core compiler concepts such as lexical
+analysis, parsing, abstract syntax trees, symbol tables, static type checking,
+and interpretation are therefore fundamental topics in programming language
+education.
+
+The motivation for this project is to apply those concepts in a compact but
+complete language implementation. By building a small statically-typed language,
+the project demonstrates how syntax, semantics, and execution can be connected
+in a coherent system. The assignment also provides an opportunity to study how
+type inference can improve usability while still preserving compile-time error
+checking.
 
 \section{Language Overview}
-% TODO: Give a brief summary of what the language supports:
-%   - Types: Integer, Float, Boolean, String
-%   - Static typing with type inference
-%   - Arithmetic and boolean expressions
-%   - Control flow: if-then-else, while-loop
-%   - Assignment statements
-%   - Functions with value parameter passing
-%   - Built-in print() function
+The implemented language supports four primitive types: Integer, Float,
+Boolean, and String. It uses static typing with inference, so programmers do
+not need to write explicit type declarations. Expressions include arithmetic
+operations with standard precedence and Boolean comparisons through equality and
+inequality. The statement-level constructs include assignment, if-then-else,
+while-loop, function definition, function call, return, and the built-in
+\texttt{print()} function.
+
+Programs are processed through a lexer, a recursive-descent parser, a type
+checker, and an interpreter. The final system can be executed from the command
+line or through a desktop UI that allows the user to enter a script, run it,
+and inspect the resulting tokens, AST, inferred types, and output.
 
 \section{Report Structure}
-% TODO: Describe the organisation of the remaining chapters.
-% Chapter 2: Language Design and Grammar
-% Chapter 3: Type Inference Algorithm
-% Chapter 4: System Architecture
-% Chapter 5: Implementation Details
-% Chapter 6: Testing and Verification
-% Chapter 7: Conclusion
+The remainder of this report is organised as follows. Chapter 2 presents the
+language design, token specification, grammar, and operator precedence rules.
+Chapter 3 explains the type inference algorithm and the semantic rules used by
+the checker. Chapter 4 describes the overall system architecture and the main
+implementation components. Chapter 5 discusses testing and verification,
+including the automated regression tests. Chapter 6 concludes the report and
+summarises the final outcomes of the project.
