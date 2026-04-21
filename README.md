@@ -46,8 +46,13 @@ components/
 ├── symbol_table.py  - Scoped symbol/type storage             [Member 1]
 ├── ast_nodes.py     - AST node dataclasses                   [Member 2]
 ├── parser.py        - Recursive-descent parser               [Member 2]
-└── ast_printer.py   - AST pretty-printer for debug/report    [Member 2]
-main.py              - Full pipeline demo (all stages)
+├── ast_printer.py   - AST pretty-printer for debug/report    [Member 2]
+├── type_checker.py  - Static typing and inference            [Member 3]
+├── interpreter.py   - Tree-walking interpreter               [Member 3]
+└── pipeline.py      - Shared runner for CLI/UI/tests
+main.py              - CLI runner for demo or script files
+ui.py                - Tkinter UI for script input/output
+tests/               - Automated regression tests
 ```
 
 ---
@@ -119,24 +124,53 @@ Parser errors follow Member 1's convention:
 
 ## Member 3 Deliverables — Type Checker + Interpreter
 
-*(To be completed)*
+Completed components:
 
-Consumes the `Program` AST from `Parser.parse()` and the `SymbolTable` API from Member 1 to:
-* Statically type-check all expressions and statements.
-* Interpret and execute the program.
+* **Static type checking with inference** — `components/type_checker.py` infers variable types from first assignment, checks control-flow conditions, validates arithmetic and comparisons, infers function parameter types from first call, and infers function return types from `return` statements.
+* **Interpreter/runtime execution** — `components/interpreter.py` executes assignments, `if`, `while`, functions, returns, and `print()` with immediate line-by-line output.
+* **Reusable pipeline** — `components/pipeline.py` powers the CLI runner, desktop UI, and tests from one execution path.
 
 ---
 
-## Running the Demo
+## Running the System
 
 ```bash
 python3 main.py
 ```
 
-This runs all completed pipeline stages in order:
+This runs the default sample program through all pipeline stages:
 1. **Stage 1** — tokenize the source and display the token list
-2. **Stage 1** — show the symbol table (manual demo)
-3. **Stage 2** — parse the tokens and print the full AST
+2. **Stage 2** — parse the tokens and print the full AST
+3. **Stage 3** — infer/check types and display the symbol table
+4. **Stage 4** — execute the program and print runtime output
+
+To run a source file instead of the built-in sample:
+
+```bash
+python3 main.py path/to/script.txt
+```
+
+To launch the desktop UI:
+
+```bash
+python3 ui.py
+```
+
+The UI provides:
+* script input/editing on the left
+* execution output on the right
+* separate tabs for tokens, AST, and inferred types
+
+## Running Tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+Current automated checks cover:
+* loop execution with progressive output
+* assignment type mismatch detection
+* function parameter and return type inference
 
 ## Report
 

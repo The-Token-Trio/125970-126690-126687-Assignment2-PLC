@@ -1,12 +1,12 @@
-from components.lexica import Lexer
-from components.symbol_table import LanguageType, SymbolTable
-from components.parser import Parser
-from components.ast_printer import ASTPrinter
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+from components.pipeline import format_stage_output, run_pipeline
 
 
-def run_demo() -> None:
-    # Change source code to test
-    source_code = """
+DEFAULT_SOURCE = """
 def add(a, b) {
     result = a + b;
     print(result);
@@ -33,40 +33,26 @@ z = add(x, y);
 print(z);
 """
 
-    # ── Member 1: Lexer ──────────────────────────────────────────────────────
-    print("=" * 60)
-    print("  STAGE 1 — TOKENS")
-    print("=" * 60)
-    tokens = Lexer(source_code).tokenize()
-    for token in tokens:
-        print(
-            f"  {token.token_type.name:<14} {token.lexeme!r:<12}"
-            f" line={token.line} col={token.column}"
-        )
 
-    # ── Member 1: Symbol table (manual demo) ────────────────────────────────
-    print("\n" + "=" * 60)
-    print("  STAGE 1 — SYMBOL TABLE (demo)")
-    print("=" * 60)
-    global_scope = SymbolTable()
-    global_scope.define_function(
-        name="add",
-        return_type=LanguageType.INTEGER,
-        parameters=[("a", LanguageType.INTEGER), ("b", LanguageType.INTEGER)],
-    )
-    global_scope.define_variable("x", LanguageType.INTEGER, initialized=True)
-    global_scope.define_variable("y", LanguageType.FLOAT, initialized=True)
-    global_scope.define_variable("flag", LanguageType.BOOLEAN, initialized=True)
-    global_scope.define_variable("name", LanguageType.STRING, initialized=True)
-    print(global_scope.format_table())
+def run_source(source_code: str) -> None:
+    result = run_pipeline(source_code)
+    print(format_stage_output(result))
 
-    # ── Member 2: Parser ────────────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("  STAGE 2 — AST (parser output)")
-    print("=" * 60)
-    tree = Parser(tokens).parse()
-    print(ASTPrinter().print(tree))
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the programming language pipeline.")
+    parser.add_argument("script", nargs="?", help="Optional path to a source file to run")
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = _parse_args()
+    if args.script:
+        source_code = Path(args.script).read_text(encoding="utf-8")
+    else:
+        source_code = DEFAULT_SOURCE
+    run_source(source_code)
 
 
 if __name__ == "__main__":
-    run_demo()
+    main()
