@@ -1,0 +1,141 @@
+\chapter{SYSTEM ARCHITECTURE AND IMPLEMENTATION}
+
+This chapter describes how the implementation is organised: the end-to-end
+processing flow, repository layout, technology choices, and the main components
+that realise static analysis and execution (type checker, interpreter, and user
+interfaces). Detailed treatment of lexical analysis, the symbol table, and
+parsing appears in Chapters~5 and~6; Chapter~3 presents the type-inference rules
+that the type checker implements.
+
+\section{Compiler pipeline}
+The system follows a four-stage pipeline. Lexical and syntactic processing are
+kept separate from semantic analysis and execution, which simplifies testing and
+localises errors to the appropriate stage.
+
+The overall flow of data through the system is shown in
+Figure~\ref{fig:system-overview-pipeline}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/system-overview-pipeline}
+\caption{Data flow from source characters to output (lexing, parsing, type
+checking, and execution or inspection).}
+\label{fig:system-overview-pipeline}
+\end{figure}
+
+Source characters are scanned by the lexer into a token stream. The parser
+consumes tokens and builds an AST that reflects program structure (expressions,
+statements, and control flow). The type checker then walks the AST, populates and
+uses the symbol table, infers types, and validates scope and type rules. The
+interpreter evaluates the \emph{checked} tree: it is a separate component that
+runs only after successful type checking.
+
+\subsection{Entry points and shared pipeline}
+All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
+by the command-line runner, the desktop UI, and the test suite. From the project
+root, \texttt{python3 main.py} runs a script (or built-in sample) and prints the
+stages in order: tokens, AST text, type table, and execution output.
+\texttt{python3 ui.py} runs the Tkinter workbench: the same pipeline is used
+internally, with each stage shown in a separate tab so the user can inspect
+results without altering the underlying flow.
+
+\section{Project structure}
+The main source files and their responsibilities are summarised in
+Table~\ref{tab:main-source-files}.
+
+\begin{table}[H]
+\centering
+\caption{Main source files}
+\label{tab:main-source-files}
+\begin{tabular}{ll}
+\toprule
+File & Responsibility \\
+\midrule
+\texttt{main.py} & Command-line runner for sample code or a script file \\
+\texttt{ui.py} & Desktop UI for editing and running a script \\
+\texttt{components/tokens.py} & Token classes and token categories \\
+\texttt{components/lexica.py} & Lexical analysis \\
+\texttt{components/ast\_nodes.py} & AST node definitions \\
+\texttt{components/parser.py} & Recursive-descent parser \\
+\texttt{components/ast\_printer.py} & AST renderer for debugging and reporting \\
+\texttt{components/symbol\_table.py} & Scoped symbol table and semantic types \\
+\texttt{components/type\_checker.py} & Static type checker and inference \\
+\texttt{components/interpreter.py} & Tree-walking interpreter \\
+\texttt{components/pipeline.py} & Shared pipeline for CLI, UI, and tests \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Technology stack}
+The project uses Python and standard-library tools only
+(Table~\ref{tab:technology-stack}).
+
+\begin{table}[H]
+\centering
+\caption{Technology stack}
+\label{tab:technology-stack}
+\begin{tabular}{ll}
+\toprule
+Tool & Purpose \\
+\midrule
+Python 3 & Core implementation language \\
+\texttt{dataclasses} & AST and runtime helper structures \\
+\texttt{tkinter} & Desktop graphical interface \\
+\texttt{unittest} & Automated testing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Type checker}
+The \texttt{TypeChecker} class implements the inference and checking rules
+described in Chapter~3. It traverses the AST before execution, uses the symbol
+table to record variable and function information, infers types on first
+assignment, validates arithmetic and comparison expressions, enforces Boolean
+conditions for control flow, infers function parameter types from the first call,
+and infers function return types from \texttt{return} statements. Programs that
+fail these rules are rejected before interpretation.
+
+\subsection{Scope of the implemented type system}
+In scope terms, this component turns a syntactically valid AST into a
+semantically valid program:
+
+\begin{itemize}
+	\item static typing rules for arithmetic, comparison, assignment, control
+	flow, and functions,
+	\item type checking for expressions and statements,
+	\item variable type inference from first assignment,
+	\item function parameter inference from the first call,
+	\item function return type inference from \texttt{return} statements,
+	\item source-positioned type errors when a program violates a typing rule.
+\end{itemize}
+
+\section{Interpreter}
+The interpreter is a tree-walking evaluator over the checked AST. It maintains
+nested runtime environments for variables and function calls. Assignments write
+through the current or nearest enclosing scope; \texttt{if} selects a branch;
+\texttt{while} repeats until its condition becomes false; function calls bind
+arguments by value and return through an internal return mechanism.
+
+The built-in \texttt{print()} function outputs both value and runtime type, such
+as \texttt{3 : Integer} or \texttt{"plc" : String}.
+
+\subsection{Scope of the implemented runtime}
+The runtime stage provides observable behaviour and integrates with the shared
+pipeline:
+
+\begin{itemize}
+	\item assignment execution,
+	\item \texttt{if} execution,
+	\item \texttt{while} execution,
+	\item function execution with value parameter passing,
+	\item \texttt{print()} execution with immediate output,
+	\item execution behind the same \texttt{run\_pipeline} path used by the CLI,
+	UI, and tests.
+\end{itemize}
+
+\section{Graphical user interface}
+The workbench is implemented with \texttt{tkinter}. The layout required for the
+assignment is preserved: the script is edited on the left, and pipeline outputs
+appear on the right. The right-hand side surfaces the same stages as the
+command-line printout, but in a tabbed panel so the user can switch between
+views without rerunning the pipeline for each kind of inspection.

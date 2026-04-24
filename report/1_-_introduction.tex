@@ -1,5 +1,16 @@
 \chapter{INTRODUCTION}
 
+\section{Scope of this report}
+This report outlines the development process of the programming language
+implemented in accordance with the specification of AT70.07 Programming
+Languages and Compilers --- Assignment~2. The project was divided into three
+main components: the lexer and symbol table, the parser, and the type system
+with an interpreter. These were structured to be developed consecutively rather
+than simultaneously. By organising the work in sequence, each team member could
+focus on an assigned component independently before passing it to the next
+stage, which supported steady progress while reducing the need for overlapping
+work against other academic commitments.
+
 \section{Background and Motivation}
 Programming languages provide the formal structure through which algorithms are
 expressed and executed. A compiler or language processor is responsible for
@@ -30,11 +41,16 @@ checker, and an interpreter. The final system can be executed from the command
 line or through a desktop UI that allows the user to enter a script, run it,
 and inspect the resulting tokens, AST, inferred types, and output.
 
-\section{Report Structure}
-The remainder of this report is organised as follows. Chapter 2 presents the
+\section{Report structure}
+The remainder of this report is organised as follows. Chapter~2 presents the
 language design, token specification, grammar, and operator precedence rules.
-Chapter 3 explains the type inference algorithm and the semantic rules used by
-the checker. Chapter 4 describes the overall system architecture and the main
-implementation components. Chapter 5 discusses testing and verification,
-including the automated regression tests. Chapter 6 concludes the report and
-summarises the final outcomes of the project.
+Chapter~3 explains the type inference algorithm and the semantic rules used by
+the checker. Chapter~4 presents system architecture and implementation: the end-to-end
+pipeline (with a figure of the stages), project layout, technology stack, and
+how the type checker, interpreter, and user interfaces attach to the shared
+\texttt{pipeline.py} module. Chapters~5 and~6 present the front-end
+implementation in pipeline order: lexical analysis and the symbol table, then
+recursive-descent parsing and the AST. Chapter~7 discusses testing and
+verification, including the automated
+regression tests. Chapter~8 concludes the report and summarises the final
+outcomes of the project.
