@@ -11,6 +11,12 @@ The type checker runs after parsing. It receives the AST and validates the
 program before execution. Any inconsistent use of types is reported as a type
 error, and execution is stopped.
 
+The interpreter stage does not repeat this validation: it walks the same AST
+with ordinary Python representations of values. Static type information remains
+in the symbol table produced by the checker; run-time values are not separately
+labelled with \texttt{LanguageType}, except that \texttt{print()} formats output
+by inspecting the value's Python type.
+
 \section{Type Environment}
 The type environment is represented by the symbol table. Conceptually, it is a
 mapping
@@ -47,7 +53,9 @@ non-numeric operand causes a type error.
 The comparison operators \texttt{==} and \texttt{!=} always produce
 \texttt{Boolean}. Numeric comparison is allowed for arithmetic expressions. The
 current implementation also permits Boolean-to-Boolean comparison because the
-sample programs use \texttt{flag!=false}. Other combinations are rejected.
+sample programs use \texttt{flag!=false}. Comparisons involving \texttt{String}
+operands are rejected (so string equality is not part of the type system).
+Other combinations are rejected.
 
 \subsection{Assignment Statement}
 Assignments define variable types on first use. If a variable does not yet

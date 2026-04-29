@@ -22,7 +22,17 @@ results of comparison expressions.
 \subsection{String}
 The String type represents sequences of characters enclosed in double quotes,
 for example \texttt{"hello"}. Strings can be assigned to variables and printed
-through the built-in \texttt{print()} function.
+through the built-in \texttt{print()} function. The surrounding quotes are
+stripped by the parser when the \texttt{Literal} node is created, so the value
+stored internally and printed at runtime is the bare character sequence without
+quotes.
+
+\subsection{Void}
+\texttt{Void} is an internal type used by the type system to represent the
+return type of functions that contain no \texttt{return} statement. It is not
+a type that programmers write explicitly; it exists solely inside the
+\texttt{LanguageType} enum so that the symbol table can record a well-defined
+type for every function definition, including those that produce no value.
 
 \section{Static Typing}
 The language uses static typing, which means type errors are detected before
@@ -95,6 +105,12 @@ bool_expr -> expr '==' expr
 	   | expr '!=' expr
 	   | BOOL_LITERAL
 \end{lstlisting}
+
+In the implementation, if \texttt{bool\_expr} parses an expression and finds
+no following \texttt{==} or \texttt{!=} operator, the expression is returned
+as-is. The type checker then verifies that its inferred type is
+\texttt{Boolean}. This allows the grammar to remain simple while keeping the
+parser deterministic.
 
 \subsection{Statements}
 \begin{lstlisting}

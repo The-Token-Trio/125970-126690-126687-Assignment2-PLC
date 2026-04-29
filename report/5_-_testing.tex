@@ -22,6 +22,43 @@ Type mismatch & Reassign incompatible type & Type error before runtime \\
 \end{tabular}
 \end{table}
 
+\subsection{Lexer and Symbol Table}
+The lexer was verified manually by running the full pipeline and inspecting
+Stage~1 token output for programs that exercise every token category: integer
+and float literals, Boolean literals, string literals, all six keywords,
+two-character comparison operators (\texttt{==}, \texttt{!=}), single-character
+operators, and delimiters. Identifier scanning with keyword fallback was
+confirmed by checking that \texttt{true}, \texttt{false}, and reserved words
+are emitted with their keyword token types while non-keyword names produce
+\texttt{IDENTIFIER} tokens.
+
+Error paths were also checked: supplying a bare \texttt{!} character raises a
+\texttt{LexerError} with a source position and a message suggesting
+\texttt{!=}, and an unterminated string literal raises a \texttt{LexerError}
+citing the opening line.
+
+The symbol table was verified through the type checker and the Stage~3 output.
+Duplicate variable definitions were confirmed to raise a
+\texttt{SymbolTableError} before execution. Scope isolation was verified with
+nested blocks: a variable defined inside an \texttt{if} or \texttt{while} body
+is not visible in the outer scope after the block ends. The
+\texttt{format\_table()} output was checked against the expected column layout
+(name, kind, type, initialisation status, parameters) for both variable and
+function symbols.
+
+\subsection{Parser and AST}
+The parser was verified manually by running the full pipeline and inspecting
+Stage~2 AST output. The following cases were checked:
+
+\begin{itemize}
+    \item arithmetic expressions with mixed precedence (e.g.\ \texttt{x + y * 2}) produce a tree where multiplication is a deeper sub-tree than addition, confirming the \texttt{\_expr}/\texttt{\_term}/\texttt{\_factor} precedence encoding,
+    \item assignment versus expression statement dispatch: \texttt{x = 5;} produces an \texttt{Assign} node while \texttt{add(1,2);} produces a \texttt{FunctionCall} node at the statement level, confirming the IDENTIFIER+ASSIGN lookahead,
+    \item \texttt{if} with and without an \texttt{else} clause: the resulting \texttt{If} node has a non-null \texttt{else\_block} only when the clause is present,
+    \item function definitions store only parameter names in the \texttt{FunctionDef} node; the AST printer output was inspected to confirm no type annotations are present at this stage,
+    \item string literals in \texttt{Literal} nodes have their surrounding double-quotes stripped; \texttt{print("hello")} prints \texttt{hello : String} at runtime,
+    \item parse errors: missing semicolons, unmatched parentheses, and unexpected tokens all produce \texttt{[line X, col Y] ParseError:} messages with correct source positions.
+\end{itemize}
+
 \subsection{Arithmetic Expressions}
 Arithmetic expressions were tested using both integer-only and mixed
 integer-float programs. These tests verified precedence and numeric promotion.

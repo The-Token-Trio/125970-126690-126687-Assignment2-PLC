@@ -65,12 +65,108 @@ and column information in each token to support precise diagnostics. Invalid
 characters and unterminated strings are reported immediately with source
 positions.
 
+Two-character operators (\texttt{==} and \texttt{!=}) are resolved with a
+single lookahead step before single-character operators are matched. Identifiers
+are scanned greedily and then checked against the \texttt{KEYWORDS} dictionary;
+unrecognised names become \texttt{IDENTIFIER} tokens. Number scanning detects
+the optional decimal point and lookahead digit that distinguish a
+\texttt{FLOAT\_LITERAL} from an \texttt{INT\_LITERAL}.
+
+\subsection{Implemented Lexer and Symbol Table Scope}
+The lexer and symbol table work covers the full foundational scope assigned for
+this component. Concretely, this stage produces the token stream consumed by the
+parser and provides the symbol storage consulted by the type checker:
+
+\begin{itemize}
+    \item \texttt{TokenType} enum covering all four literal types, \texttt{IDENTIFIER}, six keywords (\texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print}), four arithmetic operators, two comparison operators, the assignment operator, six delimiters, and \texttt{EOF},
+    \item frozen \texttt{Token} dataclass carrying \texttt{token\_type}, \texttt{lexeme}, \texttt{line}, and \texttt{column} for precise diagnostics,
+    \item keyword mapping and two-character operator tokenisation in the \texttt{Lexer} class with source-positioned error messages,
+    \item identifier scanning with keyword fallback; integer, float, Boolean (\texttt{true}/\texttt{false}), and string literal recognition,
+    \item scoped \texttt{SymbolTable} with duplicate-symbol detection, parent-chain lookup, and child-scope creation,
+    \item \texttt{LanguageType} enum (\texttt{Integer}, \texttt{Float}, \texttt{Boolean}, \texttt{String}, \texttt{Void}) used to label variables and function signatures,
+    \item \texttt{VariableSymbol} and \texttt{FunctionSymbol} subclasses storing type, parameter list, and initialisation state,
+    \item \texttt{format\_table()} method that renders the symbol table for the CLI and UI inferred-types display.
+\end{itemize}
+
+\section{Symbol Table}
+The symbol table is implemented in \texttt{components/symbol\_table.py} and
+serves as the shared store for both the type checker and the formatted output
+displayed to the user.
+
+\textbf{LanguageType enum.}\ The five language types are defined as an enum:
+\texttt{Integer}, \texttt{Float}, \texttt{Boolean}, \texttt{String}, and
+\texttt{Void}. The first four correspond to the language's primitive types.
+\texttt{Void} is the inferred return type of functions that contain no
+\texttt{return} statement, keeping the type system closed under function
+definitions.
+
+\textbf{Symbol class hierarchy.}\ The base \texttt{Symbol} class holds a
+\texttt{name} and a \texttt{symbol\_type}. Two subclasses specialise it:
+\texttt{VariableSymbol} adds an \texttt{initialized} flag that tracks whether
+the variable has received a value, and \texttt{FunctionSymbol} adds a
+\texttt{parameters} list of \texttt{(name, LanguageType)} pairs representing
+the inferred function signature.
+
+\textbf{Scoped lookup.}\ Each \texttt{SymbolTable} instance holds a
+\texttt{\_symbols} dictionary for its own scope and an optional \texttt{parent}
+reference. \texttt{lookup()} walks the parent chain so that inner scopes can
+read outer variables. \texttt{exists\_in\_current\_scope()} checks only the
+local dictionary, which \texttt{define\_variable()} and
+\texttt{define\_function()} use to raise a \texttt{SymbolTableError} on
+duplicate definitions. A new child scope is obtained by calling
+\texttt{child\_scope()}, which is used by the type checker when entering blocks
+and function bodies.
+
+\textbf{Formatted output.}\ \texttt{format\_table()} renders the symbol table
+as a fixed-width text table with columns for name, kind, type, initialisation
+status, and parameters. This output appears as Stage~3 in the CLI pipeline and
+in the inferred-types tab of the desktop UI.
+
 \section{Parser}
 The parser is implemented as a handwritten recursive-descent parser. It builds
 AST nodes for assignments, print statements, returns, blocks, conditional
 statements, while-loops, function definitions, and function calls. Operator
 precedence is encoded structurally through separate parsing functions for
 factors, terms, expressions, and boolean expressions.
+
+Distinguishing an assignment statement from a bare expression statement is
+handled with a one-token lookahead: when the current token is an
+\texttt{IDENTIFIER} and the next token is \texttt{ASSIGN} (\texttt{=}), the
+parser takes the assignment path; otherwise it falls through to the expression
+path. This avoids backtracking and keeps the parser deterministic.
+
+String literal values stored in \texttt{Literal} nodes have their surrounding
+double-quote characters stripped during parsing, so \texttt{"hello"} produces a
+\texttt{Literal} whose value is the plain Python string \texttt{hello}.
+
+The \texttt{\_bool\_expr()} method handles the condition position in
+\texttt{if} and \texttt{while} statements. It first checks for a bare
+\texttt{BOOL\_LITERAL} and returns it immediately. Otherwise it parses an
+expression and looks for a \texttt{==} or \texttt{!=} operator; if neither
+is present the expression is returned as-is, and the type checker is responsible
+for verifying that the result is \texttt{Boolean}.
+
+\subsection{Implemented Parser and AST Scope}
+The parser and AST work covers the full syntactic scope assigned for this
+component. Concretely, this stage transforms the token stream into the tree
+structure consumed by the type checker and interpreter:
+
+\begin{itemize}
+    \item recursive-descent \texttt{Parser} class producing a \texttt{Program} root node from a \texttt{list[Token]},
+    \item \texttt{Assign} node: variable assignment with a target name and a value sub-tree,
+    \item \texttt{BinaryOp} node: both arithmetic (\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}) and comparison (\texttt{==}, \texttt{!=}) operations encoded in the same node with an \texttt{op} string field,
+    \item \texttt{Literal} node: integer, float, Boolean, and string values (string quotes stripped at parse time),
+    \item \texttt{Identifier} node: variable and function name references,
+    \item \texttt{If} node: condition, mandatory then-block, and an \texttt{Optional[Block]} else-block,
+    \item \texttt{While} node: condition and body block,
+    \item \texttt{FunctionDef} node: function name, list of parameter \emph{names} only (types are deferred to the type checker), and a body block,
+    \item \texttt{FunctionCall} node: callee name and a list of argument sub-trees,
+    \item \texttt{Print} node: single expression argument,
+    \item \texttt{Return} node: single expression to return,
+    \item \texttt{Block} node: brace-delimited sequence of statements used as function bodies, if-branches, and loop bodies,
+    \item \texttt{Program} node: top-level list of statements,
+    \item all nodes carry \texttt{line} and \texttt{column} metadata for source-positioned diagnostics.
+\end{itemize}
 
 \section{Abstract Syntax Tree}
 The AST is the main intermediate representation shared by the checker and the
@@ -79,6 +175,24 @@ assignments, block statements, \texttt{if}, \texttt{while}, function
 definitions, function calls, \texttt{return}, and the built-in
 \texttt{print()} function. Each node stores line and column metadata.
 
+\textbf{Node design decisions.}\ \texttt{FunctionDef} stores only the
+parameter names, not their types; type information is not available at parse
+time and is inferred by the type checker from the first call site.
+\texttt{If.else\_block} is \texttt{Optional[Block]}: the \texttt{else} clause
+is genuinely absent for single-branch conditionals, and the interpreter checks
+for \texttt{None} rather than inserting an empty block. \texttt{BinaryOp}
+serves dual duty — it represents both arithmetic and comparison operations,
+distinguished at semantic time by the \texttt{op} string
+(\texttt{+}/\texttt{-}/\texttt{*}/\texttt{/} versus \texttt{==}/\texttt{!=}).
+
+\textbf{AST printer.}\ \texttt{components/ast\_printer.py} implements an
+\texttt{ASTPrinter} class that walks the AST using a visitor dispatch: for each
+node it looks up a method named \texttt{\_visit\_<NodeClassName>} and calls it.
+The output is an indented text tree where each line names the node type and
+its key fields (name, operator, value, argument count, etc.), indented four
+spaces per level. This output appears as Stage~2 in the CLI pipeline and in
+the AST tab of the desktop UI.
+
 \section{Type Checker}
 The type checker traverses the AST before execution. It uses the symbol table
 to record variable and function information, infer types on first assignment,
@@ -86,6 +200,10 @@ validate arithmetic and comparison expressions, enforce Boolean conditions for
 control flow, infer function parameter types from the first call, and infer
 function return types from \texttt{return} statements. Programs that fail these
 rules are rejected before interpretation.
+
+Types are enforced entirely during this pass. The interpreter does not consult
+the symbol table to validate each operation; it assumes the checked program and
+uses native Python values.
 
 \subsection{Implemented Type System Scope}
 The implemented type system work covers the full semantic scope assigned for the
@@ -109,6 +227,11 @@ store values in the current or nearest enclosing scope, \texttt{if} executes
 only the selected branch, and \texttt{while} re-evaluates its condition until it
 becomes false. Function calls create child environments, bind arguments by
 value, and return through an internal return signal mechanism.
+
+Bindings hold plain Python objects, not pairs of \texttt{(value, LanguageType)}.
+The displayed language type on \texttt{print()} is derived from the object's
+Python class (\texttt{int}, \texttt{float}, \texttt{bool}, \texttt{str}),
+which matches the static rules because only type-checked programs reach this stage.
 
 The built-in \texttt{print()} function outputs both value and runtime type, such
 as \texttt{3 : Integer} or \texttt{"plc" : String}.
