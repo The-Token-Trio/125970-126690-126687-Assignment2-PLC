@@ -45,3 +45,11 @@ report/*.fdb_latexmk
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Project-internal development docs (no longer needed in repo)
+HANDOFF_SPEC.md
+SAMPLE_PROGRAMS.md
+
+# LaTeX stray build artefacts (generated outside report/)
+texput.log
+texput.aux
