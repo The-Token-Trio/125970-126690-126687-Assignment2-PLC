@@ -12,7 +12,10 @@ quotation marks or a decimal point.
 \subsection{Float}
 The Float type represents real-valued numbers written with a decimal point, such
 as \texttt{3.14} or \texttt{20.5}. Float values are used in arithmetic
-expressions and may also arise through numeric promotion.
+expressions and also arise as the result of any division. Division always
+produces a \texttt{Float} even when both operands are \texttt{Integer}: for
+example, \texttt{10 / 2} evaluates to \texttt{5.0 : Float}. This is an
+explicit design rule enforced in the type checker.
 
 \subsection{Boolean}
 The Boolean type represents logical truth values. The two Boolean literals are
@@ -90,7 +93,8 @@ statement -> assignment ';'
 \begin{lstlisting}
 expr   -> term (('+' | '-') term)*
 term   -> factor (('*' | '/') factor)*
-factor -> INT_LITERAL
+factor -> '-' factor
+	| INT_LITERAL
 	| FLOAT_LITERAL
 	| STRING_LITERAL
 	| BOOL_LITERAL
@@ -99,6 +103,12 @@ factor -> INT_LITERAL
 	| '(' expr ')'
 \end{lstlisting}
 
+The unary minus production allows negative literals such as \texttt{-5} and
+negated variable references such as \texttt{-x}. It is implemented as a
+right-recursive descent into \texttt{factor} and is desugared internally to
+\texttt{0 - factor}, so all existing type rules for arithmetic apply without
+modification.
+
 \subsection{Boolean Expressions}
 \begin{lstlisting}
 bool_expr -> expr '==' expr
@@ -106,11 +116,15 @@ bool_expr -> expr '==' expr
 	   | BOOL_LITERAL
 \end{lstlisting}
 
-In the implementation, if \texttt{bool\_expr} parses an expression and finds
-no following \texttt{==} or \texttt{!=} operator, the expression is returned
-as-is. The type checker then verifies that its inferred type is
-\texttt{Boolean}. This allows the grammar to remain simple while keeping the
-parser deterministic.
+Boolean expressions are only parsed as conditions inside \texttt{if} and
+\texttt{while} statements. Comparison results are not storable in variables
+directly; the grammar does not include \texttt{bool\_expr} in the
+\texttt{factor} rule. This is consistent with the assignment specification,
+which describes Boolean expressions primarily as conditions.
+
+If \texttt{bool\_expr} parses an expression and finds no following \texttt{==}
+or \texttt{!=} operator, the expression is returned as-is and the type checker
+verifies that its inferred type is \texttt{Boolean}.
 
 \subsection{Statements}
 \begin{lstlisting}

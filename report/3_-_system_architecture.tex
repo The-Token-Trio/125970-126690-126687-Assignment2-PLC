@@ -45,9 +45,16 @@ Literal nodes have direct types:
 \subsection{Arithmetic Expressions}
 The arithmetic operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
 accept only numeric operands. If both operands are \texttt{Integer}, the result
-is \texttt{Integer}, except for division, which produces \texttt{Float}. If at
-least one operand is \texttt{Float}, the result is \texttt{Float}. Any
+is \texttt{Integer}, except for division, which always produces \texttt{Float}
+regardless of the operand types. If at least one operand is \texttt{Float} for
+\texttt{+}, \texttt{-}, or \texttt{*}, the result is \texttt{Float}. Any
 non-numeric operand causes a type error.
+
+\subsubsection*{Unary negation}
+Unary minus (\texttt{-x}) is desugared by the parser into \texttt{0 - x}. The
+type checker therefore applies the standard binary subtraction rule: if
+\texttt{x} is \texttt{Integer}, the result is \texttt{Integer}; if \texttt{x}
+is \texttt{Float}, the result is \texttt{Float}.
 
 \subsection{Boolean Expressions}
 The comparison operators \texttt{==} and \texttt{!=} always produce

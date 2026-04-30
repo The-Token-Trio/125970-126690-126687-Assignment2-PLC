@@ -19,7 +19,7 @@ Assignment 2 | Asian Institute of Technology
 | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution                     |
 | Applegate Tun Oo                  | st126690   | Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage                                         |
-| Win Htut Naing                    | st126687   | Arithmetic expressions; Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
+| Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
 
 ---
 
@@ -31,7 +31,7 @@ A statically-typed interpreted language built from scratch in Python, implementi
 | ------------- | ------------------------------------------------------------- |
 | Types         | `Integer`, `Float`, `Boolean`, `String`                       |
 | Typing        | Static, with type inference — no explicit declarations needed |
-| Arithmetic    | `+`, `-`, `*`, `/` with standard precedence                   |
+| Arithmetic    | `+`, `-`, `*`, `/` with standard precedence; unary `-`        |
 | Comparisons   | `==`, `!=` between numeric or Boolean values                  |
 | Control flow  | `if`/`else`, `while`                                          |
 | Functions     | Definition, value-parameter calls, `return`                   |

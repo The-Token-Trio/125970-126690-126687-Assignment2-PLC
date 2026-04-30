@@ -237,6 +237,14 @@ class Parser:
         """
         tok = self._peek()
 
+        # Unary minus  '-' factor
+        if tok.token_type == TokenType.MINUS:
+            op_tok = self._advance()
+            operand = self._factor()
+            zero = Literal(value=0, line=op_tok.line, column=op_tok.column)
+            return BinaryOp(op="-", left=zero, right=operand,
+                            line=op_tok.line, column=op_tok.column)
+
         # Integer literal
         if tok.token_type == TokenType.INT_LITERAL:
             self._advance()

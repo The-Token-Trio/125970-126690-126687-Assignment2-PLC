@@ -94,11 +94,30 @@ The built-in \texttt{print()} function was tested with all supported runtime
 types. The output includes the printed value together with its type, such as
 \texttt{29.5 : Float} and \texttt{"plc" : String}.
 
+\subsection{Unary Minus}
+The unary minus operator was verified for integer literals (\texttt{x = -5}),
+float literals (\texttt{y = -3.14}), negated variable references
+(\texttt{y = -x}), and negation inside a larger expression
+(\texttt{x = 3 + -2}). In each case the type checker assigned the correct
+type and the interpreter produced the expected value.
+
 \section{Type Error Detection}
 The checker was verified with invalid programs involving incompatible
 assignment, invalid arithmetic operands, wrong function arguments, and
 non-Boolean conditions. In each case the system stopped before execution and
-reported a source-positioned type error.
+reported a source-positioned type error. Representative error messages are
+shown below.
+
+\begin{lstlisting}
+# Assignment type mismatch
+[line 2, col 1] TypeError: Cannot assign String to variable 'x' of type Integer
+
+# Non-Boolean if condition
+[line 1, col 4] TypeError: If condition must have type Boolean
+
+# Wrong argument type for function
+[line 5, col 9] TypeError: Argument 1 of 'add' must be Integer, got String
+\end{lstlisting}
 
 \section{Automated Test Suite}
 Automated regression tests were added in
@@ -116,6 +135,10 @@ The tests can be run using:
 \begin{lstlisting}
 python3 -m unittest discover -s tests -v
 \end{lstlisting}
+
+All seven tests pass. The four unary-minus tests were added when support for
+negation was introduced, confirming that the feature is covered alongside the
+original three semantic checks.
 
 \section{Error Handling}
 The language system reports errors at three main stages:

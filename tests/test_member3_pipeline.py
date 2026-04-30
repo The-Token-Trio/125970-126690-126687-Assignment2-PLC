@@ -45,5 +45,26 @@ print(result);
         self.assertIn("result       variable   Float", result.checked_scope.format_table())
 
 
+    def test_unary_minus_integer(self) -> None:
+        source = "x = -5; print(x);"
+        result = run_pipeline(source)
+        self.assertEqual(result.outputs, ["-5 : Integer"])
+
+    def test_unary_minus_float(self) -> None:
+        source = "y = -3.14; print(y);"
+        result = run_pipeline(source)
+        self.assertEqual(result.outputs, ["-3.14 : Float"])
+
+    def test_unary_minus_variable(self) -> None:
+        source = "x = 10; y = -x; print(y);"
+        result = run_pipeline(source)
+        self.assertEqual(result.outputs, ["-10 : Integer"])
+
+    def test_unary_minus_in_expression(self) -> None:
+        source = "x = 3 + -2; print(x);"
+        result = run_pipeline(source)
+        self.assertEqual(result.outputs, ["1 : Integer"])
+
+
 if __name__ == "__main__":
     unittest.main()
