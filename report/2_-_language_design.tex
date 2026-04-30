@@ -140,14 +140,14 @@ operators are left-associative.
 
 \begin{table}[H]
 \centering
-\caption{Operator Precedence and Associativity}
+\caption{Operator Precedence (1 = lowest, 3 = highest) and Associativity}
 \begin{tabular}{lll}
 \toprule
-Level & Operators & Associativity \\
+Precedence & Operators & Associativity \\
 \midrule
-1 & \texttt{==}, \texttt{!=} & comparison level \\
+1 (lowest) & \texttt{==}, \texttt{!=} & non-associative (condition use only) \\
 2 & \texttt{+}, \texttt{-} & left-associative \\
-3 & \texttt{*}, \texttt{/} & left-associative \\
+3 (highest) & \texttt{*}, \texttt{/} & left-associative \\
 \bottomrule
 \end{tabular}
 \end{table}

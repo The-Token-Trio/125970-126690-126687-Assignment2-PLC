@@ -163,6 +163,43 @@ def _factor(self) -> ASTNode:  # literals, identifiers/calls, grouped expr
    ...
 \end{lstlisting}
 
+Figure~\ref{fig:ast-example} shows the AST produced for the statement
+\texttt{z = x + y * 2;}. Because \texttt{\_term} handles \texttt{*} before
+\texttt{\_expr} handles \texttt{+}, the multiplication sub-tree is nested one
+level deeper, encoding the higher precedence of \texttt{*} over \texttt{+}
+without any explicit priority table at runtime.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  anode/.style = {rectangle, rounded corners=3pt,
+                  draw=nodeblue, fill=boxblue,
+                  minimum width=2cm, minimum height=0.7cm,
+                  align=center, font=\small\bfseries},
+  leaf/.style  = {rectangle, rounded corners=3pt,
+                  draw=arrowgray, fill=boxgray,
+                  minimum width=1.8cm, minimum height=0.65cm,
+                  align=center, font=\small\itshape},
+  edge from parent/.style = {draw, -{Stealth[length=4pt]}, color=arrowgray},
+  level 1/.style = {sibling distance=6cm, level distance=1.4cm},
+  level 2/.style = {sibling distance=3.2cm, level distance=1.3cm},
+  level 3/.style = {sibling distance=2.4cm, level distance=1.2cm},
+]
+\node[anode] {Assign (z)}
+  child { node[anode] {BinaryOp (\texttt{+})}
+    child { node[leaf] {Identifier (x)} }
+    child { node[anode] {BinaryOp (\texttt{*})}
+      child { node[leaf] {Identifier (y)} }
+      child { node[leaf] {Literal (2)} }
+    }
+  };
+\end{tikzpicture}
+\caption{AST for \texttt{z = x + y * 2;}. Multiplication is a deeper sub-tree
+than addition, encoding higher precedence through tree structure rather than
+a runtime priority table.}
+\label{fig:ast-example}
+\end{figure}
+
 Expression parsing is intentionally split into layered methods to enforce
 precedence and associativity in a transparent way. Parenthesized expressions
 are parsed explicitly and re-enter \texttt{\_expr}, allowing precedence

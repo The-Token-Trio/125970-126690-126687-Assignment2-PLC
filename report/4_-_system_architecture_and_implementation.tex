@@ -17,9 +17,65 @@ Figure~\ref{fig:system-overview-pipeline}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/system-overview-pipeline}
-\caption{Data flow from source characters to output (lexing, parsing, type
-checking, and execution or inspection).}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  box/.style  = {rectangle, rounded corners=4pt,
+                 draw=nodeblue, fill=boxblue,
+                 minimum width=2cm, minimum height=0.95cm,
+                 align=center, font=\large\bfseries},
+  data/.style = {rectangle, rounded corners=3pt,
+                 draw=arrowgray, fill=boxgray,
+                 minimum width=1.7cm, minimum height=0.85cm,
+                 align=center, font=\large\itshape},
+  sbox/.style = {rectangle, rounded corners=4pt,
+                 draw=nodeorange, fill=boxorange,
+                 minimum width=2.2cm, minimum height=0.9cm,
+                 align=center, font=\large},
+  pbox/.style = {rectangle, rounded corners=4pt,
+                 draw=nodegreen, fill=boxgreen,
+                 minimum width=26cm, minimum height=0.9cm,
+                 align=center, font=\large},
+  arr/.style  = {-{Stealth[length=7pt,width=6pt]},
+                 line width=1.2pt, color=arrowgray},
+  sarr/.style = {-{Stealth[length=7pt,width=6pt]},
+                 line width=1pt, color=nodeorange, dashed},
+  node distance = 0.7cm and 1cm,
+]
+
+\node[data]                (src) {Source\\Code};
+\node[box,  right=of src]  (lex) {Lexer};
+\node[data, right=of lex]  (tok) {Tokens};
+\node[box,  right=of tok]  (par) {Parser};
+\node[data, right=of par]  (ast) {AST};
+\node[box,  right=of ast]  (tck) {Type\\Checker};
+\node[data, right=of tck]  (chk) {Checked\\AST};
+\node[box,  right=of chk]  (itp) {Interpreter};
+\node[data, right=of itp]  (out) {Output};
+
+\node[sbox, below=1.5cm of tck] (sym) {Symbol\\Table};
+
+\node[pbox, below=0.8cm of sym] (pip)
+  {\texttt{pipeline.py}\quad---\quad shared by CLI, desktop UI, and test suite};
+
+\draw[arr] (src) -- (lex);
+\draw[arr] (lex) -- (tok);
+\draw[arr] (tok) -- (par);
+\draw[arr] (par) -- (ast);
+\draw[arr] (ast) -- (tck);
+\draw[arr] (tck) -- (chk);
+\draw[arr] (chk) -- (itp);
+\draw[arr] (itp) -- (out);
+
+\draw[sarr] (tck.south) -- (sym.north)
+  node[midway, right=3pt, font=\normalsize\itshape, color=nodeorange] {builds};
+\draw[sarr] (sym.east) -| (chk.south);
+
+\end{tikzpicture}%
+}
+\caption{Data flow from source characters to output. The type checker builds
+the symbol table to record and validate types; the interpreter runs only after
+the AST passes type checking. All stages are orchestrated through
+\texttt{pipeline.py}.}
 \label{fig:system-overview-pipeline}
 \end{figure}
 

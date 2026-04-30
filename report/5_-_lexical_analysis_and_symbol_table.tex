@@ -117,8 +117,13 @@ quotation mark or the end of input is reached, with error handling for
 unterminated strings. Numeric literals are handled by \texttt{\_number}, which
 distinguishes integers and floating-point values based on the presence of a
 decimal point followed by digits. Identifiers are processed greedily, consuming
-alphanumeric characters and underscores, and then checked against a keyword map
-to determine whether they are reserved words or user-defined names.
+alphanumeric characters and underscores, and then checked against the
+\texttt{KEYWORDS} map to determine whether they are reserved words or
+user-defined names. Notably, \texttt{true} and \texttt{false} are also entries
+in this map, mapping to \texttt{TokenType.BOOL\_LITERAL} rather than a
+keyword-specific type. This means boolean literals are recognised through
+the same keyword-fallback mechanism as reserved words, preventing them from
+being scanned as user-defined identifiers.
 
 \begin{lstlisting}
 KEYWORDS: dict[str, TokenType] = {
@@ -126,6 +131,8 @@ KEYWORDS: dict[str, TokenType] = {
    "else": TokenType.ELSE,
    "while": TokenType.WHILE,
    # ...
+   "true": TokenType.BOOL_LITERAL,
+   "false": TokenType.BOOL_LITERAL,
 }
 \end{lstlisting}
 
