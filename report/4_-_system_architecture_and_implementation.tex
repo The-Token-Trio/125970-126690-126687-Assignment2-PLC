@@ -72,19 +72,19 @@ Figure~\ref{fig:system-overview-pipeline}.
 
 \end{tikzpicture}%
 }
-\caption{Data flow from source characters to output. The type checker builds
-the symbol table to record and validate types; the interpreter runs only after
-the AST passes type checking. All stages are orchestrated through
-\texttt{pipeline.py}.}
+\caption{Compiler pipeline overview.}
 \label{fig:system-overview-pipeline}
 \end{figure}
 
 Source characters are scanned by the lexer into a token stream. The parser
 consumes tokens and builds an AST that reflects program structure (expressions,
 statements, and control flow). The type checker then walks the AST, populates and
-uses the symbol table, infers types, and validates scope and type rules. The
-interpreter evaluates the \emph{checked} tree: it is a separate component that
-runs only after successful type checking.
+uses the symbol table, infers types, and validates scope and type rules. Only
+programs that pass the type checker proceed to interpretation. The interpreter
+evaluates the checked tree using ordinary Python values; it does not re-run the
+type rules, since correctness at runtime is guaranteed by the prior static pass.
+All four stages are orchestrated through \texttt{pipeline.py}, which is shared
+by the command-line runner, the desktop UI, and the test suite.
 
 \subsection{Entry points and shared pipeline}
 All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
