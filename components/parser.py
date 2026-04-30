@@ -231,7 +231,8 @@ class Parser:
 
     def _factor(self) -> ASTNode:
         """
-        INT_LITERAL | FLOAT_LITERAL | STRING_LITERAL | BOOL_LITERAL
+        '-' factor  (unary negation, desugared to 0 - factor)
+        | INT_LITERAL | FLOAT_LITERAL | STRING_LITERAL | BOOL_LITERAL
         | IDENTIFIER ( '(' args? ')' )?
         | '(' expr ')'
         """

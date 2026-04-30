@@ -152,14 +152,18 @@ As a result, equality parsing is condition-focused in the current grammar
 implementation rather than a general infix operator available in every
 expression position. Function calls are recognised when an identifier is
 followed by \texttt{(}, with argument lists parsed as comma-separated
-expressions. Parenthesized expressions are supported to override precedence.
+expressions. Parenthesized expressions are supported to override precedence. Unary
+negation (\texttt{-x}, \texttt{-5}) is also handled at the \texttt{\_factor}
+level: a leading \texttt{-} token causes the parser to recursively parse the
+operand and return \texttt{BinaryOp(0 - operand)}, so the existing type rules
+for subtraction cover negation without any additional inference code.
 
 \begin{lstlisting}
 def _expr(self) -> ASTNode:  # +,-
    ...
 def _term(self) -> ASTNode:  # *,/
    ...
-def _factor(self) -> ASTNode:  # literals, identifiers/calls, grouped expr
+def _factor(self) -> ASTNode:  # unary -, literals, identifiers/calls, grouped expr
    ...
 \end{lstlisting}
 

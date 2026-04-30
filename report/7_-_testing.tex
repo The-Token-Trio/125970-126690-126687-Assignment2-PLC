@@ -120,25 +120,57 @@ shown below.
 \end{lstlisting}
 
 \section{Automated Test Suite}
-Automated regression tests were added in
-\texttt{tests/test\_member3\_pipeline.py} using the \texttt{unittest}
-framework. The suite currently covers:
+The automated regression suite is located in \texttt{tests/test\_pipeline.py}
+and uses Python's built-in \texttt{unittest} framework. The tests are
+organised into four classes, each targeting a distinct compiler stage.
 
-\begin{itemize}
-	\item progressive output during while-loop execution,
-	\item assignment type mismatch detection,
-	\item function parameter and return type inference.
-\end{itemize}
+\begin{table}[H]
+\centering
+\caption{Automated test coverage by class}
+\begin{tabular}{llr}
+\toprule
+Test class & Stage covered & Tests \\
+\midrule
+\texttt{LexerTests}       & Tokenisation (\texttt{lexica.py})            & 10 \\
+\texttt{ParserTests}      & Parsing and precedence (\texttt{parser.py})  &  5 \\
+\texttt{TypeCheckerTests} & Static type inference (\texttt{type\_checker.py}) & 13 \\
+\texttt{IntegrationTests} & Full pipeline execution                       & 17 \\
+\midrule
+                          & \textbf{Total}                               & \textbf{45} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-The tests can be run using:
+\noindent\textbf{LexerTests} verify that each token category (integer, float,
+Boolean, string, keywords, identifiers, two-character operators) is produced
+correctly, that source line numbers are tracked across newlines, and that
+illegal characters and unterminated strings raise \texttt{LexerError}.
+
+\noindent\textbf{ParserTests} confirm that missing semicolons and unclosed
+braces raise \texttt{ParseError}, and that operator precedence and
+left-associativity are encoded correctly in the parse tree.
+
+\noindent\textbf{TypeCheckerTests} cover type inference for all four types,
+the rule that division always returns \texttt{Float}, float promotion in
+mixed arithmetic, Boolean-to-Boolean comparison, and the full set of type
+error conditions: string arithmetic, non-Boolean conditions for \texttt{if}
+and \texttt{while}, assignment type mismatch, undefined variable, wrong
+argument count, and argument type mismatch.
+
+\noindent\textbf{IntegrationTests} run programs through all four pipeline
+stages and verify the final output. Cases include unary negation on all
+numeric types, both branches of \texttt{if}/\texttt{else}, while-loop
+countdown, \texttt{print()} with every type, value-parameter isolation,
+nested function calls, variable reassignment, and scope isolation (variables
+declared inside an \texttt{if} block are not visible outside it).
+
+The tests can be run with:
 
 \begin{lstlisting}
 python3 -m unittest discover -s tests -v
 \end{lstlisting}
 
-All seven tests pass. The four unary-minus tests were added when support for
-negation was introduced, confirming that the feature is covered alongside the
-original three semantic checks.
+All 45 tests pass.
 
 \section{Error Handling}
 The language system reports errors at three main stages:

@@ -1,0 +1,274 @@
+from __future__ import annotations
+
+import unittest
+
+from components.lexica import Lexer, LexerError
+from components.parser import Parser, ParseError
+from components.pipeline import run_pipeline
+from components.tokens import TokenType
+from components.type_checker import TypeCheckError
+
+
+# ---------------------------------------------------------------------------
+# Lexer
+# ---------------------------------------------------------------------------
+
+class LexerTests(unittest.TestCase):
+    """Tests for components/lexica.py — lexical analysis and tokenisation."""
+
+    def test_integer_literal_token(self) -> None:
+        tokens = Lexer("42").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.INT_LITERAL)
+        self.assertEqual(tokens[0].lexeme, "42")
+
+    def test_float_literal_token(self) -> None:
+        tokens = Lexer("3.14").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.FLOAT_LITERAL)
+        self.assertEqual(tokens[0].lexeme, "3.14")
+
+    def test_bool_literals_produce_bool_literal_tokens(self) -> None:
+        tokens = Lexer("true false").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.BOOL_LITERAL)
+        self.assertEqual(tokens[0].lexeme, "true")
+        self.assertEqual(tokens[1].token_type, TokenType.BOOL_LITERAL)
+        self.assertEqual(tokens[1].lexeme, "false")
+
+    def test_keywords_produce_correct_token_types(self) -> None:
+        tokens = Lexer("if else while def return print").tokenize()
+        expected = [
+            TokenType.IF, TokenType.ELSE, TokenType.WHILE,
+            TokenType.DEF, TokenType.RETURN, TokenType.PRINT,
+        ]
+        actual = [t.token_type for t in tokens if t.token_type != TokenType.EOF]
+        self.assertEqual(actual, expected)
+
+    def test_identifier_not_confused_with_keyword(self) -> None:
+        tokens = Lexer("iffy whileloop").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.IDENTIFIER)
+        self.assertEqual(tokens[1].token_type, TokenType.IDENTIFIER)
+
+    def test_two_character_operators(self) -> None:
+        tokens = Lexer("== !=").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.EQUAL_EQUAL)
+        self.assertEqual(tokens[1].token_type, TokenType.BANG_EQUAL)
+
+    def test_source_position_tracked_across_lines(self) -> None:
+        tokens = Lexer("x\ny").tokenize()
+        self.assertEqual(tokens[0].line, 1)
+        self.assertEqual(tokens[1].line, 2)
+
+    def test_unexpected_character_raises_lexer_error(self) -> None:
+        with self.assertRaises(LexerError):
+            Lexer("@").tokenize()
+
+    def test_lone_exclamation_raises_lexer_error(self) -> None:
+        with self.assertRaises(LexerError):
+            Lexer("!5").tokenize()
+
+    def test_unterminated_string_raises_lexer_error(self) -> None:
+        with self.assertRaises(LexerError):
+            Lexer('"hello').tokenize()
+
+
+# ---------------------------------------------------------------------------
+# Parser
+# ---------------------------------------------------------------------------
+
+class ParserTests(unittest.TestCase):
+    """Tests for components/parser.py — recursive-descent parsing."""
+
+    def _parse(self, source: str):
+        return Parser(Lexer(source).tokenize()).parse()
+
+    def test_missing_semicolon_raises_parse_error(self) -> None:
+        with self.assertRaises(ParseError):
+            self._parse("x = 5")
+
+    def test_unclosed_brace_raises_parse_error(self) -> None:
+        with self.assertRaises(ParseError):
+            self._parse("if (true) { x = 1;")
+
+    def test_operator_precedence_mul_before_add(self) -> None:
+        # 2 + 3 * 4 must be 14, not 20
+        result = run_pipeline("x = 2 + 3 * 4; print(x);")
+        self.assertEqual(result.outputs, ["14 : Integer"])
+
+    def test_operator_left_associativity(self) -> None:
+        # 10 - 3 - 2 must be 5 (left-assoc), not 9
+        result = run_pipeline("x = 10 - 3 - 2; print(x);")
+        self.assertEqual(result.outputs, ["5 : Integer"])
+
+    def test_parentheses_override_precedence(self) -> None:
+        # (2 + 3) * 4 must be 20
+        result = run_pipeline("x = (2 + 3) * 4; print(x);")
+        self.assertEqual(result.outputs, ["20 : Integer"])
+
+
+# ---------------------------------------------------------------------------
+# Type checker
+# ---------------------------------------------------------------------------
+
+class TypeCheckerTests(unittest.TestCase):
+    """Tests for components/type_checker.py — static type inference and checking."""
+
+    def test_integer_arithmetic_stays_integer(self) -> None:
+        result = run_pipeline("x = 3 + 4; print(x);")
+        self.assertEqual(result.outputs, ["7 : Integer"])
+
+    def test_division_always_produces_float(self) -> None:
+        # integer / integer → Float by design
+        result = run_pipeline("x = 10 / 2; print(x);")
+        self.assertEqual(result.outputs, ["5.0 : Float"])
+
+    def test_float_promotion_in_addition(self) -> None:
+        result = run_pipeline("x = 1 + 2.5; print(x);")
+        self.assertEqual(result.outputs, ["3.5 : Float"])
+
+    def test_string_variable_type_inferred(self) -> None:
+        result = run_pipeline('x = "hello"; print(x);')
+        self.assertEqual(result.outputs, ['"hello" : String'])
+
+    def test_boolean_literal_type_inferred(self) -> None:
+        result = run_pipeline("x = true; print(x);")
+        self.assertEqual(result.outputs, ["true : Boolean"])
+
+    def test_boolean_equality_comparison_is_valid(self) -> None:
+        # Boolean == Boolean is permitted; result used as if condition
+        result = run_pipeline(
+            'x = true; if (x == false) { print("then"); } else { print("else"); }'
+        )
+        self.assertEqual(result.outputs, ['"else" : String'])
+
+    def test_arithmetic_on_string_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline('x = "a" + 1;')
+
+    def test_if_non_boolean_condition_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("if (1) { x = 2; }")
+
+    def test_while_non_boolean_condition_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 0; while (x) { x = x + 1; }")
+
+    def test_assignment_type_mismatch_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline('x = 5; x = "hello";')
+
+    def test_undefined_variable_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("print(z);")
+
+    def test_function_wrong_arg_count_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("def f(a) { return a; } f(1, 2);")
+
+    def test_function_arg_type_mismatch_raises_type_error(self) -> None:
+        # first call infers a: Integer; second call with String must fail
+        with self.assertRaises(TypeCheckError):
+            run_pipeline('def f(a) { return a; } f(1); f("hello");')
+
+
+# ---------------------------------------------------------------------------
+# Integration (full pipeline)
+# ---------------------------------------------------------------------------
+
+class IntegrationTests(unittest.TestCase):
+    """End-to-end tests through all four pipeline stages."""
+
+    # --- Unary minus ---
+
+    def test_unary_minus_integer(self) -> None:
+        result = run_pipeline("x = -5; print(x);")
+        self.assertEqual(result.outputs, ["-5 : Integer"])
+
+    def test_unary_minus_float(self) -> None:
+        result = run_pipeline("y = -3.14; print(y);")
+        self.assertEqual(result.outputs, ["-3.14 : Float"])
+
+    def test_unary_minus_variable(self) -> None:
+        result = run_pipeline("x = 10; y = -x; print(y);")
+        self.assertEqual(result.outputs, ["-10 : Integer"])
+
+    def test_unary_minus_inside_expression(self) -> None:
+        result = run_pipeline("x = 3 + -2; print(x);")
+        self.assertEqual(result.outputs, ["1 : Integer"])
+
+    # --- Control flow ---
+
+    def test_if_then_branch_executes(self) -> None:
+        result = run_pipeline(
+            'x = 5; if (x == 5) { print("yes"); } else { print("no"); }'
+        )
+        self.assertEqual(result.outputs, ['"yes" : String'])
+
+    def test_if_else_branch_executes_when_condition_false(self) -> None:
+        result = run_pipeline(
+            'x = 0; if (x == 5) { print("yes"); } else { print("no"); }'
+        )
+        self.assertEqual(result.outputs, ['"no" : String'])
+
+    def test_while_loop_executes_repeatedly(self) -> None:
+        result = run_pipeline("x = 3; while (x != 0) { print(x); x = x - 1; }")
+        self.assertEqual(result.outputs, ["3 : Integer", "2 : Integer", "1 : Integer"])
+
+    # --- Functions ---
+
+    def test_function_integer_return(self) -> None:
+        result = run_pipeline("def square(n) { return n * n; } print(square(7));")
+        self.assertEqual(result.outputs, ["49 : Integer"])
+
+    def test_function_type_inference(self) -> None:
+        result = run_pipeline(
+            "def add(a, b) { return a + b; } result = add(2, 3.5); print(result);"
+        )
+        self.assertEqual(result.outputs, ["5.5 : Float"])
+        self.assertIn("result       variable   Float", result.checked_scope.format_table())
+
+    def test_function_value_parameter_passing(self) -> None:
+        # Modifying a parameter inside a function must not affect the caller's variable
+        result = run_pipeline(
+            "def inc(a) { a = a + 1; return a; } x = 10; y = inc(x); print(x); print(y);"
+        )
+        self.assertEqual(result.outputs, ["10 : Integer", "11 : Integer"])
+
+    def test_nested_function_calls(self) -> None:
+        result = run_pipeline(
+            "def add(a, b) { return a + b; } print(add(add(1, 2), 3));"
+        )
+        self.assertEqual(result.outputs, ["6 : Integer"])
+
+    # --- print() with all four types ---
+
+    def test_print_integer(self) -> None:
+        result = run_pipeline("print(42);")
+        self.assertEqual(result.outputs, ["42 : Integer"])
+
+    def test_print_float(self) -> None:
+        result = run_pipeline("print(3.14);")
+        self.assertEqual(result.outputs, ["3.14 : Float"])
+
+    def test_print_boolean(self) -> None:
+        result = run_pipeline("print(true);")
+        self.assertEqual(result.outputs, ["true : Boolean"])
+
+    def test_print_string(self) -> None:
+        result = run_pipeline('print("plc");')
+        self.assertEqual(result.outputs, ['"plc" : String'])
+
+    # --- Reassignment ---
+
+    def test_variable_can_be_reassigned_same_type(self) -> None:
+        result = run_pipeline("x = 1; x = 2; x = 3; print(x);")
+        self.assertEqual(result.outputs, ["3 : Integer"])
+
+    def test_scope_isolation_if_block(self) -> None:
+        # Variable defined inside an if-block must not be visible outside it
+        with self.assertRaises(TypeCheckError):
+            run_pipeline(
+                "x = 1; if (x == 1) { inner = 99; } print(inner);"
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()
