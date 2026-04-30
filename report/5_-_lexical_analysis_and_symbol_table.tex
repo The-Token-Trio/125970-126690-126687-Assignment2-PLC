@@ -1,0 +1,277 @@
+\chapter{LEXICAL ANALYSIS AND SYMBOL TABLE}
+
+This chapter covers the responsibilities related to lexical and early semantic
+foundations of the language. It includes defining token structures and
+categories (such as keywords, operators, identifiers, and literals), implementing
+the lexer to transform source characters into tokens, and establishing the
+symbol table to manage variable and function storage along with their
+associated types. Together, these components ensure that raw source input is
+systematically organised into meaningful structures that can be used reliably
+by later stages of the compiler.
+
+\section{Token representation}
+The token system, written in \texttt{components/tokens.py}, establishes the
+vocabulary and structure of all lexical elements in the language. It specifies
+both the types of tokens that can exist and the structure each token must
+follow. This serves as a canonical contract between the lexer and the parser,
+ensuring consistency across all stages of the compiler.
+
+Table~\ref{tab:token-categories} summarises the main categories, example lexemes,
+and typical \texttt{TokenType} values.
+
+\begin{table}[H]
+\centering
+\caption{Token categories and representative \texttt{TokenType} values}
+\label{tab:token-categories}
+\small
+\begin{tabular}{p{0.16\textwidth}p{0.32\textwidth}p{0.45\textwidth}}
+\toprule
+Category & Example lexemes & Representative \texttt{TokenType} \\
+\midrule
+Literals &
+\texttt{42}, \texttt{3.14}, \texttt{true}, \texttt{"hello"} &
+\texttt{INT\_LITERAL}, \texttt{FLOAT\_LITERAL}, \texttt{BOOL\_LITERAL},
+\texttt{STRING\_LITERAL} \\
+Identifiers &
+\texttt{x}, \texttt{counter}, \texttt{add} &
+\texttt{IDENTIFIER} \\
+Keywords &
+\texttt{if}, \texttt{else}, \texttt{while}, \texttt{def},
+\texttt{return}, \texttt{print} &
+keyword-specific token variants \\
+Operators &
+\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, \texttt{=},
+\texttt{==}, \texttt{!=} &
+\texttt{PLUS}, \texttt{MINUS}, \texttt{STAR}, \texttt{SLASH},
+\texttt{ASSIGN}, \texttt{EQUAL\_EQUAL}, \texttt{BANG\_EQUAL} \\
+Delimiters &
+Parentheses, braces, comma, and semicolon (see lexer delimiter tokens) &
+delimiter token variants \\
+End marker & end of source input & \texttt{EOF} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Token types (from class \texttt{TokenType}) are defined using an \texttt{Enum}
+with \texttt{auto()} to automatically assign unique values. This avoids reliance
+on raw strings and ensures safer comparisons during parsing. The token
+categories include literals, identifiers, keywords, operators, delimiters, and
+a special end-of-file (\texttt{EOF}) token. The \texttt{EOF} token is appended
+after all input is processed, allowing the parser to detect the end of input
+explicitly rather than encountering an unexpected termination.
+
+Each token is represented as an immutable dataclass (\texttt{frozen=True}),
+meaning its fields cannot be modified after creation. Each token contains four
+key pieces of information: its kind (\texttt{token\_type}), its lexeme (the
+exact substring from the source code), and its source position (\texttt{line},
+\texttt{column}). This structured representation allows later stages to
+process the program in terms of syntax and errors without handling raw text
+directly. Immutability improves reliability by preventing accidental
+modification during later processing.
+
+\begin{lstlisting}
+@dataclass(frozen=True)
+class Token:
+   token_type: TokenType
+   lexeme: str
+   line: int
+   column: int
+\end{lstlisting}
+
+\section{Lexer implementation}
+The lexer, implemented in \texttt{components/lexica.py}, is a hand-written
+scanner that converts raw source text into a sequence of tokens. Unlike
+generated lexers (for example SLY lexer mode, or Lex and Flex), this
+implementation uses explicit control flow (\texttt{if} and \texttt{while}) to
+process input.
+
+The lexer maintains internal state including the source string, current
+position, start of the current token, line number, and column index. The
+column index is tracked per line and resets upon encountering a newline, while
+a separate \texttt{token\_column} records the starting position of each token
+for accurate error reporting.
+
+The main function, \texttt{tokenize}, iterates through the source code, repeatedly
+invoking \texttt{\_scan\_token} to identify the next token. Tokens are appended
+to a list, and an \texttt{EOF} token is added at the end. Whitespace is skipped,
+while invalid input results in a \texttt{LexerError}.
+
+\begin{lstlisting}
+def tokenize(self) -> list[Token]:
+    tokens: list[Token] = []
+    while not self._is_at_end():
+        self.start = self.current
+        self.token_column = self.column
+        token = self._scan_token()
+        if token is not None:
+            tokens.append(token)
+    tokens.append(Token(TokenType.EOF, "", self.line, self.column))
+    return tokens
+\end{lstlisting}
+
+Token recognition follows a structured approach. Single-character tokens are
+mapped using a lookup table. Multi-character operators such as \texttt{==} and
+\texttt{!=} are handled using lookahead via \texttt{\_match}. String literals
+are processed by \texttt{\_string}, which reads characters until a closing
+quotation mark or the end of input is reached, with error handling for
+unterminated strings. Numeric literals are handled by \texttt{\_number}, which
+distinguishes integers and floating-point values based on the presence of a
+decimal point followed by digits. Identifiers are processed greedily, consuming
+alphanumeric characters and underscores, and then checked against a keyword map
+to determine whether they are reserved words or user-defined names.
+
+\begin{lstlisting}
+KEYWORDS: dict[str, TokenType] = {
+   "if": TokenType.IF,
+   "else": TokenType.ELSE,
+   "while": TokenType.WHILE,
+   # ...
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+SINGLE_CHAR_TOKENS: dict[str, TokenType] = {
+   "+": TokenType.PLUS,
+   "-": TokenType.MINUS,
+   "*": TokenType.STAR,
+   "/": TokenType.SLASH,
+   # ...
+}
+\end{lstlisting}
+
+Helper functions such as \texttt{\_advance}, \texttt{\_peek}, and
+\texttt{\_peek\_next} manage character consumption and lookahead, while
+\texttt{\_is\_at\_end} determines when input has been fully processed. Error
+messages include precise line and column information, aiding debugging and
+diagnostics.
+
+Table~\ref{tab:lexica-functions} lists the main functions and data structures
+in \texttt{components/lexica.py} and their roles.
+
+\begin{table}[H]
+\centering
+\caption{Key functions and data in \texttt{lexica.py}}
+\label{tab:lexica-functions}
+\small
+\begin{tabular}{p{0.25\textwidth}p{0.4\textwidth}p{0.28\textwidth}}
+\toprule
+Function / data & Responsibility & Output / effect \\
+\midrule
+\texttt{tokenize()} & Iterates through source, scans tokens, appends
+\texttt{EOF} & ordered token list \\
+\texttt{\_scan\_token()} & Dispatches recognition based on character and
+lookahead & next token or skip \\
+\texttt{\_number()} & Parses numeric sequences, distinguishes int vs float &
+numeric literal token \\
+\texttt{\_string()} & Parses quoted text, checks termination & string token or
+error \\
+\texttt{\_identifier()} & Parses identifiers, resolves keyword vs user-defined
+& keyword or identifier token \\
+\texttt{KEYWORDS} map & Maps reserved words to token types & token type
+selection \\
+\texttt{SINGLE\_CHAR\_TOKENS} map & Maps single-character symbols & token type
+selection \\
+\texttt{\_advance()}, \texttt{\_peek()}, \texttt{\_match()} & Character
+consumption and lookahead & scanner state update \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Symbol table and semantic structure}
+The symbol table, defined in \texttt{components/symbol\_table.py}, operates at a
+higher level than the lexer. While the lexer processes raw text into tokens, the
+symbol table manages semantic information such as variable and function names,
+their types, and their scope.
+
+The symbol table is implemented as a scoped structure, where each scope
+maintains its own dictionary of symbols and optionally references a parent
+scope. This enables proper handling of nested blocks and variable shadowing.
+Symbols are introduced through definition functions and retrieved through
+lookup operations, which search recursively through parent scopes if needed.
+
+\begin{lstlisting}
+def lookup(self, name: str) -> Symbol:
+    symbol = self._symbols.get(name)
+    if symbol is not None:
+        return symbol
+    if self.parent is not None:
+        return self.parent.lookup(name)
+    raise SymbolTableError(f"Undefined symbol: {name}")
+\end{lstlisting}
+
+The type system is represented using a \texttt{LanguageType} enumeration, which
+includes fundamental types such as Integer, Float, Boolean, String, and Void.
+Symbols are modelled using an inheritance hierarchy: the base \texttt{Symbol}
+class stores a name and type, while subclasses such as
+\texttt{VariableSymbol} and \texttt{FunctionSymbol} include additional
+attributes. Variables track initialization state, while functions store
+parameter lists and return types. Table~\ref{tab:symbol-table-components}
+summarises the main building blocks.
+
+\begin{table}[H]
+\centering
+\caption{Symbol table components and roles}
+\label{tab:symbol-table-components}
+\small
+\begin{tabular}{p{0.24\textwidth}p{0.32\textwidth}p{0.36\textwidth}}
+\toprule
+Component & Stored information & Role in semantic analysis \\
+\midrule
+Scoped symbol table & Symbols in current and parent scope & Supports nesting
+and shadowing via recursive lookup \\
+\texttt{LanguageType} enum & Integer, Float, Boolean, String, Void & Defines
+the type system \\
+\texttt{Symbol} (base) & Name and declared or inferred type & Base abstraction
+for entries \\
+\texttt{VariableSymbol} & Variable metadata (including initialization state) &
+Tracks correct usage before assignment \\
+\texttt{FunctionSymbol} & Parameters and return type & Validates calls and
+return consistency \\
+\texttt{lookup(name)} & Recursive scope search & Resolves identifiers or
+reports undefined \\
+\texttt{SymbolTableError} & Semantic error details & Reports duplicates,
+undefined symbols, invalid operations \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Errors related to semantic violations are handled via
+\texttt{SymbolTableError}. These include duplicate declarations within the same
+scope, references to undefined symbols, and invalid operations such as
+attempting to mark a non-variable symbol as initialized.
+
+\section{Role of the symbol table in the pipeline}
+The symbol table is constructed during the type-checking phase rather than
+during lexical analysis. This guideline is followed in the implementation.
+The type checker initialises a global symbol table and populates it while
+traversing the AST, including defining variables and functions, managing nested
+scopes, and validating type correctness.
+
+\begin{lstlisting}
+def run_pipeline(source_code: str) -> PipelineResult:
+   tokens = Lexer(source_code).tokenize()
+   tree = Parser(tokens).parse()
+   ast_text = ASTPrinter().print(tree)
+   checked_scope = TypeChecker().check(tree)
+   outputs: list[str] = []
+   Interpreter(output_callback=outputs.append).execute(tree)
+   return PipelineResult(
+       tokens=tokens,
+       ast_text=ast_text,
+       checked_scope=checked_scope,
+       outputs=outputs,
+   )
+\end{lstlisting}
+
+Once type checking is complete, the populated symbol table is returned as part
+of the pipeline result (\texttt{checked\_scope}). The checker creates child
+scopes for blocks and functions during analysis, but the displayed
+\texttt{checked\_scope} table represents the global scope entries returned by
+the pipeline. It can then be displayed or used for further analysis.
+
+This separation of concerns keeps lexical analysis focused on tokenization,
+while semantic meaning is enforced during type checking. For user-defined
+functions, definitions are first registered in the global scope with placeholder
+parameter and return types. These are inferred from the first valid call and
+refined through body checking; subsequent calls must match the inferred
+parameter types.
