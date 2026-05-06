@@ -1,18 +1,13 @@
-\chapter*{APPENDIX A: SOURCE CODE AVAILABILITY}
-\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE AVAILABILITY}
+\chapter*{APPENDIX A: SOURCE CODE}
+\addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE}
 
-The complete source code for this project is available on GitHub:
+The complete source code is available on GitHub:
 
 \begin{center}
 \textbf{https://github.com/The-Token-Trio/125970-126690-126687-Assignment2-PLC}
 \end{center}
 
-The repository contains the lexer, parser, AST nodes, symbol table, type
-checker, interpreter, shared execution pipeline, user interface, tests, and the
-full report source. The project can be run either from the command line through
-\texttt{main.py} or from the desktop UI through \texttt{ui.py}.
-
-The main execution commands are:
+The project can be run from the command line or the desktop UI:
 
 \begin{lstlisting}
 python3 main.py
@@ -20,5 +15,98 @@ python3 ui.py
 python3 -m unittest discover -s tests -v
 \end{lstlisting}
 
-No external Python dependencies are required for the implementation. The Python
-side of the project uses only the standard library.
+No external Python dependencies are required. All pages below list the full
+source of every implementation file.
+
+% -----------------------------------------------------------------------
+\clearpage
+\section*{A.1\quad Entry Points}
+% -----------------------------------------------------------------------
+
+\lstinputlisting[
+  caption={main.py --- command-line entry point},
+  label={lst:main}
+]{../main.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={ui.py --- Tkinter desktop workbench},
+  label={lst:ui}
+]{../ui.py}
+
+% -----------------------------------------------------------------------
+\clearpage
+\section*{A.2\quad Core Components}
+% -----------------------------------------------------------------------
+
+\lstinputlisting[
+  caption={components/tokens.py --- token type enumeration and Token dataclass},
+  label={lst:tokens}
+]{../components/tokens.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/lexica.py --- lexical analyser},
+  label={lst:lexica}
+]{../components/lexica.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/ast\_nodes.py --- AST node definitions},
+  label={lst:astnodes}
+]{../components/ast_nodes.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/parser.py --- recursive-descent parser},
+  label={lst:parser}
+]{../components/parser.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/ast\_printer.py --- indented AST renderer},
+  label={lst:astprinter}
+]{../components/ast_printer.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/symbol\_table.py --- scoped symbol table},
+  label={lst:symboltable}
+]{../components/symbol_table.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/type\_checker.py --- static type checker with inference},
+  label={lst:typechecker}
+]{../components/type_checker.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/interpreter.py --- tree-walking interpreter},
+  label={lst:interpreter}
+]{../components/interpreter.py}
+
+\clearpage
+
+\lstinputlisting[
+  caption={components/pipeline.py --- shared pipeline (CLI, UI, and tests)},
+  label={lst:pipeline}
+]{../components/pipeline.py}
+
+% -----------------------------------------------------------------------
+\clearpage
+\section*{A.3\quad Test Suite}
+% -----------------------------------------------------------------------
+
+\lstinputlisting[
+  caption={tests/test\_pipeline.py --- automated regression suite (54 tests)},
+  label={lst:tests}
+]{../tests/test_pipeline.py}

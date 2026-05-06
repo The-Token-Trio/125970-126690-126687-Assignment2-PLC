@@ -198,8 +198,40 @@ pipeline:
 \end{itemize}
 
 \section{Graphical user interface}
-The workbench is implemented with \texttt{tkinter}. The layout required for the
-assignment is preserved: the script is edited on the left, and pipeline outputs
-appear on the right. The right-hand side surfaces the same stages as the
-command-line printout, but in a tabbed panel so the user can switch between
-views without rerunning the pipeline for each kind of inspection.
+The desktop workbench (\texttt{ui.py}) is implemented with Python's
+\texttt{tkinter} standard library and requires no additional dependencies.
+The window is titled \textit{AT70.07 --- Programming Language Project} and
+opens at $1200 \times 760$ pixels in a horizontal split layout.
+
+\textbf{Toolbar.}  A top toolbar provides three buttons --- \textit{Open
+Script}, \textit{Run}, and \textit{Clear Output} --- and a right-aligned
+status label that reports \textit{Ready}, a loaded filename, or \textit{Run
+failed}.
+
+\textbf{Left panel (source editor).}  A monospaced \texttt{Text} widget
+with both horizontal and vertical scrollbars allows the user to enter or
+paste arbitrary source code. The \textit{Open Script} button populates the
+editor from a file. The editor is pre-loaded with the built-in sample program
+on first launch.
+
+\textbf{Right panel (output tabs).}  A \texttt{Notebook} widget presents
+four tabs, each backed by a scrollable read-only \texttt{Text} widget with
+both horizontal and vertical scrollbars:
+\begin{itemize}
+  \item \textit{Execution Output} --- the \texttt{print()} values produced
+        by stage~4, formatted as \texttt{value : Type};
+  \item \textit{Tokens} --- the token stream from stage~1, one token per line
+        with type, lexeme, and source position;
+  \item \textit{AST} --- the indented tree text from stage~2;
+  \item \textit{Type Table} --- the symbol table from stage~3 showing each
+        name, kind, inferred type, initialisation state, and parameter list.
+\end{itemize}
+
+\textbf{Error handling.}  If any pipeline stage raises an exception, the
+error message is written to the \textit{Execution Output} tab as
+\texttt{ERROR: <message>}. No modal dialogs are used, so the user can edit
+and rerun without dismissing a popup.
+
+\textbf{Keyboard shortcuts.}  \texttt{F5} and \texttt{Ctrl+Enter} are both
+bound to the \textit{Run} action, allowing rapid edit-run cycles without
+reaching for the mouse.
