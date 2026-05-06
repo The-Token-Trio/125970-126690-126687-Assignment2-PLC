@@ -41,6 +41,9 @@ statement, allowing the symbol table to record a consistent entry for every
 function regardless of whether it produces a value. \texttt{Void} cannot appear
 in source code and is never visible to the programmer; it is a bookkeeping
 device used internally by the type checker.
+Therefore, \texttt{Void} does not extend the programmer-visible type system
+required by the assignment; it is only an internal implementation marker used
+by the compiler.
 
 \section{Static Typing}
 The language employs static typing, meaning that type errors are detected at

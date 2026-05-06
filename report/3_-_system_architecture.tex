@@ -30,6 +30,84 @@ variable name is inserted with its inferred type. When a new block or a
 function call is entered, a child environment is created so that nested scopes
 can be checked independently while still accessing outer bindings when needed.
 
+\section{Type Inference Procedure}
+
+The type checker performs type inference by traversing the abstract syntax tree
+before interpretation. The algorithm is syntax-directed: each AST node is
+visited, the types of its child nodes are inferred first, and the current node
+is checked according to the language typing rules.
+
+\begin{center}
+\textbf{Algorithm} \textsc{TypeCheck}$(\textit{node},\; \Gamma)$
+\end{center}
+
+\noindent\textbf{Input:} \textit{node} = current AST node;\quad
+$\Gamma$ = current type environment / symbol table
+
+\noindent\textbf{Output:} inferred type of \textit{node}, or \texttt{TypeError}
+
+\begin{enumerate}[leftmargin=1.5em, label=\arabic*., itemsep=2pt]
+  \item \textbf{If} \textit{node} is a \textbf{Literal}:\quad
+        return the corresponding primitive type:
+        \texttt{Integer}, \texttt{Float}, \texttt{Boolean}, or \texttt{String}.
+
+  \item \textbf{If} \textit{node} is an \textbf{Identifier}:\quad
+        look up the identifier in $\Gamma$.
+        If it is not found, report an undefined variable error.
+        Otherwise, return its stored type.
+
+  \item \textbf{If} \textit{node} is a \textbf{BinaryOp}:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item Infer the type of the left operand and the right operand.
+          \item If the operator is \texttt{+}, \texttt{-}, \texttt{*}, or \texttt{/}:\quad
+                require both operands to be numeric; infer the result using
+                Table~\ref{tab:arithmetic-result-types}.
+          \item If the operator is \texttt{==} or \texttt{!=}:\quad
+                require both operands to be arithmetic; return \texttt{Boolean}.
+          \item Otherwise, report a \texttt{TypeError}.
+        \end{itemize}
+
+  \item \textbf{If} \textit{node} is an \textbf{Assignment}:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item Infer the type of the right-hand-side expression.
+          \item If the variable is not yet in $\Gamma$: insert it with the inferred type.
+          \item Else: verify the new type matches the existing type; if not, report a \texttt{TypeError}.
+        \end{itemize}
+
+  \item \textbf{If} \textit{node} is an \textbf{If} statement:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item Infer the condition type; require it to be \texttt{Boolean}.
+          \item Type-check the then-block in a child environment.
+          \item If an else-block exists, type-check it in a child environment.
+        \end{itemize}
+
+  \item \textbf{If} \textit{node} is a \textbf{While} statement:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item Infer the condition type; require it to be \texttt{Boolean}.
+          \item Type-check the loop body in a child environment.
+        \end{itemize}
+
+  \item \textbf{If} \textit{node} is a \textbf{FunctionDef}:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item Register the function name in $\Gamma$.
+          \item Parameter types are initially unknown.
+          \item Return type is inferred from \texttt{return} statements in the body.
+        \end{itemize}
+
+  \item \textbf{If} \textit{node} is a \textbf{FunctionCall}:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item Infer all argument types.
+          \item If this is the first valid call: store the argument types as the
+                function's parameter types.
+          \item Else: compare argument types with the stored parameter types.
+          \item Type-check the function body using a local environment.
+          \item Return the inferred function return type.
+        \end{itemize}
+
+  \item \textbf{If} \textit{node} is a \textbf{Print} statement:\quad
+        infer the expression type; accept any of the four supported types.
+\end{enumerate}
+
 \section{Inference Rules}
 
 \subsection{Literals}
@@ -92,6 +170,10 @@ The comparison operators \texttt{==} and \texttt{!=} always produce
 \texttt{Float}) operands; this constraint is a deliberate design choice that
 keeps comparison semantics unambiguous. Comparisons involving \texttt{Boolean}
 or \texttt{String} operands are rejected by the type checker.
+Although \texttt{Boolean} and \texttt{String} values exist in the language,
+equality and inequality are deliberately restricted to arithmetic expressions
+because the project specification defines basic Boolean expressions as equality
+and inequality between two arithmetic expressions.
 
 \subsection{Assignment Statement}
 Assignments define variable types on first use. If a variable does not yet
@@ -139,9 +221,11 @@ parameter types by scanning the body for arithmetic and comparison usage, then
 checks the full body with those inferred types. This ensures that type errors
 inside never-called function bodies are still detected before execution.
 
-Recursive calls are intentionally outside the scope of this implementation;
-supporting them would require additional fixed-point inference or explicit
-recursion handling that is orthogonal to the core type-inference algorithm.
+Recursive functions are intentionally outside the scope of this assignment
+implementation. The current language focuses on value parameter passing and
+first-call-based function type inference; supporting recursion would require
+fixed-point inference or explicit recursive type signatures, which are beyond
+the required project features.
 
 \section{Type Error Reporting}
 Type errors are reported with source positions so that the user can locate the
