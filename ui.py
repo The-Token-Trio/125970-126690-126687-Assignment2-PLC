@@ -38,7 +38,7 @@ print(z);
 class LanguageWorkbench:
     def __init__(self) -> None:
         self.root = tk.Tk()
-        self.root.title("AT70.07 — Programming Language Project")
+        self.root.title("125970-126690-126687-Assignment2-PLC-presentation")
         self.root.geometry("1200x760")
         self.current_file: Path | None = None
 
