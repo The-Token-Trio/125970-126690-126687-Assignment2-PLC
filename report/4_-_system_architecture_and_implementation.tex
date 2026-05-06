@@ -86,6 +86,79 @@ type rules, since correctness at runtime is guaranteed by the prior static pass.
 All four stages are orchestrated through \texttt{pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite.
 
+\subsection{End-to-end pipeline walkthrough}
+
+The following example traces the complete execution of a three-statement program
+through all four pipeline stages, illustrating the correspondence between source
+text, tokens, abstract syntax tree, inferred types, and runtime output.
+
+\textbf{Source program:}
+\begin{lstlisting}
+x = 10;
+y = 20.5;
+print(x + y);
+\end{lstlisting}
+
+\textbf{Stage 1 --- Lexer output (token stream):}
+\begin{lstlisting}
+IDENTIFIER     'x'      line 1, col 1
+ASSIGN         '='      line 1, col 3
+INT_LITERAL    '10'     line 1, col 5
+SEMICOLON      ';'      line 1, col 7
+IDENTIFIER     'y'      line 2, col 1
+ASSIGN         '='      line 2, col 3
+FLOAT_LITERAL  '20.5'   line 2, col 5
+SEMICOLON      ';'      line 2, col 9
+PRINT          'print'  line 3, col 1
+LPAREN         '('      line 3, col 6
+IDENTIFIER     'x'      line 3, col 7
+PLUS           '+'      line 3, col 9
+IDENTIFIER     'y'      line 3, col 11
+RPAREN         ')'      line 3, col 12
+SEMICOLON      ';'      line 3, col 13
+EOF                     line 3, col 14
+\end{lstlisting}
+
+\textbf{Stage 2 --- Parser output (abstract syntax tree):}
+\begin{lstlisting}
+Program  [3 statement(s)]
+    Assign  'x'  =
+        Literal  10  (int)
+    Assign  'y'  =
+        Literal  20.5  (float)
+    Print
+        BinaryOp  '+'
+            left:
+                Identifier  'x'
+            right:
+                Identifier  'y'
+\end{lstlisting}
+
+\textbf{Stage 3 --- Type checker output (inferred type environment):}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{} ll @{}}
+\toprule
+\textbf{Name} & \textbf{Inferred type} \\
+\midrule
+\texttt{x}       & \texttt{Integer} \\
+\texttt{y}       & \texttt{Float}   \\
+\texttt{x + y}   & \texttt{Float} \quad (Integer $\times$ Float $\rightarrow$ Float) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Stage 4 --- Interpreter output:}
+\begin{lstlisting}
+30.5 : Float
+\end{lstlisting}
+
+The example demonstrates the full data flow: source characters are tokenised by
+the lexer, structured into an AST by the parser, validated and annotated by the
+type checker, and finally evaluated by the interpreter to produce typed output.
+
 \subsection{Entry points and shared pipeline}
 All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite. From the project
