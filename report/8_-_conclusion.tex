@@ -19,21 +19,21 @@ statements. Invalid programs are rejected before runtime. In addition, the
 system includes both a command-line runner and a desktop UI so that scripts can
 be entered, loaded, executed, and inspected conveniently.
 
-The 52 automated tests cover all five test classes --- lexical analysis, symbol
+The 54 automated tests cover all five test classes --- lexical analysis, symbol
 table, parsing, static type checking, and full pipeline execution --- and confirm
 correct behaviour for all language features including scope isolation, duplicate
 symbol detection, unary negation, division type rules, and error detection. These
 checks provide a baseline for future extensions.
 
-One known limitation of the current type checker is that function bodies are
-only checked when the function is first called. A function that is defined but
-never called will have its body silently skipped by the type checker, meaning
-type errors inside it go undetected. This is a deliberate consequence of the
-call-site inference strategy: because parameter types are inferred from the
-first call rather than from explicit declarations, a body check is not possible
-before any call is seen. Addressing this fully would require either explicit
-parameter type annotations or a separate pre-pass that analyses all function
-bodies with placeholder types.
+One design consideration in the type checker is that function bodies are
+checked on demand. For functions that are called, the body is checked at the
+first call site using the inferred argument types. For functions that are
+defined but never called, the type checker performs a post-pass after all
+top-level statements have been processed: it infers parameter types from how
+they are used inside the body (for example, a parameter used in an arithmetic
+expression is inferred as \texttt{Integer} or \texttt{Float}), then runs the
+full body check with those inferred types. This ensures that type errors in
+never-called function bodies are still detected before execution.
 
 Future work could include recursive functions, richer data structures,
 additional operators, and code generation to a lower-level target. However, the

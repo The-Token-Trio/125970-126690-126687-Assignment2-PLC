@@ -17,7 +17,7 @@ Assignment 2 | Asian Institute of Technology
 
 | Name                              | Student ID | Assignment Scope                                                                                                                                     |
 | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 52 tests) |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 54 tests) |
 | Applegate T. Tun Oo               | st126690   | Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage                                         |
 | Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
 
@@ -150,14 +150,14 @@ Edit a script on the left panel and click Run. Results appear in tabbed panes on
 python3 -m unittest discover -s tests -v
 ```
 
-52 tests across 5 classes in `tests/test_pipeline.py`:
+54 tests across 5 classes in `tests/test_pipeline.py`:
 
 | Class | Stage | Tests |
 |---|---|---|
 | `LexerTests` | Tokenisation | 10 |
 | `SymbolTableTests` | Scoped symbol table | 7 |
 | `ParserTests` | Parsing and precedence | 5 |
-| `TypeCheckerTests` | Static type inference and error detection | 13 |
+| `TypeCheckerTests` | Static type inference and error detection | 15 |
 | `IntegrationTests` | Full pipeline execution | 17 |
 
 ---

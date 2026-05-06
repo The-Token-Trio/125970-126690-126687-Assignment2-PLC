@@ -52,6 +52,7 @@ class TypeChecker:
                 continue
             self._check_statement(statement, self.global_scope, None)
 
+        self._check_uncalled_functions()
         return self.global_scope
 
     def _register_function(self, node: FunctionDef) -> None:
@@ -203,6 +204,74 @@ class TypeChecker:
 
         function_symbol.symbol_type = function_context.return_type or LanguageType.VOID
         function_state.body_checked = True
+
+    def _check_uncalled_functions(self) -> None:
+        """After all call-site checks, type-check any function whose body was never visited."""
+        for name, state in self._functions.items():
+            if not state.body_checked:
+                try:
+                    function_symbol = self.global_scope.lookup(name)
+                except SymbolTableError:
+                    continue
+                if not isinstance(function_symbol, FunctionSymbol):
+                    continue
+                inferred_params = self._infer_param_types_from_body(state.node)
+                function_symbol.parameters = inferred_params
+                self._check_function_body(state, function_symbol)
+
+    def _infer_param_types_from_body(self, node: FunctionDef) -> list[tuple[str, LanguageType]]:
+        """Infer parameter types by scanning the body for expression contexts.
+
+        Any parameter used as an operand of an arithmetic or comparison operator
+        is inferred as numeric (Float if the sibling operand is a float literal,
+        Integer otherwise).  Parameters whose usage gives no type hint default to
+        Integer.
+        """
+        param_names = set(node.params)
+        inferred: dict[str, LanguageType] = {}
+
+        def scan_expr(n: ASTNode) -> None:
+            if isinstance(n, BinaryOp):
+                if n.op in {"+", "-", "*", "/", "==", "!="}:
+                    for operand, other in ((n.left, n.right), (n.right, n.left)):
+                        if isinstance(operand, Identifier) and operand.name in param_names:
+                            if isinstance(other, Literal) and isinstance(other.value, float):
+                                inferred.setdefault(operand.name, LanguageType.FLOAT)
+                            else:
+                                inferred.setdefault(operand.name, LanguageType.INTEGER)
+                scan_expr(n.left)
+                scan_expr(n.right)
+            elif isinstance(n, FunctionCall):
+                for arg in n.args:
+                    scan_expr(arg)
+
+        def scan_stmt(n: ASTNode) -> None:
+            if isinstance(n, Assign):
+                scan_expr(n.value)
+            elif isinstance(n, Print):
+                scan_expr(n.expr)
+            elif isinstance(n, Return):
+                scan_expr(n.expr)
+            elif isinstance(n, If):
+                scan_expr(n.condition)
+                scan_block(n.then_block)
+                if n.else_block:
+                    scan_block(n.else_block)
+            elif isinstance(n, While):
+                scan_expr(n.condition)
+                scan_block(n.body)
+            elif isinstance(n, Block):
+                scan_block(n)
+            elif isinstance(n, FunctionCall):
+                for arg in n.args:
+                    scan_expr(arg)
+
+        def scan_block(block: Block) -> None:
+            for stmt in block.statements:
+                scan_stmt(stmt)
+
+        scan_block(node.body)
+        return [(param, inferred.get(param, LanguageType.INTEGER)) for param in node.params]
 
     def _assign_variable_type(self, scope: SymbolTable, node: Assign, value_type: LanguageType) -> None:
         try:

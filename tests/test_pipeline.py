@@ -220,6 +220,16 @@ class TypeCheckerTests(unittest.TestCase):
         with self.assertRaises(TypeCheckError):
             run_pipeline('def f(a) { return a; } f(1); f("hello");')
 
+    def test_uncalled_function_body_type_error_is_caught(self) -> None:
+        # type error inside body must be detected even if function is never called
+        with self.assertRaises(TypeCheckError):
+            run_pipeline('def bad() { y = "hello" + 1; }')
+
+    def test_valid_uncalled_function_does_not_raise(self) -> None:
+        # a well-typed but uncalled function should not raise
+        result = run_pipeline("def add(a, b) { return a + b; }")
+        self.assertEqual(result.outputs, [])
+
 
 # ---------------------------------------------------------------------------
 # Integration (full pipeline)

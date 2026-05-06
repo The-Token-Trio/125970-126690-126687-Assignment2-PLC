@@ -136,10 +136,10 @@ Test class & Stage covered & Tests \\
 \texttt{LexerTests}        & Tokenisation (\texttt{lexica.py})                &  10 \\
 \texttt{SymbolTableTests}  & Scoped symbol table (\texttt{symbol\_table.py})  &   7 \\
 \texttt{ParserTests}       & Parsing and precedence (\texttt{parser.py})      &   5 \\
-\texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) & 13 \\
+\texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) &  15 \\
 \texttt{IntegrationTests}  & Full pipeline execution                           &  17 \\
 \midrule
-                           & \textbf{Total}                                   & \textbf{52} \\
+                           & \textbf{Total}                                   & \textbf{54} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -156,16 +156,13 @@ functions, parent-scope lookup through \texttt{child\_scope()}, undefined-symbol
 lookup error, and the \texttt{format\_table()} output for both variable and
 function symbol rows.
 
-\noindent\textbf{ParserTests} confirm that missing semicolons and unclosed
-braces raise \texttt{ParseError}, and that operator precedence and
-left-associativity are encoded correctly in the parse tree.
-
-\noindent\textbf{TypeCheckerTests} cover type inference for all four types,
-the rule that division always returns \texttt{Float}, float promotion in
-mixed arithmetic, Boolean-to-Boolean comparison, and the full set of type
-error conditions: string arithmetic, non-Boolean conditions for \texttt{if}
-and \texttt{while}, assignment type mismatch, undefined variable, wrong
-argument count, and argument type mismatch.
+\noindent\textbf{TypeCheckerTests} verify static type inference and error
+detection. The 15 tests cover integer and float arithmetic, division producing
+\texttt{Float}, numeric promotion, string and boolean type inference,
+assignment type mismatch, non-Boolean conditions, undefined variables, wrong
+argument count and type, and two tests for uncalled-function body checking:
+one confirms that a type error inside a never-called function body is detected,
+and another confirms that a valid uncalled function raises no error.
 
 \noindent\textbf{IntegrationTests} run programs through all four pipeline
 stages and verify the final output. Cases include unary negation on all
@@ -180,7 +177,7 @@ The tests can be run with:
 python3 -m unittest discover -s tests -v
 \end{lstlisting}
 
-All 52 tests pass.
+All 54 tests pass.
 
 \section{Error Handling}
 The language system reports errors at three main stages:
