@@ -81,12 +81,12 @@ parsing functions.
 \subsection{Program Structure}
 \begin{lstlisting}
 program   -> statement* EOF
-statement -> assignment ';'
+statement -> assignment
 	   | if_stmt
 	   | while_stmt
 	   | func_def
-	   | print_stmt ';'
-	   | return_stmt ';'
+	   | print_stmt
+	   | return_stmt
 	   | expr ';'
 \end{lstlisting}
 
@@ -115,6 +115,7 @@ modification.
 bool_expr -> expr '==' expr
 	   | expr '!=' expr
 	   | BOOL_LITERAL
+	   | expr          (* fallback: type checker enforces Boolean *)
 \end{lstlisting}
 
 Boolean expressions are only parsed as conditions inside \texttt{if} and
@@ -129,11 +130,11 @@ verifies that its inferred type is \texttt{Boolean}.
 
 \subsection{Statements}
 \begin{lstlisting}
-assignment  -> IDENTIFIER '=' expr
+assignment  -> IDENTIFIER '=' expr ';'
 if_stmt     -> 'if' '(' bool_expr ')' block ('else' block)?
 while_stmt  -> 'while' '(' bool_expr ')' block
-print_stmt  -> 'print' '(' expr ')'
-return_stmt -> 'return' expr
+print_stmt  -> 'print' '(' expr ')' ';'
+return_stmt -> 'return' expr ';'
 block       -> '{' statement* '}'
 \end{lstlisting}
 

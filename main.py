@@ -15,8 +15,8 @@ def add(a, b) {
 
 x = 10;
 y = 20.5;
-flag = true;
 name = "plc";
+flag = true;
 
 if (x != 0) {
     print(name);
@@ -24,9 +24,10 @@ if (x != 0) {
     print(x);
 }
 
-while (flag != false) {
-    x = x - 1;
-    flag = false;
+i = 3;
+while (i != 0) {
+    print(i);
+    i = i - 1;
 }
 
 z = add(x, y);
