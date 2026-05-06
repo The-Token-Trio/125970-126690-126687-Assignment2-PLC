@@ -15,98 +15,88 @@ python3 ui.py
 python3 -m unittest discover -s tests -v
 \end{lstlisting}
 
-No external Python dependencies are required. All pages below list the full
-source of every implementation file.
+No external Python dependencies are required.
+
+% Compact style for appendix listings: tiny font, no line numbers, tight spacing
+\lstdefinestyle{appendix}{
+  basicstyle=\tiny\ttfamily,
+  numbers=none,
+  breaklines=true,
+  lineskip=0pt,
+  frame=single,
+  backgroundcolor=\color{codebg},
+  rulecolor=\color{codeframe},
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate={—}{{---}}1 {→}{{$\rightarrow$}}1
+}
 
 % -----------------------------------------------------------------------
-\clearpage
 \section*{A.1\quad Entry Points}
 % -----------------------------------------------------------------------
 
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={main.py --- command-line entry point},
   label={lst:main}
 ]{../main.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={ui.py --- Tkinter desktop workbench},
   label={lst:ui}
 ]{../ui.py}
 
 % -----------------------------------------------------------------------
-\clearpage
 \section*{A.2\quad Core Components}
 % -----------------------------------------------------------------------
 
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/tokens.py --- token type enumeration and Token dataclass},
   label={lst:tokens}
 ]{../components/tokens.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/lexica.py --- lexical analyser},
   label={lst:lexica}
 ]{../components/lexica.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/ast\_nodes.py --- AST node definitions},
   label={lst:astnodes}
 ]{../components/ast_nodes.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/parser.py --- recursive-descent parser},
   label={lst:parser}
 ]{../components/parser.py}
 
-\clearpage
-
-\lstinputlisting[
-  caption={components/ast\_printer.py --- indented AST renderer},
-  label={lst:astprinter}
-]{../components/ast_printer.py}
-
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/symbol\_table.py --- scoped symbol table},
   label={lst:symboltable}
 ]{../components/symbol_table.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/type\_checker.py --- static type checker with inference},
   label={lst:typechecker}
 ]{../components/type_checker.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/interpreter.py --- tree-walking interpreter},
   label={lst:interpreter}
 ]{../components/interpreter.py}
 
-\clearpage
-
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={components/pipeline.py --- shared pipeline (CLI, UI, and tests)},
   label={lst:pipeline}
 ]{../components/pipeline.py}
 
 % -----------------------------------------------------------------------
-\clearpage
 \section*{A.3\quad Test Suite}
 % -----------------------------------------------------------------------
 
-\lstinputlisting[
+\lstinputlisting[style=appendix,
   caption={tests/test\_pipeline.py --- automated regression suite (54 tests)},
   label={lst:tests}
 ]{../tests/test_pipeline.py}
