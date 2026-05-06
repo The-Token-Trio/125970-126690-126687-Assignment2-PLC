@@ -222,9 +222,9 @@ class TypeChecker:
     def _infer_param_types_from_body(self, node: FunctionDef) -> list[tuple[str, LanguageType]]:
         """Infer parameter types by scanning the body for expression contexts.
 
-        Any parameter used as an operand of an arithmetic or comparison operator
-        is inferred as numeric (Float if the sibling operand is a float literal,
-        Integer otherwise).  Parameters whose usage gives no type hint default to
+        Any parameter used as an operand of a float operator (+. -. *. /.) is
+        inferred as Float; a parameter used with an integer operator (+ - * /
+        == !=) is inferred as Integer.  Parameters with no type hint default to
         Integer.
         """
         param_names = set(node.params)

@@ -163,7 +163,7 @@ def _expr(self) -> ASTNode:      # ==, !=
    ...
 def _additive(self) -> ASTNode:  # +, -, +., -.
    ...
-def _term(self) -> ASTNode:  # *,/
+def _term(self) -> ASTNode:  # *, /, *., /.
    ...
 def _factor(self) -> ASTNode:  # unary -, literals, identifiers/calls, grouped expr
    ...
@@ -171,7 +171,7 @@ def _factor(self) -> ASTNode:  # unary -, literals, identifiers/calls, grouped e
 
 Figure~\ref{fig:ast-example} shows the AST produced for the statement
 \texttt{z = x + y * 2;}. Because \texttt{\_term} handles \texttt{*} before
-\texttt{\_expr} handles \texttt{+}, the multiplication sub-tree is nested one
+\texttt{\_additive} handles \texttt{+}, the multiplication sub-tree is nested one
 level deeper, encoding the higher precedence of \texttt{*} over \texttt{+}
 without any explicit priority table at runtime.
 

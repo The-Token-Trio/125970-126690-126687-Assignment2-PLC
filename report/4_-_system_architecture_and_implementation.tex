@@ -145,10 +145,14 @@ Program  [3 statement(s)]
 \midrule
 \texttt{a}     & \texttt{Integer} \\
 \texttt{b}     & \texttt{Integer} \\
-\texttt{a + b} & \texttt{Integer} \quad (Integer $+$ Integer $\rightarrow$ Integer) \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\noindent The symbol table records only named symbols (\texttt{a} and \texttt{b}).
+The type checker additionally infers that the sub-expression \texttt{a + b}
+has type \texttt{Integer} (Integer $+$ Integer $\rightarrow$ Integer) during
+AST traversal, but sub-expression types are not stored in the symbol table.
 
 \textbf{Stage 4 --- Interpreter output:}
 \begin{lstlisting}
@@ -161,14 +165,22 @@ type checker, and finally evaluated by the interpreter to produce typed output.
 
 \subsection{Entry points and shared pipeline}
 All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
-by the command-line runner, the desktop UI, and the test suite. In this Windows
-workspace, \texttt{.\textbackslash.venv\textbackslash Scripts\textbackslash python.exe main.py}
-runs a script (or built-in sample) and prints the stages in order: tokens, AST
-text, type table, and execution output.
-\texttt{.\textbackslash.venv\textbackslash Scripts\textbackslash python.exe ui.py}
-runs the Tkinter workbench: the same pipeline is used internally, with each
-stage shown in a separate tab so the user can inspect results without altering
-the underlying flow.
+by the command-line runner, the desktop UI, and the test suite.
+From the project root, the CLI and desktop UI can be launched as follows:
+
+\begin{lstlisting}
+# macOS / Linux
+python3 main.py       # run CLI (built-in sample or script file)
+python3 ui.py         # open desktop workbench
+
+# Windows
+.\venv\Scripts\python.exe main.py
+.\venv\Scripts\python.exe ui.py
+\end{lstlisting}
+
+\noindent The CLI prints the four pipeline stages in order: tokens, AST text,
+type table, and execution output. The desktop workbench uses the same pipeline
+internally, presenting each stage in a separate tab for inspection.
 
 \section{Project structure}
 The main source files and their responsibilities are summarised in
@@ -294,9 +306,10 @@ four tabs, each backed by a scrollable read-only \texttt{Text} widget with
 both horizontal and vertical scrollbars:
 \begin{itemize}
   \item \textit{Execution Output} --- the \texttt{print()} values produced
-        by stage~4, formatted as \texttt{value : Type}. Runtime output includes
-        both the computed value and its inferred static type, reflecting the
-        result of the type-checking phase before interpretation;
+        by stage~4, formatted as \texttt{value : Type}. The type label is
+        determined at runtime by inspecting the Python type of the evaluated
+        value; because the type checker guarantees correctness before execution,
+        this always agrees with the statically inferred type;
   \item \textit{Tokens} --- the token stream from stage~1, one token per line
         with type, lexeme, and source position;
   \item \textit{AST} --- the indented tree text from stage~2;
