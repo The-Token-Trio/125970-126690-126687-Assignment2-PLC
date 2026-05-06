@@ -5,6 +5,7 @@ import unittest
 from components.lexica import Lexer, LexerError
 from components.parser import Parser, ParseError
 from components.pipeline import run_pipeline
+from components.symbol_table import LanguageType, SymbolTable, SymbolTableError
 from components.tokens import TokenType
 from components.type_checker import TypeCheckError
 
@@ -68,6 +69,59 @@ class LexerTests(unittest.TestCase):
     def test_unterminated_string_raises_lexer_error(self) -> None:
         with self.assertRaises(LexerError):
             Lexer('"hello').tokenize()
+
+
+# ---------------------------------------------------------------------------
+# Symbol table
+# ---------------------------------------------------------------------------
+
+class SymbolTableTests(unittest.TestCase):
+    """Tests for components/symbol_table.py — scoped symbol table and semantic types."""
+
+    def test_define_variable_and_lookup(self) -> None:
+        table = SymbolTable()
+        table.define_variable("x", LanguageType.INTEGER, initialized=True)
+        symbol = table.lookup("x")
+        self.assertEqual(symbol.symbol_type, LanguageType.INTEGER)
+
+    def test_duplicate_variable_definition_raises_error(self) -> None:
+        table = SymbolTable()
+        table.define_variable("x", LanguageType.INTEGER)
+        with self.assertRaises(SymbolTableError):
+            table.define_variable("x", LanguageType.FLOAT)
+
+    def test_duplicate_function_definition_raises_error(self) -> None:
+        table = SymbolTable()
+        table.define_function("f", LanguageType.INTEGER, [])
+        with self.assertRaises(SymbolTableError):
+            table.define_function("f", LanguageType.FLOAT, [])
+
+    def test_lookup_in_parent_scope(self) -> None:
+        parent = SymbolTable()
+        parent.define_variable("x", LanguageType.INTEGER, initialized=True)
+        child = parent.child_scope()
+        symbol = child.lookup("x")
+        self.assertEqual(symbol.symbol_type, LanguageType.INTEGER)
+
+    def test_undefined_symbol_raises_error(self) -> None:
+        table = SymbolTable()
+        with self.assertRaises(SymbolTableError):
+            table.lookup("z")
+
+    def test_format_table_contains_variable_row(self) -> None:
+        table = SymbolTable()
+        table.define_variable("counter", LanguageType.INTEGER, initialized=True)
+        output = table.format_table()
+        self.assertIn("counter", output)
+        self.assertIn("variable", output)
+        self.assertIn("Integer", output)
+
+    def test_format_table_contains_function_row(self) -> None:
+        table = SymbolTable()
+        table.define_function("add", LanguageType.INTEGER, [("a", LanguageType.INTEGER)])
+        output = table.format_table()
+        self.assertIn("add", output)
+        self.assertIn("function", output)
 
 
 # ---------------------------------------------------------------------------
