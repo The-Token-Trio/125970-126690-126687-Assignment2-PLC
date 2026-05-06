@@ -221,11 +221,9 @@ parameter types by scanning the body for arithmetic and comparison usage, then
 checks the full body with those inferred types. This ensures that type errors
 inside never-called function bodies are still detected before execution.
 
-Recursive functions are intentionally outside the scope of this assignment
-implementation. The current language focuses on value parameter passing and
-first-call-based function type inference; supporting recursion would require
-fixed-point inference or explicit recursive type signatures, which are beyond
-the required project features.
+Recursive calls are intentionally outside the scope of this implementation;
+supporting them would require additional fixed-point inference or explicit
+recursion handling that is orthogonal to the core type-inference algorithm.
 
 \section{Type Error Reporting}
 Type errors are reported with source positions so that the user can locate the
