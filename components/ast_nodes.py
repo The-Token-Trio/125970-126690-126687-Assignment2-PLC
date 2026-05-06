@@ -41,8 +41,8 @@ class Identifier(ASTNode):
 class BinaryOp(ASTNode):
     """An arithmetic or comparison binary operation.
 
-    op is one of: '+' '-' '*' '/' '==' '!='
-    Example:  a + b   x == 0
+    op is one of: '+' '-' '*' '/' '+.' '-.' '*.' '/.' '==' '!='
+    Example:  a + b   x == 0   a +. b
     """
     op: str
     left: ASTNode
