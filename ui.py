@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, ttk
 
 from components.pipeline import format_tokens, run_pipeline
 
@@ -15,8 +15,8 @@ DEFAULT_SOURCE = """def add(a, b) {
 
 x = 10;
 y = 20.5;
-flag = true;
 name = \"plc\";
+flag = true;
 
 if (x != 0) {
     print(name);
@@ -24,9 +24,10 @@ if (x != 0) {
     print(x);
 }
 
-while (flag != false) {
-    x = x - 1;
-    flag = false;
+i = 3;
+while (i != 0) {
+    print(i);
+    i = i - 1;
 }
 
 z = add(x, y);
@@ -37,12 +38,14 @@ print(z);
 class LanguageWorkbench:
     def __init__(self) -> None:
         self.root = tk.Tk()
-        self.root.title("Programming Language Project")
+        self.root.title("AT70.07 — Programming Language Project")
         self.root.geometry("1200x760")
         self.current_file: Path | None = None
 
         self._build_layout()
         self.source_text.insert("1.0", DEFAULT_SOURCE)
+        self.root.bind("<F5>", lambda _e: self._run_source())
+        self.root.bind("<Control-Return>", lambda _e: self._run_source())
 
     def _build_layout(self) -> None:
         toolbar = ttk.Frame(self.root, padding=10)
@@ -64,8 +67,15 @@ class LanguageWorkbench:
         body.add(right_panel, weight=1)
 
         ttk.Label(left_panel, text="Input Script").pack(anchor=tk.W)
-        self.source_text = tk.Text(left_panel, wrap=tk.NONE, font=("Consolas", 11))
-        self.source_text.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
+        src_frame = ttk.Frame(left_panel)
+        src_frame.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
+        self.source_text = tk.Text(src_frame, wrap=tk.NONE, font=("Consolas", 11))
+        src_vsb = ttk.Scrollbar(src_frame, orient=tk.VERTICAL, command=self.source_text.yview)
+        src_hsb = ttk.Scrollbar(src_frame, orient=tk.HORIZONTAL, command=self.source_text.xview)
+        self.source_text.configure(yscrollcommand=src_vsb.set, xscrollcommand=src_hsb.set)
+        src_vsb.pack(side=tk.RIGHT, fill=tk.Y)
+        src_hsb.pack(side=tk.BOTTOM, fill=tk.X)
+        self.source_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         notebook = ttk.Notebook(right_panel)
         notebook.pack(fill=tk.BOTH, expand=True)
@@ -79,7 +89,12 @@ class LanguageWorkbench:
         frame = ttk.Frame(notebook, padding=8)
         notebook.add(frame, text=title)
         text = tk.Text(frame, wrap=tk.NONE, font=("Consolas", 11), state=tk.DISABLED)
-        text.pack(fill=tk.BOTH, expand=True)
+        vsb = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=text.yview)
+        hsb = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=text.xview)
+        text.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        vsb.pack(side=tk.RIGHT, fill=tk.Y)
+        hsb.pack(side=tk.BOTTOM, fill=tk.X)
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         return text
 
     def _open_script(self) -> None:
@@ -101,9 +116,8 @@ class LanguageWorkbench:
         try:
             result = run_pipeline(source)
         except Exception as error:
-            self._write_text(self.output_text, str(error))
+            self._write_text(self.output_text, f"ERROR: {error}")
             self.status_var.set("Run failed")
-            messagebox.showerror("Execution Error", str(error))
             return
 
         self._write_text(self.output_text, "\n".join(result.outputs) if result.outputs else "(no output)")
