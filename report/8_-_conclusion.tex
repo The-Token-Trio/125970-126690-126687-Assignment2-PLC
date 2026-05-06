@@ -25,6 +25,16 @@ correct behaviour for all language features including scope isolation, duplicate
 symbol detection, unary negation, division type rules, and error detection. These
 checks provide a baseline for future extensions.
 
+One known limitation of the current type checker is that function bodies are
+only checked when the function is first called. A function that is defined but
+never called will have its body silently skipped by the type checker, meaning
+type errors inside it go undetected. This is a deliberate consequence of the
+call-site inference strategy: because parameter types are inferred from the
+first call rather than from explicit declarations, a body check is not possible
+before any call is seen. Addressing this fully would require either explicit
+parameter type annotations or a separate pre-pass that analyses all function
+bodies with placeholder types.
+
 Future work could include recursive functions, richer data structures,
 additional operators, and code generation to a lower-level target. However, the
 current implementation already satisfies the main functional requirements of the
