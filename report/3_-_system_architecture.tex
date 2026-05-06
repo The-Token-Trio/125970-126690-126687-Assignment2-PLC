@@ -42,13 +42,24 @@ Literal nodes have direct types:
 \Gamma \vdash \texttt{``hi''} &: \texttt{String}
 \end{align*}
 
+\subsection{No Operator Overloading}
+The language does not support operator overloading. Every operator has a single,
+fixed meaning determined solely by the operator symbol. Specifically:
+\begin{itemize}
+  \item The \texttt{+} operator is not overloaded for string concatenation. Applying \texttt{+} to a \texttt{String} operand is a type error.
+  \item The comparison operators \texttt{==} and \texttt{!=} are not overloaded for string or boolean equality. Both operands must be arithmetic.
+  \item No mixed Boolean or String arithmetic is permitted.
+\end{itemize}
+Because operators have unambiguous types, the compiler can always infer expression types without requiring explicit type declarations from the programmer.
+
 \subsection{Arithmetic Expressions}
 The arithmetic operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
 accept only numeric operands. If both operands are \texttt{Integer}, the result
 is \texttt{Integer}, except for division, which always produces \texttt{Float}
 regardless of the operand types. If at least one operand is \texttt{Float} for
-\texttt{+}, \texttt{-}, or \texttt{*}, the result is \texttt{Float}. Any
-non-numeric operand causes a type error.
+\texttt{+}, \texttt{-}, or \texttt{*}, the result is \texttt{Float} --- this is
+numeric promotion, not operator overloading, because \texttt{+} retains a single
+numeric meaning throughout. Any non-numeric operand causes a type error.
 
 \subsubsection*{Unary negation}
 Unary minus (\texttt{-x}) is desugared by the parser into \texttt{0 - x}. The
