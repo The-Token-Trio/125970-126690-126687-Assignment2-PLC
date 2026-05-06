@@ -173,8 +173,15 @@ through the current or nearest enclosing scope; \texttt{if} selects a branch;
 \texttt{while} repeats until its condition becomes false; function calls bind
 arguments by value and return through an internal return mechanism.
 
-The built-in \texttt{print()} function outputs both value and runtime type, such
-as \texttt{3 : Integer} or \texttt{"plc" : String}.
+The built-in \texttt{print()} function outputs both value and runtime type.
+All four types are supported:
+
+\begin{lstlisting}
+print(42);       (* 42 : Integer       *)
+print(3.14);     (* 3.14 : Float       *)
+print(true);     (* true : Boolean     *)
+print("plc");   (* "plc" : String     *)
+\end{lstlisting}
 
 \subsection{Scope of the implemented runtime}
 The runtime stage provides observable behaviour and integrates with the shared

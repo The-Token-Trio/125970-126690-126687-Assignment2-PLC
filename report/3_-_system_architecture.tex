@@ -61,6 +61,25 @@ regardless of the operand types. If at least one operand is \texttt{Float} for
 numeric promotion, not operator overloading, because \texttt{+} retains a single
 numeric meaning throughout. Any non-numeric operand causes a type error.
 
+\begin{table}[H]
+\centering
+\caption{Arithmetic result types by operand combination}
+\label{tab:arithmetic-result-types}
+\small
+\begin{tabular}{llll}
+\toprule
+Left operand & Operator & Right operand & Result type \\
+\midrule
+\texttt{Integer} & \texttt{+}, \texttt{-}, \texttt{*} & \texttt{Integer} & \texttt{Integer} \\
+\texttt{Integer} & \texttt{/}                       & \texttt{Integer} & \texttt{Float} \\
+\texttt{Float}   & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Integer} & \texttt{Float} \\
+\texttt{Integer} & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Float}   & \texttt{Float} \\
+\texttt{Float}   & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Float}   & \texttt{Float} \\
+Any & any & \texttt{String} or \texttt{Boolean} & \texttt{TypeError} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsubsection*{Unary negation}
 Unary minus (\texttt{-x}) is desugared by the parser into \texttt{0 - x}. The
 type checker therefore applies the standard binary subtraction rule: if
@@ -93,10 +112,20 @@ The condition of an \texttt{if} statement must be \texttt{Boolean}. The
 then-block and else-block are checked in child scopes so that local operations
 can be validated cleanly.
 
+\begin{center}
+$\Gamma \vdash c : \texttt{Boolean} \quad \Gamma' \vdash B_{then} \quad \Gamma'' \vdash B_{else}$
+\quad $\Longrightarrow$ \quad $\Gamma \vdash \texttt{if}\,(c)\,B_{then}\,\texttt{else}\,B_{else}$
+\end{center}
+
 \subsection{While-Loop}
 The condition of a \texttt{while} loop must also be \texttt{Boolean}. The loop
 body is checked in a child scope and must not violate the types of variables
 already introduced in the surrounding environment.
+
+\begin{center}
+$\Gamma \vdash c : \texttt{Boolean} \quad \Gamma' \vdash B$
+\quad $\Longrightarrow$ \quad $\Gamma \vdash \texttt{while}\,(c)\,B$
+\end{center}
 
 \subsection{Function Definition and Call}
 Function parameter types are inferred from the first call to the function.

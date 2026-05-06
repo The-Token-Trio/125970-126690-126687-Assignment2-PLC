@@ -30,7 +30,15 @@ two-character comparison operators (\texttt{==}, \texttt{!=}), single-character
 operators, and delimiters. Identifier scanning with keyword fallback was
 confirmed by checking that \texttt{true}, \texttt{false}, and reserved words
 are emitted with their keyword token types while non-keyword names produce
-\texttt{IDENTIFIER} tokens.
+\texttt{IDENTIFIER} tokens. For example, the source fragment \texttt{x = 10;}
+produces the token sequence:
+
+\begin{lstlisting}
+IDENTIFIER  'x'    line=1 col=1
+ASSIGN      '='    line=1 col=3
+INT_LITERAL '10'   line=1 col=5
+SEMICOLON   ';'    line=1 col=7
+\end{lstlisting}
 
 Error paths were also checked: supplying a bare \texttt{!} character raises a
 \texttt{LexerError} with a source position and a message suggesting

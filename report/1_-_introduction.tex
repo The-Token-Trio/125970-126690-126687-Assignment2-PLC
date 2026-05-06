@@ -1,15 +1,14 @@
 \chapter{INTRODUCTION}
 
-\section{Scope of this report}
-This report outlines the development process of the programming language
-implemented in accordance with the specification of AT70.07 Programming
-Languages and Compilers --- Assignment~2. The project was divided into three
-main components: the lexer and symbol table, the parser, and the type system
-with an interpreter. These were structured to be developed consecutively rather
-than simultaneously. By organising the work in sequence, each team member could
-focus on an assigned component independently before passing it to the next
-stage, which supported steady progress while reducing the need for overlapping
-work against other academic commitments.
+\section{Scope}
+This report presents the design and implementation of a small statically-typed
+interpreted programming language with type inference. The language supports four
+primitive types --- Integer, Float, Boolean, and String --- and is processed
+through a four-stage pipeline: lexical analysis, recursive-descent parsing,
+static type checking, and tree-walking interpretation. The project was divided
+into three principal components --- the lexer and symbol table, the parser, and
+the type system with interpreter --- developed sequentially, since each stage
+depends on the structured output of the preceding one.
 
 \section{Background and Motivation}
 Programming languages provide the formal structure through which algorithms are

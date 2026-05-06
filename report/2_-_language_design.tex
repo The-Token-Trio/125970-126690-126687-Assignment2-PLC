@@ -31,12 +31,13 @@ stored internally is the bare character sequence without surrounding quotes. At
 runtime, the built-in \texttt{print()} function re-adds double quotes around
 string values, so \texttt{print("plc")} outputs \texttt{"plc" : String}.
 
-\subsection{Void}
-\texttt{Void} is an internal type used by the type system to represent the
-return type of functions that contain no \texttt{return} statement. It is not
-a type that programmers write explicitly; it exists solely inside the
-\texttt{LanguageType} enum so that the symbol table can record a well-defined
-type for every function definition, including those that produce no value.
+\subsection{Void (internal only)}
+\texttt{Void} is not a programmer-visible type. The language has exactly four
+primitive types: Integer, Float, Boolean, and String. \texttt{Void} exists
+solely as an internal sentinel inside the \texttt{LanguageType} enum so that
+the symbol table can record a well-defined return type for functions that
+contain no \texttt{return} statement. Programmers cannot write \texttt{Void}
+in source code.
 
 \section{Static Typing}
 The language uses static typing, which means type errors are detected before
@@ -44,6 +45,17 @@ execution rather than during program execution. No explicit variable type
 declarations are required. Instead, the type checker infers types from literals,
 assignments, operations, function calls, and return statements. Once a variable
 type is established, later assignments must remain consistent with that type.
+For example, the following program is rejected at the type-checking stage before
+any execution occurs:
+
+\begin{lstlisting}
+x = 5;
+x = "hello";   (* TypeError: Cannot assign String to variable 'x' of type Integer *)
+\end{lstlisting}
+
+\noindent This contrasts with dynamically-typed languages, where the same
+program would run without error until (or unless) a type-dependent operation
+was attempted.
 
 \section{Token Specification}
 Table \ref{tab:token-specification} summarises the major token classes used by
