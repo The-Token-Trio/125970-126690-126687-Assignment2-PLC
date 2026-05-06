@@ -1,42 +1,22 @@
 \chapter{CONCLUSION}
 
-This project delivered a working statically-typed programming language with the
-required primitive types: Integer, Float, Boolean, and String. The language
-supports arithmetic expressions (including unary negation),
-equality and inequality checks, assignments, if-then-else statements,
-while-loops, function abstraction with value parameter passing, return
-statements, and the built-in \texttt{print()} function.
+This project delivered a complete, statically-typed interpreted language
+supporting Integer, Float, Boolean, and String types, with arithmetic,
+comparisons, assignments, if-then-else, while-loops, functions with value
+parameter passing, and a built-in \texttt{print()} function.
 
-The final system follows a clean compiler-style architecture. The lexer creates
-tokens, the parser builds the AST, the type checker performs static inference
-and validation, and the interpreter executes the program. This staged design
-made it easier to isolate syntax errors, type errors, and runtime behaviour.
+The system follows a four-stage pipeline: lexer, parser, type checker, and
+interpreter. Variable and function types are inferred without explicit
+declarations; programs that violate type rules are rejected before execution.
+For uncalled functions, the type checker performs a post-pass to infer parameter
+types from body usage, ensuring type errors are always caught.
 
-One of the main outcomes of the project is the successful implementation of
-static typing without explicit declarations. Variable types are inferred from
-assignments, and function signatures are inferred from calls and return
-statements. Invalid programs are rejected before runtime. In addition, the
-system includes both a command-line runner and a desktop UI so that scripts can
-be entered, loaded, executed, and inspected conveniently.
+The 54 automated tests across five classes --- lexical analysis, symbol table,
+parsing, type checking, and full pipeline --- confirm correct behaviour for all
+language features. Both a command-line runner and a desktop UI are provided.
 
-The 54 automated tests cover all five test classes --- lexical analysis, symbol
-table, parsing, static type checking, and full pipeline execution --- and confirm
-correct behaviour for all language features including scope isolation, duplicate
-symbol detection, unary negation, division type rules, and error detection. These
-checks provide a baseline for future extensions.
-
-One design consideration in the type checker is that function bodies are
-checked on demand. For functions that are called, the body is checked at the
-first call site using the inferred argument types. For functions that are
-defined but never called, the type checker performs a post-pass after all
-top-level statements have been processed: it infers parameter types from how
-they are used inside the body (for example, a parameter used in an arithmetic
-expression is inferred as \texttt{Integer} or \texttt{Float}), then runs the
-full body check with those inferred types. This ensures that type errors in
-never-called function bodies are still detected before execution.
-
-Future work could include recursive functions, richer data structures,
-additional operators, and code generation to a lower-level target.
-The current implementation demonstrates all core compiler-construction concepts
-covered in the course --- lexical analysis, parsing, static type inference, and
+The implementation demonstrates all core compiler-construction concepts covered
+in the course --- lexical analysis, parsing, static type inference, and
 tree-walking interpretation --- in a complete, tested, and working system.
+Future work could extend the language with recursive functions, richer data
+structures, and code generation.
