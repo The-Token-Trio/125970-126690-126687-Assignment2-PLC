@@ -11,12 +11,14 @@ declarations; programs that violate type rules are rejected before execution.
 For uncalled functions, the type checker performs a post-pass to infer parameter
 types from body usage, ensuring type errors are always caught.
 
-The 59 automated tests across five classes --- lexical analysis, symbol table,
+The 62 automated tests across five classes --- lexical analysis, symbol table,
 parsing, type checking, and full pipeline --- confirm correct behaviour for all
 language features. Both a command-line runner and a desktop UI are provided.
 
-The implementation demonstrates all core compiler-construction concepts covered
-in the course --- lexical analysis, parsing, static type inference, and
-tree-walking interpretation --- in a complete, tested, and working system.
+The project demonstrates how lexical analysis, parsing, semantic analysis, type
+inference, and interpretation can be integrated into a coherent compiler pipeline
+with clear separation of responsibilities between stages. The implementation
+prioritised semantic clarity, deterministic type inference, and modular compiler
+structure over advanced language features.
 Future work could extend the language with recursive functions, richer data
 structures, and code generation.

@@ -10,9 +10,9 @@ The complete source code is available on GitHub:
 The project can be run from the command line or the desktop UI:
 
 \begin{lstlisting}
-python3 main.py
-python3 ui.py
-python3 -m unittest discover -s tests -v
+.\venv\Scripts\python.exe main.py
+.\venv\Scripts\python.exe ui.py
+.\venv\Scripts\python.exe -m unittest discover -s tests -v
 \end{lstlisting}
 
 No external Python dependencies are required.
@@ -51,7 +51,7 @@ No external Python dependencies are required.
 \toprule
 \textbf{Name} & \textbf{Student ID} & \textbf{Contributions} \\
 \midrule
-Aye Khin Khin Hpone (Yolanda Lim) & st125970 & Static typing rules; type checking; assignment, if, while, function, and \texttt{print()} execution; unary minus inference; pipeline integration (\texttt{pipeline.py}); automated test suite (59 tests) \\
+Aye Khin Khin Hpone (Yolanda Lim) & st125970 & Static typing rules; type checking; assignment, if, while, function, and \texttt{print()} execution; unary minus inference; pipeline integration (\texttt{pipeline.py}); automated test suite (62 tests) \\
 Applegate T. Tun Oo & st126690 & Lexer implementation (scanning, tokenisation, line/column tracking, error reporting); token definitions; keywords, operators, identifiers, and literals; symbol table (variable/function/type storage) \\
 Win Htut Naing & st126687 & Arithmetic and boolean expressions; assignment, if-then-else, while-loop, function definition/call, and \texttt{print()} parsing; unary minus parsing \\
 \bottomrule
@@ -121,6 +121,6 @@ Win Htut Naing & st126687 & Arithmetic and boolean expressions; assignment, if-t
 % -----------------------------------------------------------------------
 
 \lstinputlisting[style=appendix,
-  caption={tests/test\_pipeline.py --- automated regression suite (59 tests)},
+  caption={tests/test\_pipeline.py --- automated regression suite (62 tests)},
   label={lst:tests}
 ]{../tests/test_pipeline.py}

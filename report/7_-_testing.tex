@@ -13,7 +13,7 @@ Table~\ref{tab:manual-test-cases} summarises the categories covered.
 \toprule
 Category & Program Behaviour & Expected Result \\
 \midrule
-Arithmetic & Evaluate mixed numeric expressions & Correct value and inferred type \\
+Arithmetic & Evaluate integer and float expressions separately & Correct value and inferred type \\
 If-then-else & Choose one branch from a Boolean condition & Only matching branch runs \\
 While-loop & Print during repeated execution & One output line per iteration \\
 Functions & Infer parameters and return type & Valid call and correct return value \\
@@ -71,8 +71,16 @@ Stage~2 AST output. The following cases were checked:
 Arithmetic expressions were tested with integer-only and float-only programs to
 verify operator precedence and strict type separation. The expression
 \texttt{x + y * 2} confirmed that multiplication binds more tightly than
-addition, and mixing integer and float operands (e.g.\ \texttt{Integer + Float})
-correctly produced a type error, confirming the no-overloading design.
+addition, and mixing integer and float operands correctly produced a type error,
+confirming the no-overloading design. The test suite explicitly verifies that
+mixed-type arithmetic is rejected:
+
+\begin{itemize}[nosep]
+  \item \texttt{1 + 2} --- valid Integer arithmetic.
+  \item \texttt{2.0 +. 3.5} --- valid Float arithmetic.
+  \item \texttt{1 + 2.5} --- \texttt{TypeError}: operator \texttt{+} requires two Integer operands.
+  \item \texttt{2 +. 3} --- \texttt{TypeError}: operator \texttt{+.} requires two Float operands.
+\end{itemize}
 
 \subsection{Boolean Expressions}
 Boolean expressions were tested inside \texttt{if} and \texttt{while}
@@ -152,9 +160,9 @@ Test class & Stage covered & Tests \\
 \texttt{SymbolTableTests}  & Scoped symbol table (\texttt{symbol\_table.py})  &   7 \\
 \texttt{ParserTests}       & Parsing and precedence (\texttt{parser.py})      &   5 \\
 \texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) &  18 \\
-\texttt{IntegrationTests}  & Full pipeline execution                           &  17 \\
+\texttt{IntegrationTests}  & Full pipeline execution                           &  20 \\
 \midrule
-                           & \textbf{Total}                                   & \textbf{59} \\
+                           & \textbf{Total}                                   & \textbf{62} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -191,10 +199,10 @@ declared inside an \texttt{if} block are not visible outside it).
 The tests can be run with:
 
 \begin{lstlisting}
-python3 -m unittest discover -s tests -v
+.\venv\Scripts\python.exe -m unittest discover -s tests -v
 \end{lstlisting}
 
-All 59 tests pass.
+All 62 tests pass.
 
 \section{Error Handling}
 The language system reports errors at three main stages:

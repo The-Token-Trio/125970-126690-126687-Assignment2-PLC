@@ -134,7 +134,9 @@ so every operator has a single, fixed type signature:
 \end{itemize}
 Because every operator has a unique, unambiguous type derivable from its token
 alone, the compiler can always infer expression types without requiring explicit
-type declarations from the programmer.
+type declarations from the programmer. This design ensures that operator
+meaning is determined uniquely from the operator token itself, eliminating
+semantic ambiguity during type inference and simplifying static analysis.
 
 \subsection{Arithmetic Expressions}
 The integer operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}

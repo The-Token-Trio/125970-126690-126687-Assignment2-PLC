@@ -18,6 +18,12 @@ dot-suffixed arithmetic operators (\texttt{+.}, \texttt{-.}, \texttt{*.},
 performs floor division and returns \texttt{Integer}: for example,
 \texttt{10 / 3} evaluates to \texttt{3 : Integer}.
 
+The language intentionally does not perform implicit numeric promotion between
+\texttt{Integer} and \texttt{Float} values. Mixed-type arithmetic such as
+\texttt{1 + 2.5} is rejected by the type checker. Instead, the language follows
+the Caml~Light convention of using separate operator tokens for integer and
+floating-point arithmetic.
+
 \subsection{Boolean}
 The Boolean type represents logical truth values. The two Boolean literals are
 \texttt{true} and \texttt{false}. Boolean values are used in conditions and as
@@ -40,7 +46,8 @@ well-defined return type for functions that contain no \texttt{return}
 statement, allowing the symbol table to record a consistent entry for every
 function regardless of whether it produces a value. \texttt{Void} cannot appear
 in source code and is never visible to the programmer; it is a bookkeeping
-device used internally by the type checker.
+device used internally by the type checker. Therefore, \texttt{Void} does not
+extend the programmer-visible type system required by the assignment.
 
 \section{Static Typing}
 The language employs static typing, meaning that type errors are detected at
@@ -106,19 +113,20 @@ statement -> assignment
 	   | expr ';'
 \end{lstlisting}
 
-\subsection{Arithmetic Expressions}
+\subsection{Expressions}
 \begin{lstlisting}
-expr   -> term (('+' | '-' | '+.' | '-.') term)*
-term   -> factor (('*' | '/' | '*.' | '/.') factor)*
-factor -> '-'  factor     (* integer unary negation *)
-	| '-.' factor    (* float unary negation *)
-	| INT_LITERAL
-	| FLOAT_LITERAL
-	| STRING_LITERAL
-	| BOOL_LITERAL
-	| IDENTIFIER
-	| IDENTIFIER '(' args? ')'
-	| '(' expr ')'
+expr      -> additive (('==' | '!=') additive)?
+additive  -> term (('+' | '-' | '+.' | '-.') term)*
+term      -> factor (('*' | '/' | '*.' | '/.') factor)*
+factor    -> '-'  factor     (* integer unary negation *)
+	   | '-.' factor    (* float unary negation *)
+	   | INT_LITERAL
+	   | FLOAT_LITERAL
+	   | STRING_LITERAL
+	   | BOOL_LITERAL
+	   | IDENTIFIER
+	   | IDENTIFIER '(' args? ')'
+	   | '(' expr ')'
 \end{lstlisting}
 
 The operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/} operate
@@ -131,28 +139,23 @@ for implicit numeric promotion. Unary negation is similarly split:
 \texttt{-.x} negates a \texttt{Float} (desugared to \texttt{0.0 -. x}).
 
 \subsection{Boolean Expressions}
+Comparison operators \texttt{==} and \texttt{!=} are the lowest-precedence
+binary operators and produce \texttt{Boolean} values. Because they are part
+of the general \texttt{expr} rule, Boolean expressions may appear both as
+control-flow conditions and as ordinary expressions. Their inferred type is
+\texttt{Boolean}, allowing comparison results to be assigned to variables,
+passed as arguments, or printed:
+
 \begin{lstlisting}
-bool_expr -> expr '==' expr
-	   | expr '!=' expr
-	   | BOOL_LITERAL
-	   | expr          (* fallback: type checker enforces Boolean *)
+flag = (x == y);    (* flag inferred as Boolean *)
+print(a != b);      (* prints true/false : Boolean *)
 \end{lstlisting}
-
-Boolean expressions are only parsed as conditions inside \texttt{if} and
-\texttt{while} statements. Comparison results are not storable in variables
-directly; the grammar does not include \texttt{bool\_expr} in the
-\texttt{factor} rule. This is consistent with the assignment specification,
-which describes Boolean expressions primarily as conditions.
-
-If \texttt{bool\_expr} parses an expression and finds no following \texttt{==}
-or \texttt{!=} operator, the expression is returned as-is and the type checker
-verifies that its inferred type is \texttt{Boolean}.
 
 \subsection{Statements}
 \begin{lstlisting}
 assignment  -> IDENTIFIER '=' expr ';'
-if_stmt     -> 'if' '(' bool_expr ')' block ('else' block)?
-while_stmt  -> 'while' '(' bool_expr ')' block
+if_stmt     -> 'if' '(' expr ')' block ('else' block)?
+while_stmt  -> 'while' '(' expr ')' block
 print_stmt  -> 'print' '(' expr ')' ';'
 return_stmt -> 'return' expr ';'
 block       -> '{' statement* '}'

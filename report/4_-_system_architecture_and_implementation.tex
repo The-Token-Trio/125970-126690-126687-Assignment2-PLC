@@ -72,7 +72,7 @@ Figure~\ref{fig:system-overview-pipeline}.
 
 \end{tikzpicture}%
 }
-\caption{Compiler pipeline overview.}
+\caption{Front-end and interpreter pipeline overview.}
 \label{fig:system-overview-pipeline}
 \end{figure}
 
@@ -161,12 +161,14 @@ type checker, and finally evaluated by the interpreter to produce typed output.
 
 \subsection{Entry points and shared pipeline}
 All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
-by the command-line runner, the desktop UI, and the test suite. From the project
-root, \texttt{python3 main.py} runs a script (or built-in sample) and prints the
-stages in order: tokens, AST text, type table, and execution output.
-\texttt{python3 ui.py} runs the Tkinter workbench: the same pipeline is used
-internally, with each stage shown in a separate tab so the user can inspect
-results without altering the underlying flow.
+by the command-line runner, the desktop UI, and the test suite. In this Windows
+workspace, \texttt{.\textbackslash.venv\textbackslash Scripts\textbackslash python.exe main.py}
+runs a script (or built-in sample) and prints the stages in order: tokens, AST
+text, type table, and execution output.
+\texttt{.\textbackslash.venv\textbackslash Scripts\textbackslash python.exe ui.py}
+runs the Tkinter workbench: the same pipeline is used internally, with each
+stage shown in a separate tab so the user can inspect results without altering
+the underlying flow.
 
 \section{Project structure}
 The main source files and their responsibilities are summarised in
@@ -292,7 +294,9 @@ four tabs, each backed by a scrollable read-only \texttt{Text} widget with
 both horizontal and vertical scrollbars:
 \begin{itemize}
   \item \textit{Execution Output} --- the \texttt{print()} values produced
-        by stage~4, formatted as \texttt{value : Type};
+        by stage~4, formatted as \texttt{value : Type}. Runtime output includes
+        both the computed value and its inferred static type, reflecting the
+        result of the type-checking phase before interpretation;
   \item \textit{Tokens} --- the token stream from stage~1, one token per line
         with type, lexeme, and source position;
   \item \textit{AST} --- the indented tree text from stage~2;

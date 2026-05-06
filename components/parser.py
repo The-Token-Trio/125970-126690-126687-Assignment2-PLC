@@ -101,10 +101,10 @@ class Parser:
                       line=name_tok.line, column=name_tok.column)
 
     def _if_stmt(self) -> If:
-        """'if' '(' bool_expr ')' block ( 'else' block )?"""
+        """'if' '(' expr ')' block ( 'else' block )?"""
         tok = self._advance()                                   # 'if'
         self._expect(TokenType.LPAREN, "Expected '(' after 'if'")
-        condition = self._bool_expr()
+        condition = self._expr()
         self._expect(TokenType.RPAREN, "Expected ')' after if condition")
         then_block = self._block()
         else_block: Optional[Block] = None
@@ -115,10 +115,10 @@ class Parser:
                   line=tok.line, column=tok.column)
 
     def _while_stmt(self) -> While:
-        """'while' '(' bool_expr ')' block"""
+        """'while' '(' expr ')' block"""
         tok = self._advance()                                   # 'while'
         self._expect(TokenType.LPAREN, "Expected '(' after 'while'")
-        condition = self._bool_expr()
+        condition = self._expr()
         self._expect(TokenType.RPAREN, "Expected ')' after while condition")
         body = self._block()
         return While(condition=condition, body=body,
@@ -176,40 +176,20 @@ class Parser:
         return params
 
     # -----------------------------------------------------------------------
-    # Boolean expressions  (lowest precedence, used in if/while conditions)
-    # -----------------------------------------------------------------------
-
-    def _bool_expr(self) -> ASTNode:
-        """expr ('==' | '!=') expr   |   BOOL_LITERAL"""
-        # bare boolean literal: true / false
-        if self._check(TokenType.BOOL_LITERAL):
-            tok = self._advance()
-            value = tok.lexeme == "true"
-            return Literal(value=value, line=tok.line, column=tok.column)
-
-        left = self._expr()
-
-        if self._check(TokenType.EQUAL_EQUAL):
-            op_tok = self._advance()
-            right = self._expr()
-            return BinaryOp(op="==", left=left, right=right,
-                            line=op_tok.line, column=op_tok.column)
-
-        if self._check(TokenType.BANG_EQUAL):
-            op_tok = self._advance()
-            right = self._expr()
-            return BinaryOp(op="!=", left=left, right=right,
-                            line=op_tok.line, column=op_tok.column)
-
-        # no comparison operator found — return the expr as-is
-        # (the type checker will validate it's Boolean)
-        return left
-
-    # -----------------------------------------------------------------------
-    # Arithmetic expressions  (standard precedence)
+    # Expressions  (comparison is lowest precedence, then additive, then term)
     # -----------------------------------------------------------------------
 
     def _expr(self) -> ASTNode:
+        """additive (('==' | '!=') additive)?  — non-associative comparison"""
+        node = self._additive()
+        if self._check(TokenType.EQUAL_EQUAL) or self._check(TokenType.BANG_EQUAL):
+            op_tok = self._advance()
+            right = self._additive()
+            node = BinaryOp(op=op_tok.lexeme, left=node, right=right,
+                            line=op_tok.line, column=op_tok.column)
+        return node
+
+    def _additive(self) -> ASTNode:
         """term (('+' | '-' | '+.' | '-.') term)*"""
         node = self._term()
         while self._check(TokenType.PLUS) or self._check(TokenType.MINUS) \

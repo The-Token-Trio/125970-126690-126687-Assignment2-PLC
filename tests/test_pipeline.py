@@ -344,6 +344,20 @@ class IntegrationTests(unittest.TestCase):
         result = run_pipeline('print("plc");')
         self.assertEqual(result.outputs, ['"plc" : String'])
 
+    # --- Boolean expressions as values ---
+
+    def test_comparison_result_assigned_to_variable(self) -> None:
+        result = run_pipeline("x = 5; y = 5; flag = (x == y); print(flag);")
+        self.assertEqual(result.outputs, ["true : Boolean"])
+
+    def test_comparison_result_printed_directly(self) -> None:
+        result = run_pipeline("x = 10; print(x != 0);")
+        self.assertEqual(result.outputs, ["true : Boolean"])
+
+    def test_comparison_result_false(self) -> None:
+        result = run_pipeline("a = 1; b = 2; eq = (a == b); print(eq);")
+        self.assertEqual(result.outputs, ["false : Boolean"])
+
     # --- Reassignment ---
 
     def test_variable_can_be_reassigned_same_type(self) -> None:
