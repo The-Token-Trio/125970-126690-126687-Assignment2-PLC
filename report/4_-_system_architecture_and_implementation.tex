@@ -147,8 +147,9 @@ The \texttt{TypeChecker} class implements the inference and checking rules
 described in Chapter~5. It traverses the AST before execution, uses the symbol
 table to record variable and function information, infers types on first
 assignment, validates arithmetic and comparison expressions, enforces Boolean
-conditions for control flow, infers function parameter types from the first call,
-and infers function return types from \texttt{return} statements. Programs that
+conditions for control flow, infers function parameter types from the first call
+(or from body usage for uncalled functions), and infers function return types
+from \texttt{return} statements. Programs that
 fail these rules are rejected before interpretation.
 
 \subsection{Scope of the implemented type system}
@@ -160,7 +161,7 @@ semantically valid program:
 	flow, and functions,
 	\item type checking for expressions and statements,
 	\item variable type inference from first assignment,
-	\item function parameter inference from the first call,
+	\item function parameter inference from the first call (or from body usage for uncalled functions),
 	\item function return type inference from \texttt{return} statements,
 	\item source-positioned type errors when a program violates a typing rule.
 \end{itemize}
