@@ -47,28 +47,41 @@ No external Python packages are required. The project uses only the Python stand
 
 ```
 def add(a, b) {
-    return a + b;
+    result = a + b;
+    print(result);
+    return result;
 }
 
 x = 10;
 y = 20.5;
-z = add(x, y);
-print(z);
+name = "plc";
+flag = true;
+
+if (x != 0) {
+    print(name);
+} else {
+    print(x);
+}
 
 i = 3;
 while (i != 0) {
     print(i);
     i = i - 1;
 }
+
+z = add(x, y);
+print(z);
 ```
 
 Output:
 
 ```
-30.5 : Float
+"plc" : String
 3 : Integer
 2 : Integer
 1 : Integer
+30.5 : Float
+30.5 : Float
 ```
 
 ---
