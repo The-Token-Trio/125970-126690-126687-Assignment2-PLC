@@ -27,8 +27,9 @@ The String type represents sequences of characters enclosed in double quotes,
 for example \texttt{"hello"}. Strings can be assigned to variables and printed
 through the built-in \texttt{print()} function. The surrounding quotes are
 stripped by the parser when the \texttt{Literal} node is created, so the value
-stored internally and printed at runtime is the bare character sequence without
-quotes.
+stored internally is the bare character sequence without surrounding quotes. At
+runtime, the built-in \texttt{print()} function re-adds double quotes around
+string values, so \texttt{print("plc")} outputs \texttt{"plc" : String}.
 
 \subsection{Void}
 \texttt{Void} is an internal type used by the type system to represent the
