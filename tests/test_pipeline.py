@@ -208,6 +208,15 @@ class TypeCheckerTests(unittest.TestCase):
         with self.assertRaises(TypeCheckError):
             run_pipeline('x = true; if (x == false) { print("then"); } else { print("else"); }')
 
+    def test_mixed_int_float_equality_raises_type_error(self) -> None:
+        # == and != must not accept mixed Integer/Float (no overloading)
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 5; y = 3.14; if (x == y) { print(x); }")
+
+    def test_mixed_int_float_inequality_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 5; y = 3.14; if (x != y) { print(x); }")
+
     def test_arithmetic_on_string_raises_type_error(self) -> None:
         with self.assertRaises(TypeCheckError):
             run_pipeline('x = "a" + 1;')

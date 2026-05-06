@@ -323,12 +323,18 @@ class TypeChecker:
             return LanguageType.FLOAT
 
         if node.op in {"==", "!="}:
-            numeric_comparison = self._is_numeric(left_type) and self._is_numeric(right_type)
-            if not numeric_comparison:
+            if not self._is_numeric(left_type) or not self._is_numeric(right_type):
                 raise TypeCheckError(
                     self._error_at(
                         node,
                         f"Operator '{node.op}' requires two arithmetic operands",
+                    )
+                )
+            if left_type != right_type:
+                raise TypeCheckError(
+                    self._error_at(
+                        node,
+                        f"Operator '{node.op}' requires operands of the same type, got {left_type.value} and {right_type.value}",
                     )
                 )
             return LanguageType.BOOLEAN
