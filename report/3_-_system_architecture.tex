@@ -58,11 +58,10 @@ is \texttt{Float}, the result is \texttt{Float}.
 
 \subsection{Boolean Expressions}
 The comparison operators \texttt{==} and \texttt{!=} always produce
-\texttt{Boolean}. Numeric comparison is allowed for arithmetic expressions. The
-current implementation also permits Boolean-to-Boolean comparison because the
-sample programs use \texttt{flag!=false}. Comparisons involving \texttt{String}
-operands are rejected (so string equality is not part of the type system).
-Other combinations are rejected.
+\texttt{Boolean}. Following the language specification, both operators require
+two arithmetic (\texttt{Integer} or \texttt{Float}) operands. Comparisons
+involving \texttt{Boolean} or \texttt{String} operands are rejected by the type
+checker.
 
 \subsection{Assignment Statement}
 Assignments define variable types on first use. If a variable does not yet

@@ -186,12 +186,10 @@ class TypeCheckerTests(unittest.TestCase):
         result = run_pipeline("x = true; print(x);")
         self.assertEqual(result.outputs, ["true : Boolean"])
 
-    def test_boolean_equality_comparison_is_valid(self) -> None:
-        # Boolean == Boolean is permitted; result used as if condition
-        result = run_pipeline(
-            'x = true; if (x == false) { print("then"); } else { print("else"); }'
-        )
-        self.assertEqual(result.outputs, ['"else" : String'])
+    def test_boolean_equality_raises_type_error(self) -> None:
+        # Boolean == Boolean is not allowed; == only accepts arithmetic operands
+        with self.assertRaises(TypeCheckError):
+            run_pipeline('x = true; if (x == false) { print("then"); } else { print("else"); }')
 
     def test_arithmetic_on_string_raises_type_error(self) -> None:
         with self.assertRaises(TypeCheckError):

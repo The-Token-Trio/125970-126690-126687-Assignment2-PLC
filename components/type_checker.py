@@ -239,12 +239,11 @@ class TypeChecker:
 
         if node.op in {"==", "!="}:
             numeric_comparison = self._is_numeric(left_type) and self._is_numeric(right_type)
-            boolean_comparison = left_type == right_type == LanguageType.BOOLEAN
-            if not numeric_comparison and not boolean_comparison:
+            if not numeric_comparison:
                 raise TypeCheckError(
                     self._error_at(
                         node,
-                        f"Operator '{node.op}' requires either two numeric operands or two Boolean operands",
+                        f"Operator '{node.op}' requires two arithmetic operands",
                     )
                 )
             return LanguageType.BOOLEAN
