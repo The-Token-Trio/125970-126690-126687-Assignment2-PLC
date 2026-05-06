@@ -55,7 +55,7 @@ Stage~2 AST output. The following cases were checked:
     \item assignment versus expression statement dispatch: \texttt{x = 5;} produces an \texttt{Assign} node while \texttt{add(1,2);} produces a \texttt{FunctionCall} node at the statement level, confirming the IDENTIFIER+ASSIGN lookahead,
     \item \texttt{if} with and without an \texttt{else} clause: the resulting \texttt{If} node has a non-null \texttt{else\_block} only when the clause is present,
     \item function definitions store only parameter names in the \texttt{FunctionDef} node; the AST printer output was inspected to confirm no type annotations are present at this stage,
-    \item string literals in \texttt{Literal} nodes have their surrounding double-quotes stripped; \texttt{print("hello")} prints \texttt{hello : String} at runtime,
+    \item string literals in \texttt{Literal} nodes have their surrounding double-quotes stripped; \texttt{print("hello")} prints \texttt{"hello" : String} at runtime (the interpreter re-adds the quotes when formatting string output),
     \item parse errors: missing semicolons, unmatched parentheses, and unexpected tokens all produce \texttt{[line X, col Y] ParseError:} messages with correct source positions.
 \end{itemize}
 
@@ -67,8 +67,10 @@ before addition.
 
 \subsection{Boolean Expressions}
 Boolean expressions were tested inside \texttt{if} and \texttt{while}
-conditions. The checker verified valid comparison operands, and the interpreter
-used the resulting Boolean values for control flow.
+conditions. The type checker enforces that both operands of \texttt{==} and
+\texttt{!=} are arithmetic (\texttt{Integer} or \texttt{Float}); supplying a
+\texttt{Boolean} or \texttt{String} operand raises a \texttt{TypeCheckError}.
+The interpreter used the resulting \texttt{Boolean} values for control flow.
 
 \subsection{Assignment Statements}
 Assignments were tested for both first-use inference and reassignment checks.
