@@ -1,8 +1,9 @@
 \chapter{LANGUAGE DESIGN AND GRAMMAR}
 
 \section{Types}
-The language supports four primitive types. These types are sufficient to cover
-the assignment requirements while keeping the semantics simple and predictable.
+The language provides four primitive types, chosen to cover the core domains
+of numeric computation, logical control flow, and text manipulation while
+keeping the type system tractable and the semantics well-defined.
 
 \subsection{Integer}
 The Integer type represents whole numbers such as \texttt{0}, \texttt{7}, and
@@ -42,8 +43,8 @@ in source code and is never visible to the programmer; it is a bookkeeping
 device used internally by the type checker.
 
 \section{Static Typing}
-The language uses static typing, which means type errors are detected before
-execution rather than during program execution. No explicit variable type
+The language employs static typing, meaning that type errors are detected at
+type-checking time rather than at runtime. No explicit variable type
 declarations are required. Instead, the type checker infers types from literals,
 assignments, operations, function calls, and return statements. Once a variable
 type is established, later assignments must remain consistent with that type.

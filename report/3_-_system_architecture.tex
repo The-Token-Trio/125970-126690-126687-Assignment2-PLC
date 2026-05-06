@@ -88,10 +88,10 @@ is \texttt{Float}, the result is \texttt{Float}.
 
 \subsection{Boolean Expressions}
 The comparison operators \texttt{==} and \texttt{!=} always produce
-\texttt{Boolean}. Following the language specification, both operators require
-two arithmetic (\texttt{Integer} or \texttt{Float}) operands. Comparisons
-involving \texttt{Boolean} or \texttt{String} operands are rejected by the type
-checker.
+\texttt{Boolean}. Both operators require two arithmetic (\texttt{Integer} or
+\texttt{Float}) operands; this constraint is a deliberate design choice that
+keeps comparison semantics unambiguous. Comparisons involving \texttt{Boolean}
+or \texttt{String} operands are rejected by the type checker.
 
 \subsection{Assignment Statement}
 Assignments define variable types on first use. If a variable does not yet
@@ -139,9 +139,9 @@ parameter types by scanning the body for arithmetic and comparison usage, then
 checks the full body with those inferred types. This ensures that type errors
 inside never-called function bodies are still detected before execution.
 
-Recursive calls are intentionally rejected in this implementation because they
-were not required by the assignment and would require additional inference and
-control-flow analysis.
+Recursive calls are intentionally outside the scope of this implementation;
+supporting them would require additional fixed-point inference or explicit
+recursion handling that is orthogonal to the core type-inference algorithm.
 
 \section{Type Error Reporting}
 Type errors are reported with source positions so that the user can locate the

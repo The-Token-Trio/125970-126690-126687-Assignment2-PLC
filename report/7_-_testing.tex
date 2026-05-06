@@ -1,14 +1,14 @@
 \chapter{TESTING AND VERIFICATION}
 
-\section{Test Cases}
-Testing was performed through both manual execution and automated regression
-tests. Manual runs were used to inspect the full pipeline from source code to
-output, while automated tests were added for the semantic and runtime behaviour
-of the implemented type checker and interpreter.
+\section{Manual Testing}
+Prior to the construction of the automated suite, each language feature was
+exercised manually by running the full pipeline and inspecting stage outputs.
+Table~\ref{tab:manual-test-cases} summarises the categories covered.
 
 \begin{table}[H]
 \centering
-\caption{Representative Test Cases}
+\caption{Representative manually tested categories}
+\label{tab:manual-test-cases}
 \begin{tabular}{p{3.5cm}p{5cm}p{4cm}}
 \toprule
 Category & Program Behaviour & Expected Result \\
@@ -68,36 +68,43 @@ Stage~2 AST output. The following cases were checked:
 \end{itemize}
 
 \subsection{Arithmetic Expressions}
-Arithmetic expressions were tested using both integer-only and mixed
-integer-float programs. These tests verified precedence and numeric promotion.
-Expressions such as \texttt{x + y * 2} confirmed that multiplication is applied
-before addition.
+Arithmetic expressions were tested with integer-only and mixed integer--float
+programs to verify operator precedence and numeric promotion. The expression
+\texttt{x + y * 2} confirmed that multiplication binds more tightly than
+addition, and mixed-type operands consistently produced \texttt{Float} results
+in accordance with the promotion rules defined in Chapter~5.
 
 \subsection{Boolean Expressions}
 Boolean expressions were tested inside \texttt{if} and \texttt{while}
-conditions. The type checker enforces that both operands of \texttt{==} and
-\texttt{!=} are arithmetic (\texttt{Integer} or \texttt{Float}); supplying a
-\texttt{Boolean} or \texttt{String} operand raises a \texttt{TypeCheckError}.
-The interpreter used the resulting \texttt{Boolean} values for control flow.
+conditions. The type checker correctly enforced that both operands of
+\texttt{==} and \texttt{!=} must be arithmetic; supplying a \texttt{Boolean}
+or \texttt{String} operand produced a source-positioned \texttt{TypeCheckError}
+before any execution.
 
 \subsection{Assignment Statements}
-Assignments were tested for both first-use inference and reassignment checks.
-For example, a variable assigned \texttt{5} and later assigned
-\texttt{"hello"} correctly triggers a type error.
+Assignments were tested for both first-use type inference and reassignment
+consistency. Assigning \texttt{5} to a variable and subsequently assigning
+\texttt{"hello"} to the same variable correctly produced a type error,
+confirming that the inferred type is fixed after first assignment.
 
 \subsection{If-Then-Else}
-Conditional programs were used to verify that exactly one branch is executed and
-that non-Boolean conditions are rejected before runtime.
+Conditional programs were constructed to verify that exactly one branch
+executes for a given condition and that neither branch is entered when the
+condition evaluates to the opposite truth value. Non-Boolean conditions were
+also supplied and confirmed to be rejected by the type checker before
+execution.
 
 \subsection{While-Loop}
-While-loops were tested with a countdown example. This confirmed that the loop
-body executes repeatedly and that \texttt{print()} emits output progressively on
-each iteration rather than only once at the end.
+While-loops were tested with an integer countdown from three to zero. The
+results confirmed that the loop body executes once per iteration and
+terminates when the condition becomes false, with \texttt{print()} producing
+one output line per pass rather than accumulating output until loop exit.
 
 \subsection{Functions}
-Function tests covered parameter passing, local execution, and return values.
-The implementation infers parameter types from the first call and then enforces
-that signature for later calls.
+Function tests covered value parameter passing, local scope execution, and
+return value propagation. The type checker correctly inferred parameter types
+from the first call site and enforced that signature for all subsequent
+calls to the same function.
 
 \subsection{Print}
 The built-in \texttt{print()} function was tested with all supported runtime
