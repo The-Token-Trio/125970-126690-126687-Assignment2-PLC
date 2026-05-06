@@ -1,45 +1,35 @@
 \chapter{INTRODUCTION}
 
-\section{Scope}
+Programming languages define the formal contract between a programmer's intent
+and machine execution. Building a language processor from source text through to
+evaluated output requires a coherent pipeline of components, each of which must
+correctly transform its input before passing it downstream. Lexical analysis
+identifies atomic tokens; parsing imposes hierarchical structure; static type
+checking validates semantic correctness before execution; and interpretation
+evaluates the validated program. When these stages are connected cleanly, errors
+are caught at the earliest possible point, and the overall system remains
+tractable to reason about, test, and extend.
+
 This report presents the design and implementation of a small statically-typed
-interpreted programming language with type inference. The language supports four
-primitive types --- Integer, Float, Boolean, and String --- and is processed
-through a four-stage pipeline: lexical analysis, recursive-descent parsing,
-static type checking, and tree-walking interpretation. The project was divided
-into three principal components --- the lexer and symbol table, the parser, and
-the type system with interpreter --- developed sequentially, since each stage
-depends on the structured output of the preceding one.
+interpreted language that realises this pipeline in full. The language supports
+four primitive types --- Integer, Float, Boolean, and String --- and provides
+arithmetic and equality expressions, assignment, conditional and iterative
+control flow, user-defined functions with value parameter passing, and a
+built-in \texttt{print()} statement. Types are inferred from program context
+rather than declared explicitly, combining the safety of static typing with the
+conciseness of a declaration-free syntax. The implementation spans three
+principal components developed in pipeline order: the lexer and symbol table,
+the recursive-descent parser and abstract syntax tree, and the type checker with
+interpreter. Each component was completed before the next was begun, since each
+stage consumes the structured output of its predecessor.
 
-\section{Background and Motivation}
-Programming languages provide the formal structure through which algorithms are
-expressed and executed. A compiler or language processor is responsible for
-turning source code into a form that can be analysed or executed while also
-detecting errors as early as possible. Core compiler concepts such as lexical
-analysis, parsing, abstract syntax trees, symbol tables, static type checking,
-and interpretation are therefore fundamental topics in programming language
-education.
+The implemented system can be invoked from the command line or through an
+interactive desktop interface, both of which surface the four pipeline stages
+--- tokens, AST, inferred type table, and execution output --- for inspection.
+An automated regression suite of 54 tests verifies correctness across all
+stages and language features.
 
-The motivation for this project is to apply those concepts in a compact but
-complete language implementation. By building a small statically-typed language,
-the project demonstrates how syntax, semantics, and execution can be connected
-in a coherent system. The assignment also provides an opportunity to study how
-type inference can improve usability while still preserving compile-time error
-checking.
-
-\section{Language Overview}
-The implemented language supports four primitive types: Integer, Float,
-Boolean, and String. It uses static typing with inference, so programmers do
-not need to write explicit type declarations. Expressions include arithmetic
-operations with standard precedence and Boolean comparisons through equality and
-inequality. The statement-level constructs include assignment, if-then-else,
-while-loop, function definition, function call, return, and the built-in
-\texttt{print()} function.
-
-Programs are processed through a lexer, a recursive-descent parser, a type
-checker, and an interpreter. The final system can be executed from the command
-line or through a desktop UI that allows the user to enter a script, run it,
-and inspect the resulting tokens, AST, inferred types, and output.
-
+\section{Report Structure}
 Chapter~2 presents the language design, token specification, grammar, and
 operator precedence rules. Chapters~3 and~4 cover the front-end implementation
 in pipeline order: lexical analysis and the symbol table, then recursive-descent
