@@ -235,3 +235,73 @@ and rerun without dismissing a popup.
 \textbf{Keyboard shortcuts.}  \texttt{F5} and \texttt{Ctrl+Enter} are both
 bound to the \textit{Run} action, allowing rapid edit-run cycles without
 reaching for the mouse.
+
+\subsection{Screenshots}
+Figures~\ref{fig:ui-main}--\ref{fig:ui-error} illustrate the four output tabs
+and inline error display of the desktop workbench.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/ui-main.png}
+\caption{Execution Output tab after running the built-in sample: six
+\texttt{print()} calls produce values with their inferred types.}
+\label{fig:ui-main}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/ui-tokens.png}
+\caption{Tokens tab showing the token stream from Stage~1 (lexer), with token
+type, lexeme, and source position for each token.}
+\label{fig:ui-tokens}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/ui-ast.png}
+\caption{AST tab showing the indented parse tree from Stage~2 (parser),
+rooted at \texttt{Program [10 statement(s)]}.}
+\label{fig:ui-ast}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/ui-types.png}
+\caption{Type Table tab showing the symbol table from Stage~3 (type checker),
+with inferred types for all six symbols (\texttt{add}, \texttt{x}, \texttt{y},
+\texttt{name}, \texttt{flag}, \texttt{i}, \texttt{z}).}
+\label{fig:ui-types}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/ui-error.png}
+\caption{Inline error display: a type error is reported in the Execution Output
+tab when \texttt{x = 10; x = "hello";} is run (no modal dialog).}
+\label{fig:ui-error}
+\end{figure}
+
+\section{Command-line interface}
+The CLI runner (\texttt{main.py}) accepts an optional script path argument;
+without one it runs the built-in sample.  Output is printed to \texttt{stdout}
+in four labelled stages separated by dividers.
+Figure~\ref{fig:cli-tokens} shows the Stage~1 token output produced by the
+invocation \texttt{python main.py}; Figure~\ref{fig:cli-exec} shows the
+Stage~3 inferred type table and Stage~4 execution output at the end of the
+same run.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{figures/cli-1.png}
+\caption{CLI: \texttt{python main.py} invocation and Stage~1 token stream
+(first 30 tokens of the built-in sample shown).}
+\label{fig:cli-tokens}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{figures/cli-5.png}
+\caption{CLI: Stage~3 inferred type table and Stage~4 execution output for
+the built-in sample, showing all six \texttt{print()} values with types.}
+\label{fig:cli-exec}
+\end{figure}
