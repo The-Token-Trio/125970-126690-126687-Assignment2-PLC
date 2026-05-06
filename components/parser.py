@@ -210,9 +210,10 @@ class Parser:
     # -----------------------------------------------------------------------
 
     def _expr(self) -> ASTNode:
-        """term (('+' | '-') term)*"""
+        """term (('+' | '-' | '+.' | '-.') term)*"""
         node = self._term()
-        while self._check(TokenType.PLUS) or self._check(TokenType.MINUS):
+        while self._check(TokenType.PLUS) or self._check(TokenType.MINUS) \
+                or self._check(TokenType.PLUS_DOT) or self._check(TokenType.MINUS_DOT):
             op_tok = self._advance()
             right = self._term()
             node = BinaryOp(op=op_tok.lexeme, left=node, right=right,
@@ -220,9 +221,10 @@ class Parser:
         return node
 
     def _term(self) -> ASTNode:
-        """factor (('*' | '/') factor)*"""
+        """factor (('*' | '/' | '*.' | '/.') factor)*"""
         node = self._factor()
-        while self._check(TokenType.STAR) or self._check(TokenType.SLASH):
+        while self._check(TokenType.STAR) or self._check(TokenType.SLASH) \
+                or self._check(TokenType.STAR_DOT) or self._check(TokenType.SLASH_DOT):
             op_tok = self._advance()
             right = self._factor()
             node = BinaryOp(op=op_tok.lexeme, left=node, right=right,
@@ -238,12 +240,20 @@ class Parser:
         """
         tok = self._peek()
 
-        # Unary minus  '-' factor
+        # Unary minus  '-' factor  (integer negation, desugared to 0 - factor)
         if tok.token_type == TokenType.MINUS:
             op_tok = self._advance()
             operand = self._factor()
             zero = Literal(value=0, line=op_tok.line, column=op_tok.column)
             return BinaryOp(op="-", left=zero, right=operand,
+                            line=op_tok.line, column=op_tok.column)
+
+        # Unary minus-dot  '-.' factor  (float negation, desugared to 0.0 -. factor)
+        if tok.token_type == TokenType.MINUS_DOT:
+            op_tok = self._advance()
+            operand = self._factor()
+            zero_f = Literal(value=0.0, line=op_tok.line, column=op_tok.column)
+            return BinaryOp(op="-.", left=zero_f, right=operand,
                             line=op_tok.line, column=op_tok.column)
 
         # Integer literal

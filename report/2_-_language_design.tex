@@ -77,7 +77,8 @@ Token Category & Example Lexemes \\
 \texttt{BOOL\_LITERAL} & \texttt{true}, \texttt{false} \\
 \texttt{STRING\_LITERAL} & \texttt{"hello"} \\
 \texttt{IDENTIFIER} & variable and function names such as \texttt{x}, \texttt{add} \\
-Arithmetic operators & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
+Arithmetic operators (integer) & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
+Float arithmetic operators & \texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} \\
 Comparison operators & \texttt{==}, \texttt{!=} \\
 Assignment operator & \texttt{=} \\
 Keywords & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print} \\
@@ -107,9 +108,10 @@ statement -> assignment
 
 \subsection{Arithmetic Expressions}
 \begin{lstlisting}
-expr   -> term (('+' | '-') term)*
-term   -> factor (('*' | '/') factor)*
-factor -> '-' factor
+expr   -> term (('+' | '-' | '+.' | '-.') term)*
+term   -> factor (('*' | '/' | '*.' | '/.') factor)*
+factor -> '-'  factor     (* integer unary negation *)
+	| '-.' factor    (* float unary negation *)
 	| INT_LITERAL
 	| FLOAT_LITERAL
 	| STRING_LITERAL
@@ -119,11 +121,14 @@ factor -> '-' factor
 	| '(' expr ')'
 \end{lstlisting}
 
-The unary minus production allows negative literals such as \texttt{-5} and
-negated variable references such as \texttt{-x}. It is implemented as a
-right-recursive descent into \texttt{factor} and is desugared internally to
-\texttt{0 - factor}, so all existing type rules for arithmetic apply without
-modification.
+The operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/} operate
+exclusively on \texttt{Integer} operands. The dot-suffixed operators
+\texttt{+.}, \texttt{-.}, \texttt{*.}, and \texttt{/.} operate exclusively on
+\texttt{Float} operands. This follows the Caml~Light convention of using
+distinct operator tokens for integer and float arithmetic, eliminating the need
+for implicit numeric promotion. Unary negation is similarly split:
+\texttt{-x} negates an \texttt{Integer} (desugared to \texttt{0 - x}), and
+\texttt{-.x} negates a \texttt{Float} (desugared to \texttt{0.0 -. x}).
 
 \subsection{Boolean Expressions}
 \begin{lstlisting}
@@ -177,8 +182,8 @@ operators are left-associative.
 Precedence & Operators & Associativity \\
 \midrule
 1 (lowest) & \texttt{==}, \texttt{!=} & non-associative (condition use only) \\
-2 & \texttt{+}, \texttt{-} & left-associative \\
-3 (highest) & \texttt{*}, \texttt{/} & left-associative \\
+2 & \texttt{+}, \texttt{-}, \texttt{+.}, \texttt{-.} & left-associative \\
+3 (highest) & \texttt{*}, \texttt{/}, \texttt{*.}, \texttt{/.} & left-associative \\
 \bottomrule
 \end{tabular}
 \end{table}

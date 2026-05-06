@@ -233,12 +233,13 @@ class TypeChecker:
         def scan_expr(n: ASTNode) -> None:
             if isinstance(n, BinaryOp):
                 if n.op in {"+", "-", "*", "/", "==", "!="}:
-                    for operand, other in ((n.left, n.right), (n.right, n.left)):
+                    for operand in (n.left, n.right):
                         if isinstance(operand, Identifier) and operand.name in param_names:
-                            if isinstance(other, Literal) and isinstance(other.value, float):
-                                inferred.setdefault(operand.name, LanguageType.FLOAT)
-                            else:
-                                inferred.setdefault(operand.name, LanguageType.INTEGER)
+                            inferred.setdefault(operand.name, LanguageType.INTEGER)
+                elif n.op in {"+.", "-.", "*.", "/."}:
+                    for operand in (n.left, n.right):
+                        if isinstance(operand, Identifier) and operand.name in param_names:
+                            inferred.setdefault(operand.name, LanguageType.FLOAT)
                 scan_expr(n.left)
                 scan_expr(n.right)
             elif isinstance(n, FunctionCall):
@@ -297,14 +298,29 @@ class TypeChecker:
         left_type: LanguageType,
         right_type: LanguageType,
     ) -> LanguageType:
-        if node.op in {"+", "-", "*", "/"}:
-            if not self._is_numeric(left_type) or not self._is_numeric(right_type):
-                raise TypeCheckError(self._error_at(node, f"Operator '{node.op}' requires numeric operands"))
-            if node.op == "/":
-                return LanguageType.FLOAT
-            if left_type == LanguageType.FLOAT or right_type == LanguageType.FLOAT:
-                return LanguageType.FLOAT
+        # Integer operators: both operands must be Integer
+        if node.op in {"+", "-", "*"}:
+            if left_type != LanguageType.INTEGER or right_type != LanguageType.INTEGER:
+                raise TypeCheckError(
+                    self._error_at(node, f"Operator '{node.op}' requires two Integer operands")
+                )
             return LanguageType.INTEGER
+
+        # Integer division: both operands must be Integer, result is Integer
+        if node.op == "/":
+            if left_type != LanguageType.INTEGER or right_type != LanguageType.INTEGER:
+                raise TypeCheckError(
+                    self._error_at(node, f"Operator '{node.op}' requires two Integer operands")
+                )
+            return LanguageType.INTEGER
+
+        # Float operators: both operands must be Float
+        if node.op in {"+.", "-.", "*.", "/."}:
+            if left_type != LanguageType.FLOAT or right_type != LanguageType.FLOAT:
+                raise TypeCheckError(
+                    self._error_at(node, f"Operator '{node.op}' requires two Float operands")
+                )
+            return LanguageType.FLOAT
 
         if node.op in {"==", "!="}:
             numeric_comparison = self._is_numeric(left_type) and self._is_numeric(right_type)

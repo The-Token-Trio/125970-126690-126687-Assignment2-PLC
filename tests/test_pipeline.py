@@ -53,6 +53,18 @@ class LexerTests(unittest.TestCase):
         self.assertEqual(tokens[0].token_type, TokenType.EQUAL_EQUAL)
         self.assertEqual(tokens[1].token_type, TokenType.BANG_EQUAL)
 
+    def test_float_dot_operators_tokenised(self) -> None:
+        tokens = Lexer("+. -. *. /.").tokenize()
+        expected = [TokenType.PLUS_DOT, TokenType.MINUS_DOT, TokenType.STAR_DOT, TokenType.SLASH_DOT]
+        actual = [t.token_type for t in tokens if t.token_type != TokenType.EOF]
+        self.assertEqual(actual, expected)
+
+    def test_float_literal_not_confused_with_dot_operator(self) -> None:
+        # "3.14" must produce FLOAT_LITERAL, not INT_LITERAL followed by something
+        tokens = Lexer("3.14").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.FLOAT_LITERAL)
+        self.assertEqual(tokens[0].lexeme, "3.14")
+
     def test_source_position_tracked_across_lines(self) -> None:
         tokens = Lexer("x\ny").tokenize()
         self.assertEqual(tokens[0].line, 1)
@@ -169,14 +181,19 @@ class TypeCheckerTests(unittest.TestCase):
         result = run_pipeline("x = 3 + 4; print(x);")
         self.assertEqual(result.outputs, ["7 : Integer"])
 
-    def test_division_always_produces_float(self) -> None:
-        # integer / integer → Float by design
+    def test_division_always_produces_integer(self) -> None:
+        # integer / integer -> Integer (no implicit float conversion)
         result = run_pipeline("x = 10 / 2; print(x);")
-        self.assertEqual(result.outputs, ["5.0 : Float"])
+        self.assertEqual(result.outputs, ["5 : Integer"])
 
-    def test_float_promotion_in_addition(self) -> None:
-        result = run_pipeline("x = 1 + 2.5; print(x);")
+    def test_float_dot_operators_produce_float(self) -> None:
+        result = run_pipeline("x = 1.0 +. 2.5; print(x);")
         self.assertEqual(result.outputs, ["3.5 : Float"])
+
+    def test_mixed_int_float_addition_raises_type_error(self) -> None:
+        # Integer + Float is no longer valid; must use +.
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 1 + 2.5; print(x);")
 
     def test_string_variable_type_inferred(self) -> None:
         result = run_pipeline('x = "hello"; print(x);')
@@ -245,7 +262,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(result.outputs, ["-5 : Integer"])
 
     def test_unary_minus_float(self) -> None:
-        result = run_pipeline("y = -3.14; print(y);")
+        result = run_pipeline("y = -. 3.14; print(y);")
         self.assertEqual(result.outputs, ["-3.14 : Float"])
 
     def test_unary_minus_variable(self) -> None:
@@ -282,7 +299,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_function_type_inference(self) -> None:
         result = run_pipeline(
-            "def add(a, b) { return a + b; } result = add(2, 3.5); print(result);"
+            "def add(a, b) { return a +. b; } result = add(2.0, 3.5); print(result);"
         )
         self.assertEqual(result.outputs, ["5.5 : Float"])
         self.assertIn("result       variable   Float", result.checked_scope.format_table())

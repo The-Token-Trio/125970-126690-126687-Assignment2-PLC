@@ -60,8 +60,9 @@ $\Gamma$ = current type environment / symbol table
         \begin{itemize}[nosep, leftmargin=1.5em]
           \item Infer the type of the left operand and the right operand.
           \item If the operator is \texttt{+}, \texttt{-}, \texttt{*}, or \texttt{/}:\quad
-                require both operands to be numeric; infer the result using
-                Table~\ref{tab:arithmetic-result-types}.
+                require both operands to be \texttt{Integer}; return \texttt{Integer}.
+          \item If the operator is \texttt{+.}, \texttt{-.}, \texttt{*.}, or \texttt{/.}:\quad
+                require both operands to be \texttt{Float}; return \texttt{Float}.
           \item If the operator is \texttt{==} or \texttt{!=}:\quad
                 require both operands to be arithmetic; return \texttt{Boolean}.
           \item Otherwise, report a \texttt{TypeError}.
@@ -121,57 +122,51 @@ Literal nodes have direct types:
 \end{align*}
 
 \subsection{No Operator Overloading}
-The language does not support operator overloading. Every operator has a single,
-fixed meaning determined solely by the operator symbol. Specifically:
+The language does not support operator overloading. Following the Caml~Light
+convention, integer and float arithmetic use entirely separate operator tokens,
+so every operator has a single, fixed type signature:
 \begin{itemize}
-  \item The \texttt{+} operator is not overloaded for string concatenation. Applying \texttt{+} to a \texttt{String} operand is a type error.
-  \item The comparison operators \texttt{==} and \texttt{!=} are not overloaded for string or boolean equality. Both operands must be arithmetic.
-  \item No mixed Boolean or String arithmetic is permitted.
+  \item \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} --- require two \texttt{Integer} operands; result is \texttt{Integer}.
+  \item \texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} --- require two \texttt{Float} operands; result is \texttt{Float}.
+  \item \texttt{+} is not overloaded for string concatenation; applying it to a \texttt{String} is a type error.
+  \item \texttt{==} and \texttt{!=} are not overloaded for \texttt{Boolean} or \texttt{String} equality.
+  \item No implicit numeric promotion: \texttt{Integer + Float} is a type error.
 \end{itemize}
-The apparent exception --- that \texttt{Integer + Float} yields \texttt{Float}
---- is standard numeric promotion (widening coercion), not operator overloading.
-The \texttt{+} operator retains a single semantic meaning (arithmetic addition on
-numbers); only the result type widens to accommodate the wider operand.
-Overloading would mean assigning an unrelated meaning to the same symbol, such
-as using \texttt{+} for both numeric addition and string concatenation, which
-this language explicitly rejects.
-Because operators have a single, unambiguous type derivable from their operands,
-the compiler can always infer expression types without requiring explicit type
-declarations from the programmer.
+Because every operator has a unique, unambiguous type derivable from its token
+alone, the compiler can always infer expression types without requiring explicit
+type declarations from the programmer.
 
 \subsection{Arithmetic Expressions}
-The arithmetic operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
-accept only numeric operands. If both operands are \texttt{Integer}, the result
-is \texttt{Integer}, except for division, which always produces \texttt{Float}
-regardless of the operand types. If at least one operand is \texttt{Float} for
-\texttt{+}, \texttt{-}, or \texttt{*}, the result is \texttt{Float} --- this is
-numeric promotion, not operator overloading, because \texttt{+} retains a single
-numeric meaning throughout. Any non-numeric operand causes a type error.
+The integer operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
+require both operands to be \texttt{Integer} and always return \texttt{Integer}
+(including division, which uses integer floor division). The float operators
+\texttt{+.}, \texttt{-.}, \texttt{*.}, and \texttt{/.} require both operands to
+be \texttt{Float} and always return \texttt{Float}. Mixing an \texttt{Integer}
+and a \texttt{Float} with any operator is a type error.
 
 \begin{table}[H]
 \centering
-\caption{Arithmetic result types by operand combination}
+\caption{Arithmetic operator type rules}
 \label{tab:arithmetic-result-types}
 \small
 \begin{tabular}{llll}
 \toprule
 Left operand & Operator & Right operand & Result type \\
 \midrule
-\texttt{Integer} & \texttt{+}, \texttt{-}, \texttt{*} & \texttt{Integer} & \texttt{Integer} \\
-\texttt{Integer} & \texttt{/}                       & \texttt{Integer} & \texttt{Float} \\
-\texttt{Float}   & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Integer} & \texttt{Float} \\
-\texttt{Integer} & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Float}   & \texttt{Float} \\
-\texttt{Float}   & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Float}   & \texttt{Float} \\
+\texttt{Integer} & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} & \texttt{Integer} & \texttt{Integer} \\
+\texttt{Float}   & \texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} & \texttt{Float} & \texttt{Float} \\
+\texttt{Integer} & any & \texttt{Float} & \texttt{TypeError} \\
+\texttt{Float} & any & \texttt{Integer} & \texttt{TypeError} \\
 Any & any & \texttt{String} or \texttt{Boolean} & \texttt{TypeError} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsubsection*{Unary negation}
-Unary minus (\texttt{-x}) is desugared by the parser into \texttt{0 - x}. The
-type checker therefore applies the standard binary subtraction rule: if
-\texttt{x} is \texttt{Integer}, the result is \texttt{Integer}; if \texttt{x}
-is \texttt{Float}, the result is \texttt{Float}.
+Unary integer negation (\texttt{-x}) is desugared by the parser to
+\texttt{0 - x}. Unary float negation (\texttt{-.x}) is desugared to
+\texttt{0.0 -. x}. The type checker therefore applies the standard binary rules
+in both cases.
 
 \subsection{Boolean Expressions}
 The comparison operators \texttt{==} and \texttt{!=} always produce

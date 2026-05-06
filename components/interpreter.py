@@ -179,7 +179,15 @@ class Interpreter:
         if node.op == "*":
             return left_value * right_value
         if node.op == "/":
-            return left_value / right_value
+            return int(left_value) // int(right_value)
+        if node.op == "+.":
+            return float(left_value) + float(right_value)
+        if node.op == "-.":
+            return float(left_value) - float(right_value)
+        if node.op == "*.":
+            return float(left_value) * float(right_value)
+        if node.op == "/.":
+            return float(left_value) / float(right_value)
         if node.op == "==":
             return left_value == right_value
         if node.op == "!=":

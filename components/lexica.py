@@ -17,11 +17,15 @@ KEYWORDS: dict[str, TokenType] = {
 }
 
 
+# Arithmetic operators that may have a trailing '.' for the float variant
+_ARITH_DOT: dict[str, tuple[TokenType, TokenType]] = {
+    "+": (TokenType.PLUS,      TokenType.PLUS_DOT),
+    "-": (TokenType.MINUS,     TokenType.MINUS_DOT),
+    "*": (TokenType.STAR,      TokenType.STAR_DOT),
+    "/": (TokenType.SLASH,     TokenType.SLASH_DOT),
+}
+
 SINGLE_CHAR_TOKENS: dict[str, TokenType] = {
-    "+": TokenType.PLUS,
-    "-": TokenType.MINUS,
-    "*": TokenType.STAR,
-    "/": TokenType.SLASH,
     "=": TokenType.ASSIGN,
     "(": TokenType.LPAREN,
     ")": TokenType.RPAREN,
@@ -76,6 +80,19 @@ class Lexer:
             if self._match("="):
                 return self._make_token(TokenType.BANG_EQUAL)
             raise LexerError(self._error_message("Unexpected '!'. Did you mean '!='?"))
+
+        # Arithmetic operators: + - * /  (with optional trailing '.' for float variant)
+        arith = _ARITH_DOT.get(char)
+        if arith is not None:
+            int_tok, float_tok = arith
+            # Unary-minus lookahead: '-' followed by a digit is NOT '-.' even if
+            # next char is '.' — we still need to check char after '.' is not digit
+            # (to avoid consuming the '.' of a float literal like 3.14).
+            # Rule: X. is a float operator only when the char after '.' is NOT a digit.
+            if self._peek() == "." and not self._peek_next().isdigit():
+                self._advance()  # consume '.'
+                return self._make_token(float_tok)
+            return self._make_token(int_tok)
 
         # Single-char operators/delimiters
         single_char_token = SINGLE_CHAR_TOKENS.get(char)
