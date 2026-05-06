@@ -128,7 +128,16 @@ fixed meaning determined solely by the operator symbol. Specifically:
   \item The comparison operators \texttt{==} and \texttt{!=} are not overloaded for string or boolean equality. Both operands must be arithmetic.
   \item No mixed Boolean or String arithmetic is permitted.
 \end{itemize}
-Because operators have unambiguous types, the compiler can always infer expression types without requiring explicit type declarations from the programmer.
+The apparent exception --- that \texttt{Integer + Float} yields \texttt{Float}
+--- is standard numeric promotion (widening coercion), not operator overloading.
+The \texttt{+} operator retains a single semantic meaning (arithmetic addition on
+numbers); only the result type widens to accommodate the wider operand.
+Overloading would mean assigning an unrelated meaning to the same symbol, such
+as using \texttt{+} for both numeric addition and string concatenation, which
+this language explicitly rejects.
+Because operators have a single, unambiguous type derivable from their operands,
+the compiler can always infer expression types without requiring explicit type
+declarations from the programmer.
 
 \subsection{Arithmetic Expressions}
 The arithmetic operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/}
