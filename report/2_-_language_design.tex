@@ -31,13 +31,15 @@ stored internally is the bare character sequence without surrounding quotes. At
 runtime, the built-in \texttt{print()} function re-adds double quotes around
 string values, so \texttt{print("plc")} outputs \texttt{"plc" : String}.
 
-\subsection{Void (internal only)}
-\texttt{Void} is not a programmer-visible type. The language has exactly four
-primitive types: Integer, Float, Boolean, and String. \texttt{Void} exists
-solely as an internal sentinel inside the \texttt{LanguageType} enum so that
-the symbol table can record a well-defined return type for functions that
-contain no \texttt{return} statement. Programmers cannot write \texttt{Void}
-in source code.
+\subsection{Void}
+Although the language exposes exactly four programmer-visible types, the
+implementation introduces a fifth value, \texttt{Void}, within the
+\texttt{LanguageType} enumeration. Its sole purpose is to provide a
+well-defined return type for functions that contain no \texttt{return}
+statement, allowing the symbol table to record a consistent entry for every
+function regardless of whether it produces a value. \texttt{Void} cannot appear
+in source code and is never visible to the programmer; it is a bookkeeping
+device used internally by the type checker.
 
 \section{Static Typing}
 The language uses static typing, which means type errors are detected before
