@@ -131,12 +131,13 @@ organised into four classes, each targeting a distinct compiler stage.
 \toprule
 Test class & Stage covered & Tests \\
 \midrule
-\texttt{LexerTests}       & Tokenisation (\texttt{lexica.py})            & 10 \\
-\texttt{ParserTests}      & Parsing and precedence (\texttt{parser.py})  &  5 \\
-\texttt{TypeCheckerTests} & Static type inference (\texttt{type\_checker.py}) & 13 \\
-\texttt{IntegrationTests} & Full pipeline execution                       & 17 \\
+\texttt{LexerTests}        & Tokenisation (\texttt{lexica.py})                &  10 \\
+\texttt{SymbolTableTests}  & Scoped symbol table (\texttt{symbol\_table.py})  &   7 \\
+\texttt{ParserTests}       & Parsing and precedence (\texttt{parser.py})      &   5 \\
+\texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) & 13 \\
+\texttt{IntegrationTests}  & Full pipeline execution                           &  17 \\
 \midrule
-                          & \textbf{Total}                               & \textbf{45} \\
+                           & \textbf{Total}                                   & \textbf{52} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -145,6 +146,13 @@ Test class & Stage covered & Tests \\
 Boolean, string, keywords, identifiers, two-character operators) is produced
 correctly, that source line numbers are tracked across newlines, and that
 illegal characters and unterminated strings raise \texttt{LexerError}.
+
+\noindent\textbf{SymbolTableTests} exercise the symbol table directly, without
+going through the full pipeline. They cover variable definition and lookup,
+duplicate definition raising \texttt{SymbolTableError} for both variables and
+functions, parent-scope lookup through \texttt{child\_scope()}, undefined-symbol
+lookup error, and the \texttt{format\_table()} output for both variable and
+function symbol rows.
 
 \noindent\textbf{ParserTests} confirm that missing semicolons and unclosed
 braces raise \texttt{ParseError}, and that operator precedence and
@@ -170,7 +178,7 @@ The tests can be run with:
 python3 -m unittest discover -s tests -v
 \end{lstlisting}
 
-All 45 tests pass.
+All 52 tests pass.
 
 \section{Error Handling}
 The language system reports errors at three main stages:

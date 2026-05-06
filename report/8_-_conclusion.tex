@@ -19,10 +19,11 @@ statements. Invalid programs are rejected before runtime. In addition, the
 system includes both a command-line runner and a desktop UI so that scripts can
 be entered, loaded, executed, and inspected conveniently.
 
-The 45 automated tests cover all four pipeline stages --- lexical analysis, parsing,
-static type checking, and full pipeline execution --- and confirm correct behaviour
-for all language features including scope isolation, unary negation, division
-type rules, and error detection. These checks provide a baseline for future extensions.
+The 52 automated tests cover all five test classes --- lexical analysis, symbol
+table, parsing, static type checking, and full pipeline execution --- and confirm
+correct behaviour for all language features including scope isolation, duplicate
+symbol detection, unary negation, division type rules, and error detection. These
+checks provide a baseline for future extensions.
 
 Future work could include recursive functions, richer data structures,
 additional operators, and code generation to a lower-level target. However, the
