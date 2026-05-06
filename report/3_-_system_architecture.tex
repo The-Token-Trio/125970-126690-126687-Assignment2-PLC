@@ -64,7 +64,7 @@ $\Gamma$ = current type environment / symbol table
           \item If the operator is \texttt{+.}, \texttt{-.}, \texttt{*.}, or \texttt{/.}:\quad
                 require both operands to be \texttt{Float}; return \texttt{Float}.
           \item If the operator is \texttt{==} or \texttt{!=}:\quad
-                require both operands to be arithmetic; return \texttt{Boolean}.
+                require both operands to be the same arithmetic type; return \texttt{Boolean}.
           \item Otherwise, report a \texttt{TypeError}.
         \end{itemize}
 
@@ -170,10 +170,11 @@ in both cases.
 
 \subsection{Boolean Expressions}
 The comparison operators \texttt{==} and \texttt{!=} always produce
-\texttt{Boolean}. Both operators require two arithmetic (\texttt{Integer} or
-\texttt{Float}) operands; this constraint is a deliberate design choice that
-keeps comparison semantics unambiguous. Comparisons involving \texttt{Boolean}
-or \texttt{String} operands are rejected by the type checker.
+\texttt{Boolean}. Both operators require two operands of the \emph{same}
+arithmetic type --- either both \texttt{Integer} or both \texttt{Float};
+mixed-type comparisons such as \texttt{Integer == Float} are rejected.
+Comparisons involving \texttt{Boolean} or \texttt{String} operands are also
+rejected by the type checker.
 Although \texttt{Boolean} and \texttt{String} values exist in the language,
 equality and inequality are deliberately restricted to arithmetic expressions
 because the project specification defines basic Boolean expressions as equality
@@ -245,31 +246,31 @@ wrong argument type to a function.
 Consider the following program fragment:
 
 \begin{lstlisting}
-x = 10;
-y = 20.5;
+x = 3;
+y = 4;
 z = x + y;
 print(z);
 \end{lstlisting}
 
 The checker infers:
 \begin{itemize}
-	\item \texttt{x: Integer}
-	\item \texttt{y: Float}
-	\item \texttt{x + y: Float}
-	\item \texttt{z: Float}
+	\item \texttt{x: Integer} (from literal \texttt{3})
+	\item \texttt{y: Integer} (from literal \texttt{4})
+	\item \texttt{x + y: Integer} (Integer \texttt{+} Integer $\rightarrow$ Integer)
+	\item \texttt{z: Integer}
 \end{itemize}
 
-For a function example:
+For a float example using dot-suffixed operators:
 
 \begin{lstlisting}
-def add(a, b) {
-		return a + b;
+def addf(a, b) {
+		return a +. b;
 }
 
-result = add(2, 3.5);
+result = addf(2.0, 3.5);
 \end{lstlisting}
 
-The first function call infers \texttt{a: Integer} and \texttt{b: Float}. The
-expression \texttt{a + b} is therefore \texttt{Float}, so the function return
-type is inferred as \texttt{Float}. The variable \texttt{result} is also
-inferred as \texttt{Float}.
+The first function call infers \texttt{a: Float} and \texttt{b: Float}. The
+operator \texttt{+.} requires both operands to be \texttt{Float}, so the
+function return type is inferred as \texttt{Float}. The variable
+\texttt{result} is also inferred as \texttt{Float}.

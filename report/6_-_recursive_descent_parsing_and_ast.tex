@@ -61,8 +61,8 @@ expressions.
 class BinaryOp(ASTNode):
    """An arithmetic or comparison binary operation.
 
-   op is one of: '+' '-' '*' '/' '==' '!='
-   Example:  a + b   x == 0
+   op is one of: '+' '-' '*' '/' '+.' '-.' '*.' '/.' '==' '!='
+   Example:  a + b   x == 0   a +. b
    """
    op: str
    left: ASTNode
@@ -143,9 +143,9 @@ self._expect(TokenType.SEMICOLON, "Expected ';' after expression")
 
 \subsection{Expression parsing and precedence}
 Expressions are parsed in layered precedence levels: \texttt{\_expr} handles
-\texttt{+} and \texttt{-}, \texttt{\_term} handles \texttt{*} and \texttt{/},
-and \texttt{\_factor} handles literals, identifiers and function calls, and
-parenthesized expressions. Boolean conditions for \texttt{if} and
+\texttt{+}, \texttt{-}, \texttt{+.}, and \texttt{-.}; \texttt{\_term} handles
+\texttt{*}, \texttt{/}, \texttt{*.}, and \texttt{/.}; and \texttt{\_factor}
+handles literals, identifiers and function calls, and parenthesized expressions. Boolean conditions for \texttt{if} and
 \texttt{while} are parsed by \texttt{\_bool\_expr}, which recognises
 \texttt{==} and \texttt{!=} after parsing the left-hand arithmetic expression.
 As a result, equality parsing is condition-focused in the current grammar

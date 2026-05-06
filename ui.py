@@ -13,8 +13,16 @@ DEFAULT_SOURCE = """def add(a, b) {
     return result;
 }
 
+def addf(a, b) {
+    result = a +. b;
+    print(result);
+    return result;
+}
+
 x = 10;
-y = 20.5;
+y = 20;
+pi = 3.14;
+half = 0.5;
 name = \"plc\";
 flag = true;
 
@@ -32,6 +40,9 @@ while (i != 0) {
 
 z = add(x, y);
 print(z);
+
+w = addf(pi, half);
+print(w);
 """
 
 

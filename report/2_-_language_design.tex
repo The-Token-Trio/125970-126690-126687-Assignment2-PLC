@@ -12,11 +12,11 @@ quotation marks or a decimal point.
 
 \subsection{Float}
 The Float type represents real-valued numbers written with a decimal point, such
-as \texttt{3.14} or \texttt{20.5}. Float values are used in arithmetic
-expressions and also arise as the result of any division. Division always
-produces a \texttt{Float} even when both operands are \texttt{Integer}: for
-example, \texttt{10 / 2} evaluates to \texttt{5.0 : Float}. This is an
-explicit design rule enforced in the type checker.
+as \texttt{3.14} or \texttt{0.5}. Float values are used exclusively with the
+dot-suffixed arithmetic operators (\texttt{+.}, \texttt{-.}, \texttt{*.},
+\texttt{/.}), following the Caml~Light convention. Integer division (\texttt{/})
+performs floor division and returns \texttt{Integer}: for example,
+\texttt{10 / 3} evaluates to \texttt{3 : Integer}.
 
 \subsection{Boolean}
 The Boolean type represents logical truth values. The two Boolean literals are
