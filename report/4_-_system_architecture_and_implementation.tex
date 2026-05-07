@@ -302,7 +302,7 @@ editor from a file. The editor is pre-loaded with the built-in sample program
 on first launch.
 
 \textbf{Right panel (output tabs).}  A \texttt{Notebook} widget presents
-four tabs, each backed by a scrollable read-only \texttt{Text} widget with
+five tabs, each backed by a scrollable read-only \texttt{Text} widget with
 both horizontal and vertical scrollbars:
 \begin{itemize}
   \item \textit{Execution Output} --- the \texttt{print()} values produced
@@ -314,12 +314,15 @@ both horizontal and vertical scrollbars:
         with type, lexeme, and source position;
   \item \textit{AST} --- the indented tree text from stage~2;
   \item \textit{Type Table} --- the symbol table from stage~3 showing each
-        name, kind, inferred type, initialisation state, and parameter list.
+        name, kind, inferred type, initialisation state, and parameter list;
+  \item \textit{Errors} --- populated only when a pipeline stage fails;
+        shows the error message (e.g.\ \texttt{[line~2, col~5] TypeError: \ldots}).
+        On a successful run this tab is cleared automatically.
 \end{itemize}
 
 \textbf{Error handling.}  If any pipeline stage raises an exception, the
-error message is written to the \textit{Execution Output} tab as
-\texttt{ERROR: <message>}. No modal dialogs are used, so the user can edit
+error message is written exclusively to the \textit{Errors} tab and the
+remaining tabs are cleared. No modal dialogs are used, so the user can edit
 and rerun without dismissing a popup.
 
 \textbf{Keyboard shortcuts.}  \texttt{F5} and \texttt{Ctrl+Enter} are both
@@ -371,6 +374,13 @@ and CLI output.
 \section{Command-line interface}
 The CLI runner (\texttt{main.py}) accepts an optional script path; without one
 it runs the built-in sample and prints four labelled stages to \texttt{stdout}.
+Errors are reported cleanly to \texttt{stderr}: if the specified file does not
+exist, the runner prints \texttt{ERROR: File not found: <path>} and exits with
+code~1. If any pipeline stage raises a language error (\texttt{LexerError},
+\texttt{ParseError}, \texttt{TypeCheckError}, or \texttt{InterpreterError}),
+the message is printed as \texttt{ERROR: [line~X, col~Y] <ErrorType>: <detail>}
+and the process exits with code~1. In both cases no Python traceback is shown
+to the user.
 
 % --- CLI screenshots: kept on one page ---
 \begin{figure}[H]

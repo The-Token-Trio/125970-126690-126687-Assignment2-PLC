@@ -95,6 +95,7 @@ class LanguageWorkbench:
         self.tokens_text = self._make_output_tab(notebook, "Tokens")
         self.ast_text = self._make_output_tab(notebook, "AST")
         self.types_text = self._make_output_tab(notebook, "Type Table")
+        self.error_text = self._make_output_tab(notebook, "Errors")
 
     def _make_output_tab(self, notebook: ttk.Notebook, title: str) -> tk.Text:
         frame = ttk.Frame(notebook, padding=8)
@@ -127,7 +128,11 @@ class LanguageWorkbench:
         try:
             result = run_pipeline(source)
         except Exception as error:
-            self._write_text(self.output_text, f"ERROR: {error}")
+            self._write_text(self.error_text, str(error))
+            self._write_text(self.output_text, "")
+            self._write_text(self.tokens_text, "")
+            self._write_text(self.ast_text, "")
+            self._write_text(self.types_text, "")
             self.status_var.set("Run failed")
             return
 
@@ -135,6 +140,7 @@ class LanguageWorkbench:
         self._write_text(self.tokens_text, format_tokens(result.tokens))
         self._write_text(self.ast_text, result.ast_text)
         self._write_text(self.types_text, result.checked_scope.format_table())
+        self._write_text(self.error_text, "")
 
         current_label = self.current_file.name if self.current_file is not None else "editor contents"
         self.status_var.set(f"Ran {current_label}")
@@ -144,6 +150,7 @@ class LanguageWorkbench:
         self._write_text(self.tokens_text, "")
         self._write_text(self.ast_text, "")
         self._write_text(self.types_text, "")
+        self._write_text(self.error_text, "")
         self.status_var.set("Output cleared")
 
     @staticmethod
