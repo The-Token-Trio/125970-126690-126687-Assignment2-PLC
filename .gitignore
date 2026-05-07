@@ -41,6 +41,7 @@ report/*.synctex.gz
 report/*.fls
 report/*.fdb_latexmk
 report/*.blg
+report/*.bbl
 
 # Test / coverage artefacts
 .pytest_cache/
