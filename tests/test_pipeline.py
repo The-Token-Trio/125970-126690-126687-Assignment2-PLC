@@ -408,6 +408,21 @@ class IntegrationTests(unittest.TestCase):
                 "x = 1; if (x == 1) { inner = 99; } print(inner);"
             )
 
+    def test_string_equality_raises_type_error(self) -> None:
+        # == is only valid between arithmetic (Integer/Float) operands
+        with self.assertRaises(TypeCheckError):
+            run_pipeline('a = "hello"; b = "world"; if (a == b) { print(a); }')
+
+    def test_integer_floor_division(self) -> None:
+        # 7 / 2 must be 3 (floor), not 3.5
+        result = run_pipeline("x = 7 / 2; print(x);")
+        self.assertEqual(result.outputs, ["3 : Integer"])
+
+    def test_void_function_assignment_raises_type_error(self) -> None:
+        # Assigning the result of a void function (no return) must be a type error
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("def greet() { print(42); } x = greet();")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -275,6 +275,8 @@ class TypeChecker:
         return [(param, inferred.get(param, LanguageType.INTEGER)) for param in node.params]
 
     def _assign_variable_type(self, scope: SymbolTable, node: Assign, value_type: LanguageType) -> None:
+        if value_type == LanguageType.VOID:
+            raise TypeCheckError(self._error_at(node, f"Cannot assign the result of a void function to '{node.name}'"))
         try:
             symbol = scope.lookup(node.name)
         except SymbolTableError:

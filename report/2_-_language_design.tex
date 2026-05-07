@@ -138,6 +138,15 @@ for implicit numeric promotion. Unary negation is similarly split:
 \texttt{-x} negates an \texttt{Integer} (desugared to \texttt{0 - x}), and
 \texttt{-.x} negates a \texttt{Float} (desugared to \texttt{0.0 -. x}).
 
+\textbf{Integer division and division by zero.}
+\texttt{/} is floor (integer) division: both operands must be \texttt{Integer},
+the result is \texttt{Integer}, and the value is $\lfloor a / b \rfloor$.
+For example, \texttt{7 / 2} evaluates to \texttt{3 : Integer}.
+Float division uses the distinct operator \texttt{/.} and requires two
+\texttt{Float} operands.
+Division by zero (\texttt{x / 0} or \texttt{x /. 0.0}) is detected at runtime
+and raises a \texttt{RuntimeError}.
+
 \subsection{Boolean Expressions}
 Comparison operators \texttt{==} and \texttt{!=} are the lowest-precedence
 binary operators and produce \texttt{Boolean} values. Because they are part
@@ -150,6 +159,15 @@ passed as arguments, or printed:
 flag = (x == y);    (* flag inferred as Boolean *)
 print(a != b);      (* prints true/false : Boolean *)
 \end{lstlisting}
+
+\textbf{Strict arithmetic operands.}
+The specification states that \texttt{==} and \texttt{!=} operate between two
+arithmetic expressions. We interpret ``arithmetic'' strictly as \texttt{Integer}
+and \texttt{Float}, consistent with the no-overloading rule. Both operands must
+also share the same numeric type (no implicit coercion). Therefore
+\texttt{Integer == Integer} and \texttt{Float == Float} are well-typed;
+\texttt{Integer == Float}, \texttt{Boolean == Boolean}, and
+\texttt{String == String} are all rejected at type-check time.
 
 \subsection{Statements}
 \begin{lstlisting}
@@ -183,6 +201,16 @@ args     -> expr (',' expr)*
 
 Function calls use value parameter passing. This means the argument values are
 evaluated before the call and copied into the function's local environment.
+
+\textbf{Return type uniformity.}
+A function's return type is inferred from its \texttt{return} statements.
+All \texttt{return} expressions within a function body must yield the same
+type; mixed return types are a compile-time error. A function with no
+\texttt{return} statement is assigned the special internal type \texttt{Void}
+and may only be invoked as a standalone statement, not used as an expression.
+Assigning the result of a \texttt{Void} function to a variable (e.g.\
+\texttt{x = f();} where \texttt{f} returns nothing) is rejected by the type
+checker.
 
 \section{Operator Precedence and Associativity}
 Operator precedence is encoded structurally in the recursive-descent parser.
