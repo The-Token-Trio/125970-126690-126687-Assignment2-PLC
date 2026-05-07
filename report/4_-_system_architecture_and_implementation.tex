@@ -107,33 +107,33 @@ print(c +. c);
 
 \textbf{Stage 1 --- Lexer output (token stream):}
 \begin{lstlisting}
-IDENTIFIER     'a'     line 1, col 1
-ASSIGN         '='     line 1, col 3
-INT_LITERAL    '3'     line 1, col 5
-SEMICOLON      ';'     line 1, col 6
-IDENTIFIER     'b'     line 2, col 1
-ASSIGN         '='     line 2, col 3
-INT_LITERAL    '4'     line 2, col 5
-SEMICOLON      ';'     line 2, col 6
-IDENTIFIER     'print' line 3, col 1
-LPAREN         '('     line 3, col 6
-IDENTIFIER     'a'     line 3, col 7
-PLUS           '+'     line 3, col 9
-IDENTIFIER     'b'     line 3, col 11
-RPAREN         ')'     line 3, col 12
-SEMICOLON      ';'     line 3, col 13
-IDENTIFIER     'c'     line 4, col 1
-ASSIGN         '='     line 4, col 3
-FLOAT_LITERAL  '1.5'   line 4, col 5
-SEMICOLON      ';'     line 4, col 8
-IDENTIFIER     'print' line 5, col 1
-LPAREN         '('     line 5, col 6
-IDENTIFIER     'c'     line 5, col 7
-PLUS_DOT       '+.'    line 5, col 9
-IDENTIFIER     'c'     line 5, col 12
-RPAREN         ')'     line 5, col 13
-SEMICOLON      ';'     line 5, col 14
-EOF                    line 5, col 15
+  IDENTIFIER     'a'          line=1 col=1
+  ASSIGN         '='          line=1 col=3
+  INT_LITERAL    '3'          line=1 col=5
+  SEMICOLON      ';'          line=1 col=6
+  IDENTIFIER     'b'          line=2 col=1
+  ASSIGN         '='          line=2 col=3
+  INT_LITERAL    '4'          line=2 col=5
+  SEMICOLON      ';'          line=2 col=6
+  IDENTIFIER     'print'      line=3 col=1
+  LPAREN         '('          line=3 col=6
+  IDENTIFIER     'a'          line=3 col=7
+  PLUS           '+'          line=3 col=9
+  IDENTIFIER     'b'          line=3 col=11
+  RPAREN         ')'          line=3 col=12
+  SEMICOLON      ';'          line=3 col=13
+  IDENTIFIER     'c'          line=4 col=1
+  ASSIGN         '='          line=4 col=3
+  FLOAT_LITERAL  '1.5'        line=4 col=5
+  SEMICOLON      ';'          line=4 col=8
+  IDENTIFIER     'print'      line=5 col=1
+  LPAREN         '('          line=5 col=6
+  IDENTIFIER     'c'          line=5 col=7
+  PLUS_DOT       '+.'         line=5 col=9
+  IDENTIFIER     'c'          line=5 col=12
+  RPAREN         ')'          line=5 col=13
+  SEMICOLON      ';'          line=5 col=14
+  EOF            ''           line=5 col=15
 \end{lstlisting}
 
 \textbf{Stage 2 --- Parser output (ASCII branch parse tree):}
@@ -292,22 +292,22 @@ print(x +. y);
 
 \textbf{Stage 1 --- Lexer output (token stream):}
 \begin{lstlisting}
-IDENTIFIER     'x'       line=1 col=1
-ASSIGN         '='       line=1 col=3
-FLOAT_LITERAL  '2.0'     line=1 col=5
-SEMICOLON      ';'       line=1 col=8
-IDENTIFIER     'y'       line=2 col=1
-ASSIGN         '='       line=2 col=3
-FLOAT_LITERAL  '3.5'     line=2 col=5
-SEMICOLON      ';'       line=2 col=8
-IDENTIFIER     'print'   line=3 col=1
-LPAREN         '('       line=3 col=6
-IDENTIFIER     'x'       line=3 col=7
-PLUS_DOT       '+.'      line=3 col=9
-IDENTIFIER     'y'       line=3 col=12
-RPAREN         ')'       line=3 col=13
-SEMICOLON      ';'       line=3 col=14
-EOF                      line=3 col=15
+  IDENTIFIER     'x'          line=1 col=1
+  ASSIGN         '='          line=1 col=3
+  FLOAT_LITERAL  '2.0'        line=1 col=5
+  SEMICOLON      ';'          line=1 col=8
+  IDENTIFIER     'y'          line=2 col=1
+  ASSIGN         '='          line=2 col=3
+  FLOAT_LITERAL  '3.5'        line=2 col=5
+  SEMICOLON      ';'          line=2 col=8
+  IDENTIFIER     'print'      line=3 col=1
+  LPAREN         '('          line=3 col=6
+  IDENTIFIER     'x'          line=3 col=7
+  PLUS_DOT       '+.'         line=3 col=9
+  IDENTIFIER     'y'          line=3 col=12
+  RPAREN         ')'          line=3 col=13
+  SEMICOLON      ';'          line=3 col=14
+  EOF            ''           line=3 col=15
 \end{lstlisting}
 
 \noindent Note that the lexer emits \texttt{PLUS\_DOT} (not \texttt{PLUS}) for
@@ -493,8 +493,10 @@ opens at $1200 \times 760$ pixels in a horizontal split layout.
 
 \textbf{Toolbar.}  A top toolbar provides three buttons --- \textit{Open
 Script}, \textit{Run}, and \textit{Clear Output} --- and a right-aligned
-status label that reports \textit{Ready}, a loaded filename, or \textit{Run
-failed}.
+status label that reports \textit{Ready} on launch,
+\textit{Loaded \textless{}filename\textgreater{}} after a script is opened,
+\textit{Ran \textless{}name\textgreater{}} after a successful run, or
+\textit{Run failed} when a pipeline stage raises an error.
 
 \textbf{Left panel (source editor).}  A monospaced \texttt{Text} widget
 with both horizontal and vertical scrollbars allows the user to enter or
