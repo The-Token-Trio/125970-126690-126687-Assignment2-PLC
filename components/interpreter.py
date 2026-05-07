@@ -179,7 +179,19 @@ class Interpreter:
         if node.op == "*":
             return left_value * right_value
         if node.op == "/":
-            return left_value / right_value
+            if int(right_value) == 0:
+                raise InterpreterError(self._error_at(node, "Division by zero"))
+            return int(left_value) // int(right_value)
+        if node.op == "+.":
+            return float(left_value) + float(right_value)
+        if node.op == "-.":
+            return float(left_value) - float(right_value)
+        if node.op == "*.":
+            return float(left_value) * float(right_value)
+        if node.op == "/.":
+            if float(right_value) == 0.0:
+                raise InterpreterError(self._error_at(node, "Division by zero"))
+            return float(left_value) / float(right_value)
         if node.op == "==":
             return left_value == right_value
         if node.op == "!=":

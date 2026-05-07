@@ -39,10 +39,14 @@ Keywords &
 \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def},
 \texttt{return}, \texttt{print} &
 keyword-specific token variants \\
-Operators &
-\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}, \texttt{=},
-\texttt{==}, \texttt{!=} &
-\texttt{PLUS}, \texttt{MINUS}, \texttt{STAR}, \texttt{SLASH},
+Integer operators &
+\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} &
+\texttt{PLUS}, \texttt{MINUS}, \texttt{STAR}, \texttt{SLASH} \\
+Float operators &
+\texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} &
+\texttt{PLUS\_DOT}, \texttt{MINUS\_DOT}, \texttt{STAR\_DOT}, \texttt{SLASH\_DOT} \\
+Other operators &
+\texttt{=}, \texttt{==}, \texttt{!=} &
 \texttt{ASSIGN}, \texttt{EQUAL\_EQUAL}, \texttt{BANG\_EQUAL} \\
 Delimiters &
 Parentheses, braces, comma, and semicolon (see lexer delimiter tokens) &
@@ -137,11 +141,26 @@ KEYWORDS: dict[str, TokenType] = {
 \end{lstlisting}
 
 \begin{lstlisting}
+# Arithmetic operators with optional trailing '.' for float variant
+_ARITH_DOT: dict[str, tuple[TokenType, TokenType]] = {
+   "+": (TokenType.PLUS,  TokenType.PLUS_DOT),
+   "-": (TokenType.MINUS, TokenType.MINUS_DOT),
+   "*": (TokenType.STAR,  TokenType.STAR_DOT),
+   "/": (TokenType.SLASH, TokenType.SLASH_DOT),
+}
+\end{lstlisting}
+
+When one of these characters is encountered, the lexer checks the next
+character: if it is a \texttt{.} (and the character after that is not a digit),
+the dot-suffixed float variant is emitted; otherwise the plain integer operator
+is emitted. This lookahead prevents the \texttt{.} in a float literal such as
+\texttt{3.14} from being consumed as part of an operator.
+
+\begin{lstlisting}
 SINGLE_CHAR_TOKENS: dict[str, TokenType] = {
-   "+": TokenType.PLUS,
-   "-": TokenType.MINUS,
-   "*": TokenType.STAR,
-   "/": TokenType.SLASH,
+   "=": TokenType.ASSIGN,
+   "(": TokenType.LPAREN,
+   ")": TokenType.RPAREN,
    # ...
 }
 \end{lstlisting}

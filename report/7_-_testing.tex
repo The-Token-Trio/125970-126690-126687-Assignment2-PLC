@@ -13,7 +13,7 @@ Table~\ref{tab:manual-test-cases} summarises the categories covered.
 \toprule
 Category & Program Behaviour & Expected Result \\
 \midrule
-Arithmetic & Evaluate mixed numeric expressions & Correct value and inferred type \\
+Arithmetic & Evaluate integer and float expressions separately & Correct value and inferred type \\
 If-then-else & Choose one branch from a Boolean condition & Only matching branch runs \\
 While-loop & Print during repeated execution & One output line per iteration \\
 Functions & Infer parameters and return type & Valid call and correct return value \\
@@ -28,8 +28,10 @@ Stage~1 token output for programs that exercise every token category: integer
 and float literals, Boolean literals, string literals, all six keywords,
 two-character comparison operators (\texttt{==}, \texttt{!=}), single-character
 operators, and delimiters. Identifier scanning with keyword fallback was
-confirmed by checking that \texttt{true}, \texttt{false}, and reserved words
-are emitted with their keyword token types while non-keyword names produce
+confirmed by checking that \texttt{true} and \texttt{false} are emitted as
+\texttt{BOOL\_LITERAL} tokens, the six reserved words (\texttt{if},
+\texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print})
+as their respective keyword token types, and non-keyword names as
 \texttt{IDENTIFIER} tokens. For example, the source fragment \texttt{x = 10;}
 produces the token sequence:
 
@@ -59,7 +61,7 @@ The parser was verified manually by running the full pipeline and inspecting
 Stage~2 AST output. The following cases were checked:
 
 \begin{itemize}
-    \item arithmetic expressions with mixed precedence (e.g.\ \texttt{x + y * 2}) produce a tree where multiplication is a deeper sub-tree than addition, confirming the \texttt{\_expr}/\texttt{\_term}/\texttt{\_factor} precedence encoding,
+    \item arithmetic expressions with mixed precedence (e.g.\ \texttt{x + y * 2}) produce a tree where multiplication is a deeper sub-tree than addition, confirming the \texttt{\_expr}/\texttt{\_additive}/\texttt{\_term}/\texttt{\_factor} precedence encoding,
     \item assignment versus expression statement dispatch: \texttt{x = 5;} produces an \texttt{Assign} node while \texttt{add(1,2);} produces a \texttt{FunctionCall} node at the statement level, confirming the IDENTIFIER+ASSIGN lookahead,
     \item \texttt{if} with and without an \texttt{else} clause: the resulting \texttt{If} node has a non-null \texttt{else\_block} only when the clause is present,
     \item function definitions store only parameter names in the \texttt{FunctionDef} node; the AST printer output was inspected to confirm no type annotations are present at this stage,
@@ -68,11 +70,22 @@ Stage~2 AST output. The following cases were checked:
 \end{itemize}
 
 \subsection{Arithmetic Expressions}
-Arithmetic expressions were tested with integer-only and mixed integer--float
-programs to verify operator precedence and numeric promotion. The expression
+Arithmetic expressions were tested with integer-only and float-only programs to
+verify operator precedence and strict type separation. The expression
 \texttt{x + y * 2} confirmed that multiplication binds more tightly than
-addition, and mixed-type operands consistently produced \texttt{Float} results
-in accordance with the promotion rules defined in Chapter~5.
+addition, and mixing integer and float operands correctly produced a type error,
+confirming the no-overloading design. The test suite explicitly verifies that
+mixed-type arithmetic is rejected:
+
+\begin{itemize}[nosep]
+  \item \texttt{1 + 2} --- valid Integer arithmetic.
+  \item \texttt{2.0 +. 3.5} --- valid Float arithmetic.
+  \item \texttt{5.0 -. 1.5}, \texttt{2.0 *. 3.0}, \texttt{9.0 /. 4.0} --- valid Float arithmetic for the other dot-suffixed operators.
+  \item \texttt{1 + 2.5} --- \texttt{TypeError}: operator \texttt{+} requires two Integer operands.
+  \item \texttt{2 +. 3} --- \texttt{TypeError}: operator \texttt{+.} requires two Float operands.
+  \item \texttt{10 / 0} and \texttt{10.0 /. 0.0} --- \texttt{InterpreterError}: division by zero, raised at runtime.
+  \item \texttt{1.0 +. 2.0 *. 3.0} --- evaluates to \texttt{7.0} confirming \texttt{*.} binds more tightly than \texttt{+.}.
+\end{itemize}
 
 \subsection{Boolean Expressions}
 Boolean expressions were tested inside \texttt{if} and \texttt{while}
@@ -109,14 +122,17 @@ calls to the same function.
 \subsection{Print}
 The built-in \texttt{print()} function was tested with all supported runtime
 types. The output includes the printed value together with its type, such as
-\texttt{29.5 : Float} and \texttt{"plc" : String}.
+\texttt{3.14 : Float} and \texttt{"plc" : String}.
 
 \subsection{Unary Minus}
 The unary minus operator was verified for integer literals (\texttt{x = -5}),
-float literals (\texttt{y = -3.14}), negated variable references
-(\texttt{y = -x}), and negation inside a larger expression
-(\texttt{x = 3 + -2}). In each case the type checker assigned the correct
-type and the interpreter produced the expected value.
+float literals (\texttt{y = -. 3.14}), negated float variables
+(\texttt{y = -. x}), negated integer variables (\texttt{y = -x}), and
+negation inside a larger expression (\texttt{x = 3 + -2}). In each case the
+type checker assigned the correct type and the interpreter produced the
+expected value. Note that float negation uses the \texttt{-.} token, consistent
+with the Caml~Light convention; using plain \texttt{-} on a \texttt{Float}
+operand is rejected by the type checker.
 
 \section{Type Error Detection}
 The checker was verified with invalid programs involving incompatible
@@ -148,21 +164,30 @@ organised into five classes, each targeting a distinct compiler stage.
 \toprule
 Test class & Stage covered & Tests \\
 \midrule
-\texttt{LexerTests}        & Tokenisation (\texttt{lexica.py})                &  10 \\
+\texttt{LexerTests}        & Tokenisation (\texttt{lexica.py})                &  12 \\
 \texttt{SymbolTableTests}  & Scoped symbol table (\texttt{symbol\_table.py})  &   7 \\
-\texttt{ParserTests}       & Parsing and precedence (\texttt{parser.py})      &   5 \\
-\texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) &  15 \\
-\texttt{IntegrationTests}  & Full pipeline execution                           &  17 \\
+\texttt{ParserTests}       & Parsing and precedence (\texttt{parser.py})      &   6 \\
+\texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) &  22 \\
+\texttt{IntegrationTests}  & Full pipeline execution                           &  23 \\
 \midrule
-                           & \textbf{Total}                                   & \textbf{54} \\
+                           & \textbf{Total}                                   & \textbf{70} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \noindent\textbf{LexerTests} verify that each token category (integer, float,
-Boolean, string, keywords, identifiers, two-character operators) is produced
-correctly, that source line numbers are tracked across newlines, and that
-illegal characters and unterminated strings raise \texttt{LexerError}.
+Boolean, string, keywords, identifiers, two-character operators, and the four
+float-arithmetic operators \texttt{+.} \texttt{-.} \texttt{*.} \texttt{/.})
+is produced correctly, that float literals such as \texttt{3.14} are not
+confused with integer followed by a dot operator, that source line numbers are
+tracked across newlines, and that illegal characters and unterminated strings
+raise \texttt{LexerError}.
+
+\noindent\textbf{ParserTests} verify structural correctness of parsing. The 6
+tests cover missing-semicolon and unclosed-brace error reporting, integer
+operator precedence (\texttt{*} before \texttt{+}), float operator precedence
+(\texttt{*.} before \texttt{+.}), left-associativity of arithmetic operators,
+and parenthesised expressions overriding precedence.
 
 \noindent\textbf{SymbolTableTests} exercise the symbol table directly, without
 going through the full pipeline. They cover variable definition and lookup,
@@ -172,27 +197,38 @@ lookup error, and the \texttt{format\_table()} output for both variable and
 function symbol rows.
 
 \noindent\textbf{TypeCheckerTests} verify static type inference and error
-detection. The 15 tests cover integer and float arithmetic, division producing
-\texttt{Float}, numeric promotion, string and boolean type inference,
-assignment type mismatch, non-Boolean conditions, undefined variables, wrong
-argument count and type, and two tests for uncalled-function body checking:
-one confirms that a type error inside a never-called function body is detected,
-and another confirms that a valid uncalled function raises no error.
+detection. The 22 tests cover integer and float arithmetic (all four
+dot-suffixed operators \texttt{+.} \texttt{-.} \texttt{*.} \texttt{/.} each
+verified to produce \texttt{Float}), integer floor division producing
+\texttt{Integer}, strict type separation (mixed Integer/Float rejected for both
+arithmetic and comparison operators, and integers used with a dot operator
+rejected), string and boolean type inference, assignment type mismatch,
+non-Boolean conditions, undefined variables, wrong argument count and type, and
+two tests for uncalled-function body checking: one confirms that a type error
+inside a never-called function body is detected, and another confirms that a
+valid uncalled function raises no error.
 
 \noindent\textbf{IntegrationTests} run programs through all four pipeline
 stages and verify the final output. Cases include unary negation on all
-numeric types, both branches of \texttt{if}/\texttt{else}, while-loop
-countdown, \texttt{print()} with every type, value-parameter isolation,
-nested function calls, variable reassignment, and scope isolation (variables
+numeric types (including \texttt{-.} applied to a float variable), division by
+zero for both \texttt{/} and \texttt{/.} (each must raise
+\texttt{InterpreterError}), both branches of \texttt{if}/\texttt{else},
+while-loop countdown, \texttt{print()} with every type, value-parameter
+isolation, nested function calls, comparison results assigned to variables and
+printed directly, variable reassignment, and scope isolation (variables
 declared inside an \texttt{if} block are not visible outside it).
 
 The tests can be run with:
 
 \begin{lstlisting}
+# macOS / Linux
 python3 -m unittest discover -s tests -v
+
+# Windows
+.\venv\Scripts\python.exe -m unittest discover -s tests -v
 \end{lstlisting}
 
-All 54 tests pass.
+All 70 tests pass.
 
 \section{Error Handling}
 The language system reports errors at three main stages:

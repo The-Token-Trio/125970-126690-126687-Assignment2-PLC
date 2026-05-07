@@ -12,11 +12,17 @@ quotation marks or a decimal point.
 
 \subsection{Float}
 The Float type represents real-valued numbers written with a decimal point, such
-as \texttt{3.14} or \texttt{20.5}. Float values are used in arithmetic
-expressions and also arise as the result of any division. Division always
-produces a \texttt{Float} even when both operands are \texttt{Integer}: for
-example, \texttt{10 / 2} evaluates to \texttt{5.0 : Float}. This is an
-explicit design rule enforced in the type checker.
+as \texttt{3.14} or \texttt{0.5}. Float values are used exclusively with the
+dot-suffixed arithmetic operators (\texttt{+.}, \texttt{-.}, \texttt{*.},
+\texttt{/.}), following the Caml~Light convention. Integer division (\texttt{/})
+performs floor division and returns \texttt{Integer}: for example,
+\texttt{10 / 3} evaluates to \texttt{3 : Integer}.
+
+The language intentionally does not perform implicit numeric promotion between
+\texttt{Integer} and \texttt{Float} values. Mixed-type arithmetic such as
+\texttt{1 + 2.5} is rejected by the type checker. Instead, the language follows
+the Caml~Light convention of using separate operator tokens for integer and
+floating-point arithmetic.
 
 \subsection{Boolean}
 The Boolean type represents logical truth values. The two Boolean literals are
@@ -40,7 +46,8 @@ well-defined return type for functions that contain no \texttt{return}
 statement, allowing the symbol table to record a consistent entry for every
 function regardless of whether it produces a value. \texttt{Void} cannot appear
 in source code and is never visible to the programmer; it is a bookkeeping
-device used internally by the type checker.
+device used internally by the type checker. Therefore, \texttt{Void} does not
+extend the programmer-visible type system required by the assignment.
 
 \section{Static Typing}
 The language employs static typing, meaning that type errors are detected at
@@ -77,7 +84,8 @@ Token Category & Example Lexemes \\
 \texttt{BOOL\_LITERAL} & \texttt{true}, \texttt{false} \\
 \texttt{STRING\_LITERAL} & \texttt{"hello"} \\
 \texttt{IDENTIFIER} & variable and function names such as \texttt{x}, \texttt{add} \\
-Arithmetic operators & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
+Arithmetic operators (integer) & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
+Float arithmetic operators & \texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} \\
 Comparison operators & \texttt{==}, \texttt{!=} \\
 Assignment operator & \texttt{=} \\
 Keywords & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print} \\
@@ -105,49 +113,49 @@ statement -> assignment
 	   | expr ';'
 \end{lstlisting}
 
-\subsection{Arithmetic Expressions}
+\subsection{Expressions}
 \begin{lstlisting}
-expr   -> term (('+' | '-') term)*
-term   -> factor (('*' | '/') factor)*
-factor -> '-' factor
-	| INT_LITERAL
-	| FLOAT_LITERAL
-	| STRING_LITERAL
-	| BOOL_LITERAL
-	| IDENTIFIER
-	| IDENTIFIER '(' args? ')'
-	| '(' expr ')'
+expr      -> additive (('==' | '!=') additive)?
+additive  -> term (('+' | '-' | '+.' | '-.') term)*
+term      -> factor (('*' | '/' | '*.' | '/.') factor)*
+factor    -> '-'  factor     (* integer unary negation *)
+	   | '-.' factor    (* float unary negation *)
+	   | INT_LITERAL
+	   | FLOAT_LITERAL
+	   | STRING_LITERAL
+	   | BOOL_LITERAL
+	   | IDENTIFIER
+	   | IDENTIFIER '(' args? ')'
+	   | '(' expr ')'
 \end{lstlisting}
 
-The unary minus production allows negative literals such as \texttt{-5} and
-negated variable references such as \texttt{-x}. It is implemented as a
-right-recursive descent into \texttt{factor} and is desugared internally to
-\texttt{0 - factor}, so all existing type rules for arithmetic apply without
-modification.
+The operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/} operate
+exclusively on \texttt{Integer} operands. The dot-suffixed operators
+\texttt{+.}, \texttt{-.}, \texttt{*.}, and \texttt{/.} operate exclusively on
+\texttt{Float} operands. This follows the Caml~Light convention of using
+distinct operator tokens for integer and float arithmetic, eliminating the need
+for implicit numeric promotion. Unary negation is similarly split:
+\texttt{-x} negates an \texttt{Integer} (desugared to \texttt{0 - x}), and
+\texttt{-.x} negates a \texttt{Float} (desugared to \texttt{0.0 -. x}).
 
 \subsection{Boolean Expressions}
+Comparison operators \texttt{==} and \texttt{!=} are the lowest-precedence
+binary operators and produce \texttt{Boolean} values. Because they are part
+of the general \texttt{expr} rule, Boolean expressions may appear both as
+control-flow conditions and as ordinary expressions. Their inferred type is
+\texttt{Boolean}, allowing comparison results to be assigned to variables,
+passed as arguments, or printed:
+
 \begin{lstlisting}
-bool_expr -> expr '==' expr
-	   | expr '!=' expr
-	   | BOOL_LITERAL
-	   | expr          (* fallback: type checker enforces Boolean *)
+flag = (x == y);    (* flag inferred as Boolean *)
+print(a != b);      (* prints true/false : Boolean *)
 \end{lstlisting}
-
-Boolean expressions are only parsed as conditions inside \texttt{if} and
-\texttt{while} statements. Comparison results are not storable in variables
-directly; the grammar does not include \texttt{bool\_expr} in the
-\texttt{factor} rule. This is consistent with the assignment specification,
-which describes Boolean expressions primarily as conditions.
-
-If \texttt{bool\_expr} parses an expression and finds no following \texttt{==}
-or \texttt{!=} operator, the expression is returned as-is and the type checker
-verifies that its inferred type is \texttt{Boolean}.
 
 \subsection{Statements}
 \begin{lstlisting}
 assignment  -> IDENTIFIER '=' expr ';'
-if_stmt     -> 'if' '(' bool_expr ')' block ('else' block)?
-while_stmt  -> 'while' '(' bool_expr ')' block
+if_stmt     -> 'if' '(' expr ')' block ('else' block)?
+while_stmt  -> 'while' '(' expr ')' block
 print_stmt  -> 'print' '(' expr ')' ';'
 return_stmt -> 'return' expr ';'
 block       -> '{' statement* '}'
@@ -176,9 +184,9 @@ operators are left-associative.
 \toprule
 Precedence & Operators & Associativity \\
 \midrule
-1 (lowest) & \texttt{==}, \texttt{!=} & non-associative (condition use only) \\
-2 & \texttt{+}, \texttt{-} & left-associative \\
-3 (highest) & \texttt{*}, \texttt{/} & left-associative \\
+1 (lowest) & \texttt{==}, \texttt{!=} & non-associative (one comparison per expression) \\
+2 & \texttt{+}, \texttt{-}, \texttt{+.}, \texttt{-.} & left-associative \\
+3 (highest) & \texttt{*}, \texttt{/}, \texttt{*.}, \texttt{/.} & left-associative \\
 \bottomrule
 \end{tabular}
 \end{table}

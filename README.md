@@ -17,7 +17,7 @@ Assignment 2 | Asian Institute of Technology
 
 | Name                              | Student ID | Assignment Scope                                                                                                                                     |
 | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 54 tests) |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 62 tests) |
 | Applegate T. Tun Oo               | st126690   | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
 | Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
 
@@ -31,8 +31,8 @@ A statically-typed interpreted language built from scratch in Python, implementi
 | ------------- | ------------------------------------------------------------- |
 | Types         | `Integer`, `Float`, `Boolean`, `String`                       |
 | Typing        | Static, with type inference — no explicit declarations needed |
-| Arithmetic    | `+`, `-`, `*`, `/` with standard precedence; unary `-`        |
-| Comparisons   | `==`, `!=` between two arithmetic (numeric) expressions       |
+| Arithmetic    | `+`, `-`, `*`, `/` (Integer); `+.`, `-.`, `*.`, `/.` (Float); no overloading |
+| Comparisons   | `==`, `!=` between two same-type arithmetic expressions        |
 | Control flow  | `if`/`else`, `while`                                          |
 | Functions     | Definition, value-parameter calls, `return`                   |
 | Built-in      | `print()` — outputs value with its inferred type              |
@@ -52,8 +52,16 @@ def add(a, b) {
     return result;
 }
 
+def addf(a, b) {
+    result = a +. b;
+    print(result);
+    return result;
+}
+
 x = 10;
-y = 20.5;
+y = 20;
+pi = 3.14;
+half = 0.5;
 name = "plc";
 flag = true;
 
@@ -71,6 +79,9 @@ while (i != 0) {
 
 z = add(x, y);
 print(z);
+
+w = addf(pi, half);
+print(w);
 ```
 
 Output:
@@ -80,8 +91,10 @@ Output:
 3 : Integer
 2 : Integer
 1 : Integer
-30.5 : Float
-30.5 : Float
+30 : Integer
+30 : Integer
+3.64 : Float
+3.64 : Float
 ```
 
 ---
@@ -136,13 +149,13 @@ report/              - LaTeX report source and compiled PDF
 **CLI — built-in sample:**
 
 ```bash
-python3 main.py
+.\.venv\Scripts\python.exe main.py
 ```
 
 **CLI — run a source file:**
 
 ```bash
-python3 main.py path/to/script.txt
+.\.venv\Scripts\python.exe main.py path\to\script.txt
 ```
 
 Each run prints four labelled stages: token list, AST, inferred type table, and execution output.
@@ -150,28 +163,30 @@ Each run prints four labelled stages: token list, AST, inferred type table, and 
 **Desktop UI:**
 
 ```bash
-python3 ui.py
+.\.venv\Scripts\python.exe ui.py
 ```
 
 Edit a script on the left panel and click Run. Results appear in tabbed panes on the right: Tokens, AST, Types, and Output.
+
+If Python is already on your `PATH`, `python` or `python3` can be used in place of the explicit virtual-environment interpreter above.
 
 ---
 
 ## Running Tests
 
 ```bash
-python3 -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-54 tests across 5 classes in `tests/test_pipeline.py`:
+62 tests across 5 classes in `tests/test_pipeline.py`:
 
 | Class | Stage | Tests |
 |---|---|---|
-| `LexerTests` | Tokenisation | 10 |
+| `LexerTests` | Tokenisation | 12 |
 | `SymbolTableTests` | Scoped symbol table | 7 |
 | `ParserTests` | Parsing and precedence | 5 |
-| `TypeCheckerTests` | Static type inference and error detection | 15 |
-| `IntegrationTests` | Full pipeline execution | 17 |
+| `TypeCheckerTests` | Static type inference and error detection | 18 |
+| `IntegrationTests` | Full pipeline execution | 20 |
 
 ---
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 
+from components.interpreter import InterpreterError
 from components.lexica import Lexer, LexerError
 from components.parser import Parser, ParseError
 from components.pipeline import run_pipeline
@@ -52,6 +53,18 @@ class LexerTests(unittest.TestCase):
         tokens = Lexer("== !=").tokenize()
         self.assertEqual(tokens[0].token_type, TokenType.EQUAL_EQUAL)
         self.assertEqual(tokens[1].token_type, TokenType.BANG_EQUAL)
+
+    def test_float_dot_operators_tokenised(self) -> None:
+        tokens = Lexer("+. -. *. /.").tokenize()
+        expected = [TokenType.PLUS_DOT, TokenType.MINUS_DOT, TokenType.STAR_DOT, TokenType.SLASH_DOT]
+        actual = [t.token_type for t in tokens if t.token_type != TokenType.EOF]
+        self.assertEqual(actual, expected)
+
+    def test_float_literal_not_confused_with_dot_operator(self) -> None:
+        # "3.14" must produce FLOAT_LITERAL, not INT_LITERAL followed by something
+        tokens = Lexer("3.14").tokenize()
+        self.assertEqual(tokens[0].token_type, TokenType.FLOAT_LITERAL)
+        self.assertEqual(tokens[0].lexeme, "3.14")
 
     def test_source_position_tracked_across_lines(self) -> None:
         tokens = Lexer("x\ny").tokenize()
@@ -157,6 +170,11 @@ class ParserTests(unittest.TestCase):
         result = run_pipeline("x = (2 + 3) * 4; print(x);")
         self.assertEqual(result.outputs, ["20 : Integer"])
 
+    def test_float_operator_precedence_mul_before_add(self) -> None:
+        # 1.0 +. 2.0 *. 3.0 must be 7.0 (*.  binds tighter than +.)
+        result = run_pipeline("x = 1.0 +. 2.0 *. 3.0; print(x);")
+        self.assertEqual(result.outputs, ["7.0 : Float"])
+
 
 # ---------------------------------------------------------------------------
 # Type checker
@@ -169,14 +187,36 @@ class TypeCheckerTests(unittest.TestCase):
         result = run_pipeline("x = 3 + 4; print(x);")
         self.assertEqual(result.outputs, ["7 : Integer"])
 
-    def test_division_always_produces_float(self) -> None:
-        # integer / integer → Float by design
+    def test_division_always_produces_integer(self) -> None:
+        # integer / integer -> Integer (no implicit float conversion)
         result = run_pipeline("x = 10 / 2; print(x);")
-        self.assertEqual(result.outputs, ["5.0 : Float"])
+        self.assertEqual(result.outputs, ["5 : Integer"])
 
-    def test_float_promotion_in_addition(self) -> None:
-        result = run_pipeline("x = 1 + 2.5; print(x);")
+    def test_float_dot_operators_produce_float(self) -> None:
+        result = run_pipeline("x = 1.0 +. 2.5; print(x);")
         self.assertEqual(result.outputs, ["3.5 : Float"])
+
+    def test_float_subtraction_produces_float(self) -> None:
+        result = run_pipeline("x = 5.0 -. 1.5; print(x);")
+        self.assertEqual(result.outputs, ["3.5 : Float"])
+
+    def test_float_multiplication_produces_float(self) -> None:
+        result = run_pipeline("x = 2.0 *. 3.0; print(x);")
+        self.assertEqual(result.outputs, ["6.0 : Float"])
+
+    def test_float_division_produces_float(self) -> None:
+        result = run_pipeline("x = 9.0 /. 4.0; print(x);")
+        self.assertEqual(result.outputs, ["2.25 : Float"])
+
+    def test_integer_with_float_op_raises_type_error(self) -> None:
+        # +. requires Float operands; integers must not be accepted
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 2 +. 3; print(x);")
+
+    def test_mixed_int_float_addition_raises_type_error(self) -> None:
+        # Integer + Float is no longer valid; must use +.
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 1 + 2.5; print(x);")
 
     def test_string_variable_type_inferred(self) -> None:
         result = run_pipeline('x = "hello"; print(x);')
@@ -190,6 +230,15 @@ class TypeCheckerTests(unittest.TestCase):
         # Boolean == Boolean is not allowed; == only accepts arithmetic operands
         with self.assertRaises(TypeCheckError):
             run_pipeline('x = true; if (x == false) { print("then"); } else { print("else"); }')
+
+    def test_mixed_int_float_equality_raises_type_error(self) -> None:
+        # == and != must not accept mixed Integer/Float (no overloading)
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 5; y = 3.14; if (x == y) { print(x); }")
+
+    def test_mixed_int_float_inequality_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = 5; y = 3.14; if (x != y) { print(x); }")
 
     def test_arithmetic_on_string_raises_type_error(self) -> None:
         with self.assertRaises(TypeCheckError):
@@ -245,8 +294,12 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(result.outputs, ["-5 : Integer"])
 
     def test_unary_minus_float(self) -> None:
-        result = run_pipeline("y = -3.14; print(y);")
+        result = run_pipeline("y = -. 3.14; print(y);")
         self.assertEqual(result.outputs, ["-3.14 : Float"])
+
+    def test_unary_minus_dot_variable(self) -> None:
+        result = run_pipeline("x = 1.5; y = -. x; print(y);")
+        self.assertEqual(result.outputs, ["-1.5 : Float"])
 
     def test_unary_minus_variable(self) -> None:
         result = run_pipeline("x = 10; y = -x; print(y);")
@@ -274,6 +327,16 @@ class IntegrationTests(unittest.TestCase):
         result = run_pipeline("x = 3; while (x != 0) { print(x); x = x - 1; }")
         self.assertEqual(result.outputs, ["3 : Integer", "2 : Integer", "1 : Integer"])
 
+    # --- Division by zero ---
+
+    def test_integer_division_by_zero_raises_error(self) -> None:
+        with self.assertRaises(InterpreterError):
+            run_pipeline("x = 10 / 0; print(x);")
+
+    def test_float_division_by_zero_raises_error(self) -> None:
+        with self.assertRaises(InterpreterError):
+            run_pipeline("x = 10.0 /. 0.0; print(x);")
+
     # --- Functions ---
 
     def test_function_integer_return(self) -> None:
@@ -282,7 +345,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_function_type_inference(self) -> None:
         result = run_pipeline(
-            "def add(a, b) { return a + b; } result = add(2, 3.5); print(result);"
+            "def add(a, b) { return a +. b; } result = add(2.0, 3.5); print(result);"
         )
         self.assertEqual(result.outputs, ["5.5 : Float"])
         self.assertIn("result       variable   Float", result.checked_scope.format_table())
@@ -317,6 +380,20 @@ class IntegrationTests(unittest.TestCase):
     def test_print_string(self) -> None:
         result = run_pipeline('print("plc");')
         self.assertEqual(result.outputs, ['"plc" : String'])
+
+    # --- Boolean expressions as values ---
+
+    def test_comparison_result_assigned_to_variable(self) -> None:
+        result = run_pipeline("x = 5; y = 5; flag = (x == y); print(flag);")
+        self.assertEqual(result.outputs, ["true : Boolean"])
+
+    def test_comparison_result_printed_directly(self) -> None:
+        result = run_pipeline("x = 10; print(x != 0);")
+        self.assertEqual(result.outputs, ["true : Boolean"])
+
+    def test_comparison_result_false(self) -> None:
+        result = run_pipeline("a = 1; b = 2; eq = (a == b); print(eq);")
+        self.assertEqual(result.outputs, ["false : Boolean"])
 
     # --- Reassignment ---
 

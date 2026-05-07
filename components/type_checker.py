@@ -222,9 +222,9 @@ class TypeChecker:
     def _infer_param_types_from_body(self, node: FunctionDef) -> list[tuple[str, LanguageType]]:
         """Infer parameter types by scanning the body for expression contexts.
 
-        Any parameter used as an operand of an arithmetic or comparison operator
-        is inferred as numeric (Float if the sibling operand is a float literal,
-        Integer otherwise).  Parameters whose usage gives no type hint default to
+        Any parameter used as an operand of a float operator (+. -. *. /.) is
+        inferred as Float; a parameter used with an integer operator (+ - * /
+        == !=) is inferred as Integer.  Parameters with no type hint default to
         Integer.
         """
         param_names = set(node.params)
@@ -233,12 +233,13 @@ class TypeChecker:
         def scan_expr(n: ASTNode) -> None:
             if isinstance(n, BinaryOp):
                 if n.op in {"+", "-", "*", "/", "==", "!="}:
-                    for operand, other in ((n.left, n.right), (n.right, n.left)):
+                    for operand in (n.left, n.right):
                         if isinstance(operand, Identifier) and operand.name in param_names:
-                            if isinstance(other, Literal) and isinstance(other.value, float):
-                                inferred.setdefault(operand.name, LanguageType.FLOAT)
-                            else:
-                                inferred.setdefault(operand.name, LanguageType.INTEGER)
+                            inferred.setdefault(operand.name, LanguageType.INTEGER)
+                elif n.op in {"+.", "-.", "*.", "/."}:
+                    for operand in (n.left, n.right):
+                        if isinstance(operand, Identifier) and operand.name in param_names:
+                            inferred.setdefault(operand.name, LanguageType.FLOAT)
                 scan_expr(n.left)
                 scan_expr(n.right)
             elif isinstance(n, FunctionCall):
@@ -297,22 +298,43 @@ class TypeChecker:
         left_type: LanguageType,
         right_type: LanguageType,
     ) -> LanguageType:
-        if node.op in {"+", "-", "*", "/"}:
-            if not self._is_numeric(left_type) or not self._is_numeric(right_type):
-                raise TypeCheckError(self._error_at(node, f"Operator '{node.op}' requires numeric operands"))
-            if node.op == "/":
-                return LanguageType.FLOAT
-            if left_type == LanguageType.FLOAT or right_type == LanguageType.FLOAT:
-                return LanguageType.FLOAT
+        # Integer operators: both operands must be Integer
+        if node.op in {"+", "-", "*"}:
+            if left_type != LanguageType.INTEGER or right_type != LanguageType.INTEGER:
+                raise TypeCheckError(
+                    self._error_at(node, f"Operator '{node.op}' requires two Integer operands")
+                )
             return LanguageType.INTEGER
 
+        # Integer division: both operands must be Integer, result is Integer
+        if node.op == "/":
+            if left_type != LanguageType.INTEGER or right_type != LanguageType.INTEGER:
+                raise TypeCheckError(
+                    self._error_at(node, f"Operator '{node.op}' requires two Integer operands")
+                )
+            return LanguageType.INTEGER
+
+        # Float operators: both operands must be Float
+        if node.op in {"+.", "-.", "*.", "/."}:
+            if left_type != LanguageType.FLOAT or right_type != LanguageType.FLOAT:
+                raise TypeCheckError(
+                    self._error_at(node, f"Operator '{node.op}' requires two Float operands")
+                )
+            return LanguageType.FLOAT
+
         if node.op in {"==", "!="}:
-            numeric_comparison = self._is_numeric(left_type) and self._is_numeric(right_type)
-            if not numeric_comparison:
+            if not self._is_numeric(left_type) or not self._is_numeric(right_type):
                 raise TypeCheckError(
                     self._error_at(
                         node,
                         f"Operator '{node.op}' requires two arithmetic operands",
+                    )
+                )
+            if left_type != right_type:
+                raise TypeCheckError(
+                    self._error_at(
+                        node,
+                        f"Operator '{node.op}' requires operands of the same type, got {left_type.value} and {right_type.value}",
                     )
                 )
             return LanguageType.BOOLEAN
