@@ -161,6 +161,19 @@ return_stmt -> 'return' expr ';'
 block       -> '{' statement* '}'
 \end{lstlisting}
 
+\subsubsection*{Design note: \texttt{print} as a built-in statement}
+\texttt{print} is realised as a built-in statement form rather than a
+user-callable function.  We chose this design for three reasons:
+(a)~the language has no first-class functions or void-returning user functions,
+so a built-in callable would be the only member of its kind;
+(b)~the syntactic form \texttt{print(expr);} is identical to a function call
+from the user's perspective, so there is no usability cost;
+(c)~it allows the print operator to emit \texttt{value : Type} deterministically
+without threading an output type through the function-call machinery.
+Semantically, \texttt{print} behaves as a unary built-in of type
+\texttt{T $\rightarrow$ ()}, but is parsed into a dedicated \texttt{Print}
+AST node and handled as a statement by both the type checker and the interpreter.
+
 \subsection{Function Definitions and Calls}
 \begin{lstlisting}
 func_def -> 'def' IDENTIFIER '(' params? ')' block
