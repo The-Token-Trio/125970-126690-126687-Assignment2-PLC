@@ -190,7 +190,7 @@ class Lexer:
         return char.isalnum() or char == "_"
 
     def _error_message(self, message: str) -> str:
-        return f"[line {self.line}, col {self.token_column}] {message}"
+        return f"[line {self.line}, col {self.token_column}] LexerError: {message}"
 
 
 def iter_tokens(source: str) -> Iterator[Token]:

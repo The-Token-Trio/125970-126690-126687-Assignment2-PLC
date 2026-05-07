@@ -97,16 +97,6 @@ $\Gamma$ = current type environment / symbol table
 
   \item \textbf{If} \textit{node} is a \textbf{FunctionCall}:
         \begin{itemize}[nosep, leftmargin=1.5em]
-          \item Infer all argument types.
-          \item If this is the first valid call: store the argument types as the
-                function's parameter types.
-          \item Else: compare argument types with the stored parameter types.
-          \item Type-check the function body using a local environment.
-          \item Return the inferred function return type.
-        \end{itemize}
-
-  \item \textbf{If} \textit{node} is a \textbf{FunctionCall}:
-        \begin{itemize}[nosep, leftmargin=1.5em]
           \item If the function is the built-in \texttt{print}:\quad
                 require exactly one argument, infer that argument type, and
                 return \texttt{Void}.
