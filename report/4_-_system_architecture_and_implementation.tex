@@ -8,8 +8,8 @@ parsing appears in Chapters~3 and~4; Chapter~5 presents the type-inference rules
 that the type checker implements.
 
 \section{Compiler pipeline}
-The system follows a four-stage execution pipeline, with an additional
-parse-tree rendering view exposed after parsing for inspection. Lexical and syntactic processing are
+The system follows a pipeline with four processing stages and five labelled output
+sections exposed by the shared pipeline. Lexical and syntactic processing are
 kept separate from semantic analysis and execution, which simplifies testing and
 localises errors to the appropriate stage.
 
@@ -86,7 +86,7 @@ uses the symbol table, infers types, and validates scope and type rules. Only
 programs that pass the type checker proceed to interpretation. The interpreter
 evaluates the checked tree using ordinary Python values; it does not re-run the
 type rules, since correctness at runtime is guaranteed by the prior static pass.
-All four stages are orchestrated through \texttt{pipeline.py}, which is shared
+All stages are orchestrated through \texttt{pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite.
 
 \subsection{End-to-end pipeline walkthrough}
@@ -136,84 +136,84 @@ SEMICOLON      ';'     line 5, col 14
 EOF                    line 5, col 15
 \end{lstlisting}
 
-\textbf{Stage 2 --- Parser output (textbook-style parse tree):}
+\textbf{Stage 2 --- Parser output (ASCII branch parse tree):}
 \begin{lstlisting}
 program
-    statement
-        assignment
-            IDENTIFIER(a)
-            '='
-            expr
-                additive
-                    term
-                        factor
-                            INT_LITERAL(3)
-            ';'
-    statement
-        assignment
-            IDENTIFIER(b)
-            '='
-            expr
-                additive
-                    term
-                        factor
-                            INT_LITERAL(4)
-            ';'
-    statement
-        expr_stmt
-            expr
-                additive
-                    term
-                        factor
-                            function_call
-                                IDENTIFIER(print)
-                                '('
-                                args
-                                    expr
-                                        additive
-                                            additive
-                                                term
-                                                    factor
-                                                        IDENTIFIER(a)
-                                            '+'
-                                            term
-                                                factor
-                                                    IDENTIFIER(b)
-                                ')'
-            ';'
-    statement
-        assignment
-            IDENTIFIER(c)
-            '='
-            expr
-                additive
-                    term
-                        factor
-                            FLOAT_LITERAL(1.5)
-            ';'
-    statement
-        expr_stmt
-            expr
-                additive
-                    term
-                        factor
-                            function_call
-                                IDENTIFIER(print)
-                                '('
-                                args
-                                    expr
-                                        additive
-                                            additive
-                                                term
-                                                    factor
-                                                        IDENTIFIER(c)
-                                            '+.'
-                                            term
-                                                factor
-                                                    IDENTIFIER(c)
-                                ')'
-            ';'
-    EOF
+|-- statement
+|   `-- assignment
+|       |-- IDENTIFIER(a)
+|       |-- '='
+|       |-- expr
+|       |   `-- additive
+|       |       `-- term
+|       |           `-- factor
+|       |               `-- INT_LITERAL(3)
+|       `-- ';'
+|-- statement
+|   `-- assignment
+|       |-- IDENTIFIER(b)
+|       |-- '='
+|       |-- expr
+|       |   `-- additive
+|       |       `-- term
+|       |           `-- factor
+|       |               `-- INT_LITERAL(4)
+|       `-- ';'
+|-- statement
+|   `-- expr_stmt
+|       |-- expr
+|       |   `-- additive
+|       |       `-- term
+|       |           `-- factor
+|       |               `-- function_call
+|       |                   |-- IDENTIFIER(print)
+|       |                   |-- '('
+|       |                   |-- args
+|       |                   |   `-- expr
+|       |                   |       `-- additive
+|       |                   |           |-- additive
+|       |                   |           |   `-- term
+|       |                   |           |       `-- factor
+|       |                   |           |           `-- IDENTIFIER(a)
+|       |                   |           |-- '+'
+|       |                   |           `-- term
+|       |                   |               `-- factor
+|       |                   |                   `-- IDENTIFIER(b)
+|       |                   `-- ')'
+|       `-- ';'
+|-- statement
+|   `-- assignment
+|       |-- IDENTIFIER(c)
+|       |-- '='
+|       |-- expr
+|       |   `-- additive
+|       |       `-- term
+|       |           `-- factor
+|       |               `-- FLOAT_LITERAL(1.5)
+|       `-- ';'
+|-- statement
+|   `-- expr_stmt
+|       |-- expr
+|       |   `-- additive
+|       |       `-- term
+|       |           `-- factor
+|       |               `-- function_call
+|       |                   |-- IDENTIFIER(print)
+|       |                   |-- '('
+|       |                   |-- args
+|       |                   |   `-- expr
+|       |                   |       `-- additive
+|       |                   |           |-- additive
+|       |                   |           |   `-- term
+|       |                   |           |       `-- factor
+|       |                   |           |           `-- IDENTIFIER(c)
+|       |                   |           |-- '+.'
+|       |                   |           `-- term
+|       |                   |               `-- factor
+|       |                   |                   `-- IDENTIFIER(c)
+|       |                   `-- ')'
+|       `-- ';'
+`-- EOF
 \end{lstlisting}
 
 \textbf{Stage 3 --- Parser output (abstract syntax tree):}
@@ -274,7 +274,7 @@ The example demonstrates the full data flow: source characters are tokenised by
 the lexer, structured by the parser into both an inspectable parse tree and an
 executable AST, validated and annotated by the type checker, and finally
 evaluated by the interpreter to produce typed output. It also shows that the
-textbook-style parse tree preserves the concrete operator spellings
+ASCII branch parse tree preserves the concrete operator spellings
 \texttt{'+'} and \texttt{'+.'}, making the distinction between integer and
 float arithmetic visible in the exported parser view.
 
@@ -428,7 +428,7 @@ both horizontal and vertical scrollbars:
         this always agrees with the statically inferred type;
   \item \textit{Tokens} --- the token stream from stage~1, one token per line
         with type, lexeme, and source position;
-  \item \textit{Parse Tree} --- a textbook-style concrete syntax rendering of
+  \item \textit{Parse Tree} --- a grammar-oriented ASCII branch rendering of
         stage~2 using non-terminal labels such as \texttt{statement},
         \texttt{assignment}, \texttt{expr}, \texttt{additive},
         \texttt{term}, and \texttt{factor};
@@ -487,7 +487,7 @@ and CLI output.
   \caption{Errors tab: type error isolated from execution output.}
   \label{fig:ui-error}
 \end{subfigure}
-\caption{Desktop workbench --- six output tabs. Errors are reported in the
+\caption{Desktop workbench --- five of the six output tabs shown. The Parse Tree tab (Stage~2) is described in the text. Errors are reported in the
 dedicated \textit{Errors} tab; all other tabs are cleared on failure.}
 \label{fig:ui-shots}
 \end{figure}

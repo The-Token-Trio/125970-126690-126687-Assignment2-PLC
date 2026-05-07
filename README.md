@@ -101,7 +101,7 @@ Output:
 
 ## Pipeline
 
-Source code flows through four sequential stages:
+Source code flows through four processing stages, exposing five labelled output sections:
 
 ```
 Source code
@@ -121,7 +121,7 @@ Source code
 
 All stages are wired together in `components/pipeline.py` and shared by the CLI runner, desktop UI, and test suite.
 
-For inspection purposes, the pipeline now exposes both a textbook-style concrete parse tree and the executable AST. The parser still builds the AST used by the type checker and interpreter; the parse tree is an additional rendered view that shows grammar layers such as `expr`, `additive`, `term`, `factor`, `args`, punctuation tokens, and `EOF` so the grammar-to-program correspondence is explicit in the submission.
+For inspection purposes, the pipeline now exposes both a grammar-oriented parse tree and the executable AST. The parser still builds the AST used by the type checker and interpreter; the parse tree is an additional ASCII branch rendering that shows grammar layers such as `expr`, `additive`, `term`, `factor`, `args`, punctuation tokens, and `EOF` so the grammar-to-program correspondence is explicit in the submission.
 
 ---
 
@@ -161,7 +161,7 @@ report/              - LaTeX report source and compiled PDF
 .\.venv\Scripts\python.exe main.py path\to\script.txt
 ```
 
-Each run prints five labelled stages: token list, textbook-style parse tree, AST, inferred type table, and execution output.
+Each run prints five labelled stages: token list, parse tree, AST, inferred type table, and execution output.
 
 **Desktop UI:**
 
@@ -169,7 +169,7 @@ Each run prints five labelled stages: token list, textbook-style parse tree, AST
 .\.venv\Scripts\python.exe ui.py
 ```
 
-Edit a script on the left panel and click Run. Results appear in six tabbed panes on the right: Execution Output, Tokens, Parse Tree, AST, Type Table, and Errors. The Parse Tree tab shows the textbook-style concrete tree, while the AST tab shows the simplified executable tree. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
+Edit a script on the left panel and click Run. Results appear in six tabbed panes on the right: Execution Output, Tokens, Parse Tree, AST, Type Table, and Errors. The Parse Tree tab shows a grammar-oriented ASCII branch tree, while the AST tab shows the simplified executable tree. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
 
 If Python is already on your `PATH`, `python` or `python3` can be used in place of the explicit virtual-environment interpreter above.
 
