@@ -9,7 +9,16 @@ The system follows a four-stage pipeline: lexer, parser, type checker, and
 interpreter. Variable and function types are inferred without explicit
 declarations; programs that violate type rules are rejected before execution.
 For uncalled functions, the type checker performs a post-pass to infer parameter
-types from body usage, ensuring type errors are always caught.
+types from body usage, ensuring type errors are always caught. A central design
+decision --- following the Caml~Light convention of using separate operator
+tokens for integer and float arithmetic --- ensures that the specification's
+no-overloading requirement is satisfied in the strongest possible sense: every
+operator token carries exactly one type signature, and the compiler never
+inspects operand types to resolve operator meaning. This eliminates not only
+traditional overloading but also the implicit numeric promotion found in many
+mainstream languages, resulting in fully deterministic type inference where
+every expression's type is derivable from the operator tokens and literal forms
+alone.
 
 To support clearer correspondence between the formal grammar and accepted
 programs, the parser stage now exposes both a grammar-oriented parse-tree view

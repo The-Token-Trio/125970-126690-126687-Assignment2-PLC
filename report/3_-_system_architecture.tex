@@ -171,6 +171,30 @@ Any & any & \texttt{String} or \texttt{Boolean} & \texttt{TypeError} \\
 \end{tabular}
 \end{table}
 
+The following formal typing judgements capture these rules precisely. For
+integer operators ($\mathtt{op} \in \{+,\,-,\,*,\,/\}$):
+\[
+  \frac{\Gamma \vdash e_1 : \textit{Integer} \qquad
+         \Gamma \vdash e_2 : \textit{Integer}}
+       {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \textit{Integer}}
+\]
+For float operators ($\mathtt{op} \in \{+.,\,-.,\,*.,\,/.\}$):
+\[
+  \frac{\Gamma \vdash e_1 : \textit{Float} \qquad
+         \Gamma \vdash e_2 : \textit{Float}}
+       {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \textit{Float}}
+\]
+For mixed-type operands with any operator (and symmetrically for
+$\textit{Float} / \textit{Integer}$):
+\[
+  \frac{\Gamma \vdash e_1 : \textit{Integer} \qquad
+         \Gamma \vdash e_2 : \textit{Float}}
+       {\text{TypeError}}
+\]
+Note that each rule is keyed on the operator token, not on the operand types.
+This is only possible because integer and float arithmetic use distinct tokens
+--- the property that eliminates operator overloading.
+
 \subsubsection*{Unary negation}
 Unary integer negation (\texttt{-x}) is desugared by the parser to
 \texttt{0 - x}. Unary float negation (\texttt{-.x}) is desugared to
@@ -188,6 +212,18 @@ Although \texttt{Boolean} and \texttt{String} values exist in the language,
 equality and inequality are deliberately restricted to arithmetic expressions
 because the project specification defines basic Boolean expressions as equality
 and inequality between two arithmetic expressions.
+
+Furthermore, the same-type requirement for comparisons --- both operands must be
+either both \texttt{Integer} or both \texttt{Float} --- is a direct consequence
+of the no-overloading design. If \texttt{==} accepted mixed \texttt{Integer} and
+\texttt{Float} operands, the compiler would need to determine whether to compare
+by promotion (implicitly converting \texttt{Integer} to \texttt{Float}) or by
+value identity, introducing the same ambiguity that the separate-operator design
+eliminates for arithmetic. Rejecting mixed-type comparisons ensures that
+\texttt{==} and \texttt{!=} each have exactly two valid type signatures ---
+$(\textit{Integer}, \textit{Integer}) \rightarrow \textit{Boolean}$ and
+$(\textit{Float}, \textit{Float}) \rightarrow \textit{Boolean}$ --- rather than a
+third mixed-type signature.
 
 \subsection{Assignment Statement}
 Assignments define variable types on first use. If a variable does not yet

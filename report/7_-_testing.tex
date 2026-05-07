@@ -89,6 +89,17 @@ mixed-type arithmetic is rejected:
   \item \texttt{1.0 +. 2.0 *. 3.0} --- evaluates to \texttt{7.0} confirming \texttt{*.} binds more tightly than \texttt{+.}.
 \end{itemize}
 
+These rejection tests are not incidental --- they are the primary evidence that
+the language satisfies the specification's no-overloading requirement. In a
+promotion-based language, the expressions \texttt{1 + 2.5} and \texttt{2 +. 3}
+would silently succeed (returning \texttt{3.5 : Float} and \texttt{5.0 : Float}
+respectively). The fact that both are rejected as \texttt{TypeError}s
+demonstrates that each operator token has a single, fixed type signature and
+that no implicit type coercion occurs. The test suite contains 7 dedicated
+type-error tests for mixed-type and wrong-type operator usage (see
+Table~\ref{tab:test-summary}, \texttt{TypeCheckerTests}), ensuring that the
+no-overloading guarantee is verified mechanically rather than by assertion alone.
+
 \subsection{Boolean Expressions}
 Boolean expressions were tested inside \texttt{if} and \texttt{while}
 conditions. The type checker correctly enforced that both operands of

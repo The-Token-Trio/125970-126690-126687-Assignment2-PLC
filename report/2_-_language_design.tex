@@ -19,10 +19,25 @@ performs floor division and returns \texttt{Integer}: for example,
 \texttt{10 / 3} evaluates to \texttt{3 : Integer}.
 
 The language intentionally does not perform implicit numeric promotion between
-\texttt{Integer} and \texttt{Float} values. Mixed-type arithmetic such as
-\texttt{1 + 2.5} is rejected by the type checker. Instead, the language follows
-the Caml~Light convention of using separate operator tokens for integer and
-floating-point arithmetic.
+\texttt{Integer} and \texttt{Float} values. This design decision follows
+directly from the assignment specification, which requires ``no overloading with
+the usual precedence of multiplication and division over addition and
+subtraction.'' In a language where a single \texttt{+} operator accepts both
+$(\textit{Integer}, \textit{Integer}) \rightarrow \textit{Integer}$ and
+$(\textit{Integer}, \textit{Float}) \rightarrow \textit{Float}$, the operator
+effectively carries multiple type signatures --- the compiler must inspect both
+operand types to determine the result type. This constitutes a form of operator
+overloading, even when described as ``numeric promotion'' or ``widening
+coercion.'' To eliminate all such ambiguity, the language follows the
+Caml~Light convention of using separate operator tokens for integer and
+floating-point arithmetic: \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}
+operate exclusively on \texttt{Integer} operands, while \texttt{+.},
+\texttt{-.}, \texttt{*.}, \texttt{/.} operate exclusively on \texttt{Float}
+operands. Mixed-type arithmetic such as \texttt{1 + 2.5} is rejected by the
+type checker. Under this design, every operator token uniquely determines its
+operand types and result type --- the compiler never needs to inspect operand
+types to resolve operator meaning, which is the defining property of a language
+without operator overloading.
 
 \subsection{Boolean}
 The Boolean type represents logical truth values. The two Boolean literals are
@@ -232,6 +247,88 @@ Precedence & Operators & Associativity \\
 1 (lowest) & \texttt{==}, \texttt{!=} & non-associative (one comparison per expression) \\
 2 & \texttt{+}, \texttt{-}, \texttt{+.}, \texttt{-.} & left-associative \\
 3 (highest) & \texttt{*}, \texttt{/}, \texttt{*.}, \texttt{/.} & left-associative \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Design Decisions: No Overloading}
+\label{sec:no-overloading}
+The assignment specification states: ``No overloading with the usual precedence
+of multiplication and division over addition and subtraction. Hence no explicit
+declaration.'' This section explains how the language design satisfies this
+requirement and why alternatives were rejected.
+
+\textbf{Definition of overloading.}
+An operator is overloaded when the same syntactic symbol carries more than one
+type signature, requiring the compiler to inspect operand types to determine the
+operator's meaning or result type. Under this definition, a language where
+\texttt{+} means both integer addition
+$(\textit{Integer}, \textit{Integer}) \rightarrow \textit{Integer}$ and
+floating-point addition $(\textit{Float}, \textit{Float}) \rightarrow \textit{Float}$
+--- or worse, mixed-type addition
+$(\textit{Integer}, \textit{Float}) \rightarrow \textit{Float}$ --- overloads the
+\texttt{+} symbol.
+
+\textbf{Our approach: distinct operator tokens.}
+Following the Caml~Light convention, this language assigns a unique token to
+each arithmetic meaning. Integer arithmetic uses \texttt{+}, \texttt{-},
+\texttt{*}, \texttt{/}; floating-point arithmetic uses \texttt{+.},
+\texttt{-.}, \texttt{*.}, \texttt{/.}. Each token has exactly one type
+signature. The type of any expression can be determined from the operator token
+alone, without inspecting operand types. This is the strongest possible
+interpretation of ``no overloading.''
+
+\textbf{Rejected alternative: implicit numeric promotion.}
+An alternative design would use a single set of operators and silently promote
+\texttt{Integer} operands to \texttt{Float} when mixed with a \texttt{Float}
+operand (e.g.\ \texttt{1 + 2.5} $\rightarrow$ \texttt{3.5 : Float}). Proponents
+of this approach argue that promotion is not overloading because the operator
+retains a single ``arithmetic addition'' meaning. However, this argument is
+difficult to sustain formally: the operator \texttt{+} would have three distinct
+input-type combinations --- $(\textit{Integer}, \textit{Integer})$,
+$(\textit{Integer}, \textit{Float})$, and $(\textit{Float}, \textit{Float})$ ---
+with two different result types, a dispatch table that the compiler must resolve
+from operand types, which is the hallmark of overloading. The assignment
+specification also states ``hence no explicit declaration,'' implying that type
+inference should be unambiguous; implicit promotion introduces cases where the
+inferred result type depends on operand types rather than on the operator itself.
+
+\textbf{Connection to type inference.}
+Because every operator token uniquely determines its operand and result types,
+the type inference algorithm described in Chapter~5 can determine the type of
+any expression without backtracking, unification, or constraint solving. This
+determinism directly satisfies the specification's coupling of ``no
+overloading'' with ``no explicit declaration.''
+
+Table~\ref{tab:operator-design-comparison} contrasts the two designs.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of operator design approaches}
+\label{tab:operator-design-comparison}
+\small
+\begin{tabular}{p{3.2cm}p{4.8cm}p{4.8cm}}
+\toprule
+\textbf{Expression} & \textbf{This language (separate tokens)} & \textbf{Promotion-based language} \\
+\midrule
+\texttt{3 + 4}
+  & \texttt{7 : Integer} (\texttt{+} $\rightarrow$ Integer)
+  & \texttt{7 : Integer} \\
+\texttt{3.0 +. 4.0}
+  & \texttt{7.0 : Float} (\texttt{+.} $\rightarrow$ Float)
+  & N/A (no \texttt{+.} operator) \\
+\texttt{3 + 4.0}
+  & \texttt{TypeError}: \texttt{+} requires two Integer operands
+  & \texttt{7.0 : Float} (implicit promotion) \\
+\texttt{10 / 3}
+  & \texttt{3 : Integer} (floor division)
+  & \texttt{3.333\ldots{} : Float} (or \texttt{3 : Integer}, design-dependent) \\
+Type signatures of \texttt{+}
+  & One: $(\textit{Int},\textit{Int}) \rightarrow \textit{Int}$
+  & Three: $(\textit{Int},\textit{Int})$, $(\textit{Int},\textit{Float})$, $(\textit{Float},\textit{Float})$ \\
+Overloaded?
+  & No
+  & Arguably yes \\
 \bottomrule
 \end{tabular}
 \end{table}

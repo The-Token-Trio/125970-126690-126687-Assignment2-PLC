@@ -278,6 +278,91 @@ ASCII branch parse tree preserves the concrete operator spellings
 \texttt{'+'} and \texttt{'+.'}, making the distinction between integer and
 float arithmetic visible in the exported parser view.
 
+\subsubsection*{Float operator walkthrough}
+
+To illustrate how the dot-suffixed float operators flow through each pipeline
+stage, consider a second example:
+
+\textbf{Source program:}
+\begin{lstlisting}
+x = 2.0;
+y = 3.5;
+print(x +. y);
+\end{lstlisting}
+
+\textbf{Stage 1 --- Lexer output (token stream):}
+\begin{lstlisting}
+IDENTIFIER     'x'       line=1 col=1
+ASSIGN         '='       line=1 col=3
+FLOAT_LITERAL  '2.0'     line=1 col=5
+SEMICOLON      ';'       line=1 col=8
+IDENTIFIER     'y'       line=2 col=1
+ASSIGN         '='       line=2 col=3
+FLOAT_LITERAL  '3.5'     line=2 col=5
+SEMICOLON      ';'       line=2 col=8
+IDENTIFIER     'print'   line=3 col=1
+LPAREN         '('       line=3 col=6
+IDENTIFIER     'x'       line=3 col=7
+PLUS_DOT       '+.'      line=3 col=9
+IDENTIFIER     'y'       line=3 col=12
+RPAREN         ')'       line=3 col=13
+SEMICOLON      ';'       line=3 col=14
+EOF                      line=3 col=15
+\end{lstlisting}
+
+\noindent Note that the lexer emits \texttt{PLUS\_DOT} (not \texttt{PLUS}) for
+\texttt{+.}, distinguishing float addition from integer addition at the token
+level. Note also that \texttt{print} is tokenised as an ordinary
+\texttt{IDENTIFIER} --- it is not a reserved keyword in this language.
+
+\textbf{Stage 3 --- Parser output (abstract syntax tree):}
+\begin{lstlisting}
+Program  [3 statement(s)]
+    Assign  'x'  =
+        Literal  2.0  (float)
+    Assign  'y'  =
+        Literal  3.5  (float)
+    FunctionCall  'print'  [1 arg(s)]
+        arg[0]:
+            BinaryOp  '+.'
+                left:
+                    Identifier  'x'
+                right:
+                    Identifier  'y'
+\end{lstlisting}
+
+\noindent The AST records the operator as \texttt{+.} rather than \texttt{+},
+preserving the type distinction through to semantic analysis.
+
+\textbf{Stage 4 --- Type checker output (inferred type environment):}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{} ll @{}}
+\toprule
+\textbf{Name} & \textbf{Inferred type} \\
+\midrule
+\texttt{x} & \texttt{Float} \\
+\texttt{y} & \texttt{Float} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The type checker verifies that both operands of \texttt{+.} are
+\texttt{Float}. Had either operand been \texttt{Integer}, a \texttt{TypeError}
+would be reported before execution.
+
+\textbf{Stage 5 --- Interpreter output:}
+\begin{lstlisting}
+5.5 : Float
+\end{lstlisting}
+
+This second walkthrough demonstrates that the dot-suffixed operators are visible
+at every pipeline stage --- from the lexer token \texttt{PLUS\_DOT} to the AST
+node \texttt{BinaryOp '+.'} to the final typed output --- ensuring that integer
+and float arithmetic are kept strictly separate throughout the system.
+
 \subsection{Entry points and shared pipeline}
 All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite.
@@ -453,42 +538,48 @@ reaching for the mouse.
 Figures~\ref{fig:ui-shots} and~\ref{fig:cli-shots} show the desktop workbench
 and CLI output.
 
-% --- UI screenshots: 2-column grid ---
+% --- UI screenshots: compact 3-column grid ---
 \begin{figure}[H]
 \centering
-\begin{subfigure}[t]{0.48\textwidth}
-  \includegraphics[width=\linewidth]{figures/ui-main.png}
-  \caption{Execution Output tab.}
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth]{figures/allowinputtextfile-ui.png}
+  \caption{Open script.}
   \label{fig:ui-main}
 \end{subfigure}\hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
   \includegraphics[width=\linewidth]{figures/ui-tokens.png}
-  \caption{Tokens tab (Stage~1).}
+  \caption{Tokens.}
   \label{fig:ui-tokens}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth]{figures/ui-parsetree.png}
+  \caption{Parse tree.}
+  \label{fig:ui-parsetree}
 \end{subfigure}
 
 \medskip
 
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
   \includegraphics[width=\linewidth]{figures/ui-ast.png}
-  \caption{AST tab (Stage~3).}
+  \caption{AST.}
   \label{fig:ui-ast}
 \end{subfigure}\hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.32\textwidth}
   \includegraphics[width=\linewidth]{figures/ui-types.png}
-  \caption{Type Table tab (Stage~4).}
+  \caption{Types.}
   \label{fig:ui-types}
-\end{subfigure}
-
-\medskip
-
-\begin{subfigure}[t]{0.48\textwidth}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth]{figures/ui-main.png}
+  \caption{Output.}
+  \label{fig:ui-output}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
   \includegraphics[width=\linewidth]{figures/ui-error.png}
-  \caption{Errors tab: type error isolated from execution output.}
+  \caption{Errors.}
   \label{fig:ui-error}
 \end{subfigure}
-\caption{Desktop workbench --- five of the six output tabs shown. The Parse Tree tab (Stage~2) is described in the text. Errors are reported in the
-dedicated \textit{Errors} tab; all other tabs are cleared on failure.}
+\caption{Desktop workbench tabs.}
 \label{fig:ui-shots}
 \end{figure}
 
@@ -503,19 +594,37 @@ the message is printed as \texttt{ERROR: [line~X, col~Y] <ErrorType>: <detail>}
 and the process exits with code~1. In both cases no Python traceback is shown
 to the user.
 
-% --- CLI screenshots: kept on one page ---
+% --- CLI screenshots: compact 2-row grid ---
 \begin{figure}[H]
 \centering
-\begin{subfigure}[t]{0.48\textwidth}
-  \includegraphics[width=\linewidth,height=0.32\textheight,keepaspectratio]{figures/cli-1.png}
-  \caption{Stage~1: token stream.}
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth,height=0.22\textheight,keepaspectratio]{figures/cli-1.png}
+  \caption{Tokens.}
   \label{fig:cli-tokens}
 \end{subfigure}\hfill
-\begin{subfigure}[t]{0.48\textwidth}
-  \includegraphics[width=\linewidth,height=0.32\textheight,keepaspectratio]{figures/cli-5.png}
-  \caption{Stage~4 type table and Stage~5 output.}
-  \label{fig:cli-exec}
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth,height=0.22\textheight,keepaspectratio]{figures/cli-2.png}
+  \caption{Parse tree.}
+  \label{fig:cli-parse-tree}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth,height=0.22\textheight,keepaspectratio]{figures/cli-3.png}
+  \caption{AST.}
+  \label{fig:cli-ast}
 \end{subfigure}
-\caption{CLI run of \texttt{python main.py} on the built-in sample.}
+
+\medskip
+
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth,height=0.22\textheight,keepaspectratio]{figures/cli-4.png}
+  \caption{Types and output.}
+  \label{fig:cli-exec}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.32\textwidth}
+  \includegraphics[width=\linewidth,height=0.22\textheight,keepaspectratio]{figures/cli-error-demotxtfile.png}
+  \caption{CLI error.}
+  \label{fig:cli-error}
+\end{subfigure}
+\caption{CLI stages and error handling.}
 \label{fig:cli-shots}
 \end{figure}
