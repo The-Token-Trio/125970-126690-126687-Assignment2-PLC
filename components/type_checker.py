@@ -12,7 +12,6 @@ from components.ast_nodes import (
     Identifier,
     If,
     Literal,
-    Print,
     Program,
     Return,
     While,
@@ -37,6 +36,8 @@ class _FunctionContext:
 
 
 class TypeChecker:
+    _BUILTIN_PRINT = "print"
+
     def __init__(self) -> None:
         self.global_scope = SymbolTable()
         self._functions: dict[str, _FunctionState] = {}
@@ -75,10 +76,6 @@ class TypeChecker:
         if isinstance(node, Assign):
             value_type = self._infer_expr_type(node.value, scope)
             self._assign_variable_type(scope, node, value_type)
-            return
-
-        if isinstance(node, Print):
-            self._infer_expr_type(node.expr, scope)
             return
 
         if isinstance(node, Return):
@@ -155,6 +152,9 @@ class TypeChecker:
         raise TypeCheckError(self._error_at(node, f"Unsupported expression node: {type(node).__name__}"))
 
     def _infer_function_call_type(self, node: FunctionCall, scope: SymbolTable) -> LanguageType:
+        if node.name == self._BUILTIN_PRINT:
+            return self._infer_builtin_print_type(node, scope)
+
         function_state = self._functions.get(node.name)
         if function_state is None:
             raise TypeCheckError(self._error_at(node, f"Undefined function: {node.name}"))
@@ -189,6 +189,14 @@ class TypeChecker:
             self._check_function_body(function_state, function_symbol)
 
         return function_symbol.symbol_type
+
+    def _infer_builtin_print_type(self, node: FunctionCall, scope: SymbolTable) -> LanguageType:
+        if len(node.args) != 1:
+            raise TypeCheckError(
+                self._error_at(node, f"Built-in function 'print' expects 1 argument, got {len(node.args)}")
+            )
+        self._infer_expr_type(node.args[0], scope)
+        return LanguageType.VOID
 
     def _check_function_body(self, function_state: _FunctionState, function_symbol: FunctionSymbol) -> None:
         function_context = _FunctionContext(name=function_state.node.name)
@@ -249,8 +257,6 @@ class TypeChecker:
         def scan_stmt(n: ASTNode) -> None:
             if isinstance(n, Assign):
                 scan_expr(n.value)
-            elif isinstance(n, Print):
-                scan_expr(n.expr)
             elif isinstance(n, Return):
                 scan_expr(n.expr)
             elif isinstance(n, If):

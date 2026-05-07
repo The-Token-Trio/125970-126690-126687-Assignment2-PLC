@@ -36,18 +36,18 @@ class LexerTests(unittest.TestCase):
         self.assertEqual(tokens[1].lexeme, "false")
 
     def test_keywords_produce_correct_token_types(self) -> None:
-        tokens = Lexer("if else while def return print").tokenize()
+        tokens = Lexer("if else while def return").tokenize()
         expected = [
-            TokenType.IF, TokenType.ELSE, TokenType.WHILE,
-            TokenType.DEF, TokenType.RETURN, TokenType.PRINT,
+            TokenType.IF, TokenType.ELSE, TokenType.WHILE, TokenType.DEF, TokenType.RETURN,
         ]
         actual = [t.token_type for t in tokens if t.token_type != TokenType.EOF]
         self.assertEqual(actual, expected)
 
     def test_identifier_not_confused_with_keyword(self) -> None:
-        tokens = Lexer("iffy whileloop").tokenize()
+        tokens = Lexer("iffy whileloop print").tokenize()
         self.assertEqual(tokens[0].token_type, TokenType.IDENTIFIER)
         self.assertEqual(tokens[1].token_type, TokenType.IDENTIFIER)
+        self.assertEqual(tokens[2].token_type, TokenType.IDENTIFIER)
 
     def test_two_character_operators(self) -> None:
         tokens = Lexer("== !=").tokenize()
@@ -174,6 +174,18 @@ class ParserTests(unittest.TestCase):
         # 1.0 +. 2.0 *. 3.0 must be 7.0 (*.  binds tighter than +.)
         result = run_pipeline("x = 1.0 +. 2.0 *. 3.0; print(x);")
         self.assertEqual(result.outputs, ["7.0 : Float"])
+
+    def test_pipeline_exposes_parse_tree_and_ast(self) -> None:
+        result = run_pipeline("x = 5; print(x);")
+        self.assertIn("program", result.parse_tree_text)
+        self.assertIn("assignment", result.parse_tree_text)
+        self.assertIn("additive", result.parse_tree_text)
+        self.assertIn("term", result.parse_tree_text)
+        self.assertIn("factor", result.parse_tree_text)
+        self.assertIn("function_call", result.parse_tree_text)
+        self.assertIn("Program", result.ast_text)
+        self.assertIn("Assign", result.ast_text)
+        self.assertIn("FunctionCall  'print'", result.ast_text)
 
 
 # ---------------------------------------------------------------------------
@@ -422,6 +434,10 @@ class IntegrationTests(unittest.TestCase):
         # Assigning the result of a void function (no return) must be a type error
         with self.assertRaises(TypeCheckError):
             run_pipeline("def greet() { print(42); } x = greet();")
+
+    def test_builtin_print_assignment_raises_type_error(self) -> None:
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("x = print(42);")
 
 
 if __name__ == "__main__":

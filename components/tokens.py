@@ -20,7 +20,6 @@ class TokenType(Enum):
     WHILE = auto()
     DEF = auto()
     RETURN = auto()
-    PRINT = auto()
 
     # Operators
     PLUS = auto()

@@ -57,7 +57,7 @@ No external Python dependencies are required.
 \toprule
 \textbf{Name} & \textbf{Student ID} & \textbf{Contributions} \\
 \midrule
-Aye Khin Khin Hpone (Yolanda Lim) & st125970 & Static typing rules; type checking; assignment, if, while, function, and \texttt{print()} execution; unary minus inference; pipeline integration (\texttt{pipeline.py}); automated test suite (73 tests) \\
+Aye Khin Khin Hpone (Yolanda Lim) & st125970 & Static typing rules; type checking; assignment, if, while, function, and \texttt{print()} execution; unary minus inference; pipeline integration (\texttt{pipeline.py}); automated test suite (75 tests) \\
 Applegate T. Tun Oo & st126690 & Lexer implementation (scanning, tokenisation, line/column tracking, error reporting); token definitions; keywords, operators, identifiers, and literals; symbol table (variable/function/type storage) \\
 Win Htut Naing & st126687 & Arithmetic and boolean expressions; assignment, if-then-else, while-loop, function definition/call, and \texttt{print()} parsing; unary minus parsing \\
 \bottomrule
@@ -103,6 +103,11 @@ Win Htut Naing & st126687 & Arithmetic and boolean expressions; assignment, if-t
 ]{../components/parser.py}
 
 \lstinputlisting[style=appendix,
+  caption={components/parse\_tree\_printer.py --- parse-tree renderer},
+  label={lst:parsetreeprinter}
+]{../components/parse_tree_printer.py}
+
+\lstinputlisting[style=appendix,
   caption={components/symbol\_table.py --- scoped symbol table},
   label={lst:symboltable}
 ]{../components/symbol_table.py}
@@ -127,6 +132,6 @@ Win Htut Naing & st126687 & Arithmetic and boolean expressions; assignment, if-t
 % -----------------------------------------------------------------------
 
 \lstinputlisting[style=appendix,
-  caption={tests/test\_pipeline.py --- automated regression suite (73 tests)},
+  caption={tests/test\_pipeline.py --- automated regression suite (75 tests)},
   label={lst:tests}
 ]{../tests/test_pipeline.py}

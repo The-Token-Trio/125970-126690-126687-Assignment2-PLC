@@ -9,7 +9,6 @@ from components.ast_nodes import (
     While,
     FunctionDef,
     FunctionCall,
-    Print,
     Return,
     BinaryOp,
     Literal,
@@ -92,10 +91,6 @@ class ASTPrinter:
         for i, arg in enumerate(node.args):
             lines.append(f"{self._pad(level + 1)}arg[{i}]:")
             self._visit(arg, lines, level + 2)
-
-    def _visit_Print(self, node: Print, lines: list[str], level: int) -> None:
-        lines.append(f"{self._pad(level)}Print")
-        self._visit(node.expr, lines, level + 1)
 
     def _visit_Return(self, node: Return, lines: list[str], level: int) -> None:
         lines.append(f"{self._pad(level)}Return")

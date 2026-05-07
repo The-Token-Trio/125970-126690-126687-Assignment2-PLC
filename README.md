@@ -17,7 +17,7 @@ Assignment 2 | Asian Institute of Technology
 
 | Name                              | Student ID | Assignment Scope                                                                                                                                     |
 | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 73 tests) |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 75 tests) |
 | Applegate T. Tun Oo               | st126690   | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
 | Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
 
@@ -35,7 +35,7 @@ A statically-typed interpreted language built from scratch in Python, implementi
 | Comparisons   | `==`, `!=` between two same-type arithmetic expressions        |
 | Control flow  | `if`/`else`, `while`                                          |
 | Functions     | Definition, value-parameter calls, `return`                   |
-| Built-in      | `print()` — outputs value with its inferred type              |
+| Built-in      | `print()` — callable built-in function that outputs `value : Type` |
 
 No external Python packages are required. The project uses only the Python standard library.
 
@@ -110,7 +110,7 @@ Source code
   Lexer          →  token list
     │
     ▼
-  Parser         →  Abstract Syntax Tree (AST)
+  Parser         →  Parse Tree + Abstract Syntax Tree (AST)
     │
     ▼
   Type Checker   →  validates types; populates symbol table
@@ -120,6 +120,8 @@ Source code
 ```
 
 All stages are wired together in `components/pipeline.py` and shared by the CLI runner, desktop UI, and test suite.
+
+For inspection purposes, the pipeline now exposes both a textbook-style concrete parse tree and the executable AST. The parser still builds the AST used by the type checker and interpreter; the parse tree is an additional rendered view that shows grammar layers such as `expr`, `additive`, `term`, `factor`, `args`, punctuation tokens, and `EOF` so the grammar-to-program correspondence is explicit in the submission.
 
 ---
 
@@ -132,6 +134,7 @@ components/
 ├── symbol_table.py  - Scoped symbol/type storage
 ├── ast_nodes.py     - AST node dataclasses
 ├── parser.py        - Recursive-descent parser
+├── parse_tree_printer.py - Parse-tree renderer for debug/report
 ├── ast_printer.py   - AST pretty-printer for debug/report
 ├── type_checker.py  - Static typing and inference
 ├── interpreter.py   - Tree-walking interpreter
@@ -158,7 +161,7 @@ report/              - LaTeX report source and compiled PDF
 .\.venv\Scripts\python.exe main.py path\to\script.txt
 ```
 
-Each run prints four labelled stages: token list, AST, inferred type table, and execution output.
+Each run prints five labelled stages: token list, textbook-style parse tree, AST, inferred type table, and execution output.
 
 **Desktop UI:**
 
@@ -166,7 +169,7 @@ Each run prints four labelled stages: token list, AST, inferred type table, and 
 .\.venv\Scripts\python.exe ui.py
 ```
 
-Edit a script on the left panel and click Run. Results appear in five tabbed panes on the right: Execution Output, Tokens, AST, Type Table, and Errors. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
+Edit a script on the left panel and click Run. Results appear in six tabbed panes on the right: Execution Output, Tokens, Parse Tree, AST, Type Table, and Errors. The Parse Tree tab shows the textbook-style concrete tree, while the AST tab shows the simplified executable tree. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
 
 If Python is already on your `PATH`, `python` or `python3` can be used in place of the explicit virtual-environment interpreter above.
 
@@ -178,15 +181,15 @@ If Python is already on your `PATH`, `python` or `python3` can be used in place 
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-73 tests across 5 classes in `tests/test_pipeline.py`:
+75 tests across 5 classes in `tests/test_pipeline.py`:
 
 | Class | Stage | Tests |
 |---|---|---|
 | `LexerTests` | Tokenisation | 12 |
 | `SymbolTableTests` | Scoped symbol table | 7 |
-| `ParserTests` | Parsing and precedence | 6 |
+| `ParserTests` | Parsing and precedence | 7 |
 | `TypeCheckerTests` | Static type inference and error detection | 22 |
-| `IntegrationTests` | Full pipeline execution | 26 |
+| `IntegrationTests` | Full pipeline execution | 27 |
 
 ---
 

@@ -105,8 +105,15 @@ $\Gamma$ = current type environment / symbol table
           \item Return the inferred function return type.
         \end{itemize}
 
-  \item \textbf{If} \textit{node} is a \textbf{Print} statement:\quad
-        infer the expression type; accept any of the four supported types.
+  \item \textbf{If} \textit{node} is a \textbf{FunctionCall}:
+        \begin{itemize}[nosep, leftmargin=1.5em]
+          \item If the function is the built-in \texttt{print}:\quad
+                require exactly one argument, infer that argument type, and
+                return \texttt{Void}.
+          \item Otherwise, infer all argument types, validate them against the
+                function signature, type-check the callee body if needed, and
+                return the inferred function return type.
+        \end{itemize}
 \end{enumerate}
 
 \section{Inference Rules}

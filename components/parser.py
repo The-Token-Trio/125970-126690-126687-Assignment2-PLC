@@ -12,7 +12,6 @@ from components.ast_nodes import (
     While,
     FunctionDef,
     FunctionCall,
-    Print,
     Return,
     BinaryOp,
     Literal,
@@ -76,9 +75,6 @@ class Parser:
         if tok.token_type == TokenType.RETURN:
             return self._return_stmt()
 
-        if tok.token_type == TokenType.PRINT:
-            return self._print_stmt()
-
         # assignment: IDENTIFIER "=" expr ";"
         if (
             tok.token_type == TokenType.IDENTIFIER
@@ -134,15 +130,6 @@ class Parser:
         body = self._block()
         return FunctionDef(name=name_tok.lexeme, params=params, body=body,
                            line=tok.line, column=tok.column)
-
-    def _print_stmt(self) -> Print:
-        """'print' '(' expr ')' ';'"""
-        tok = self._advance()                                   # 'print'
-        self._expect(TokenType.LPAREN, "Expected '(' after 'print'")
-        expr = self._expr()
-        self._expect(TokenType.RPAREN, "Expected ')' after print expression")
-        self._expect(TokenType.SEMICOLON, "Expected ';' after print statement")
-        return Print(expr=expr, line=tok.line, column=tok.column)
 
     def _return_stmt(self) -> Return:
         """'return' expr ';'"""

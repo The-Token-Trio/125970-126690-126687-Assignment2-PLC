@@ -13,7 +13,6 @@ from components.ast_nodes import (
     Identifier,
     If,
     Literal,
-    Print,
     Program,
     Return,
     While,
@@ -68,6 +67,8 @@ class _Environment:
 
 
 class Interpreter:
+    _BUILTIN_PRINT = "print"
+
     def __init__(self, output_callback: Callable[[str], None] | None = None) -> None:
         self._functions: dict[str, _FunctionRuntime] = {}
         self._output_callback = output_callback or print
@@ -87,11 +88,6 @@ class Interpreter:
         if isinstance(node, Assign):
             value = self._evaluate(node.value, environment)
             environment.assign(node.name, value)
-            return
-
-        if isinstance(node, Print):
-            value = self._evaluate(node.expr, environment)
-            self._output_callback(f"{self._format_value(value)} : {self._runtime_type(value).value}")
             return
 
         if isinstance(node, Return):
@@ -148,6 +144,9 @@ class Interpreter:
         raise InterpreterError(self._error_at(node, f"Unsupported expression node: {type(node).__name__}"))
 
     def _call_function(self, node: FunctionCall, environment: _Environment) -> object:
+        if node.name == self._BUILTIN_PRINT:
+            return self._call_builtin_print(node, environment)
+
         function_runtime = self._functions.get(node.name)
         if function_runtime is None:
             raise InterpreterError(self._error_at(node, f"Undefined function: {node.name}"))
@@ -169,6 +168,15 @@ class Interpreter:
             self._execute_block(function_runtime.node.body, call_environment)
         except _ReturnSignal as signal:
             return signal.value
+        return None
+
+    def _call_builtin_print(self, node: FunctionCall, environment: _Environment) -> None:
+        if len(node.args) != 1:
+            raise InterpreterError(
+                self._error_at(node, f"Built-in function 'print' expects 1 argument, got {len(node.args)}")
+            )
+        value = self._evaluate(node.args[0], environment)
+        self._output_callback(f"{self._format_value(value)} : {self._runtime_type(value).value}")
         return None
 
     def _evaluate_binary(self, node: BinaryOp, left_value: object, right_value: object) -> object:

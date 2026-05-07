@@ -93,6 +93,7 @@ class LanguageWorkbench:
 
         self.output_text = self._make_output_tab(notebook, "Execution Output")
         self.tokens_text = self._make_output_tab(notebook, "Tokens")
+        self.parse_tree_text = self._make_output_tab(notebook, "Parse Tree")
         self.ast_text = self._make_output_tab(notebook, "AST")
         self.types_text = self._make_output_tab(notebook, "Type Table")
         self.error_text = self._make_output_tab(notebook, "Errors")
@@ -131,6 +132,7 @@ class LanguageWorkbench:
             self._write_text(self.error_text, str(error))
             self._write_text(self.output_text, "")
             self._write_text(self.tokens_text, "")
+            self._write_text(self.parse_tree_text, "")
             self._write_text(self.ast_text, "")
             self._write_text(self.types_text, "")
             self.status_var.set("Run failed")
@@ -138,6 +140,7 @@ class LanguageWorkbench:
 
         self._write_text(self.output_text, "\n".join(result.outputs) if result.outputs else "(no output)")
         self._write_text(self.tokens_text, format_tokens(result.tokens))
+        self._write_text(self.parse_tree_text, result.parse_tree_text)
         self._write_text(self.ast_text, result.ast_text)
         self._write_text(self.types_text, result.checked_scope.format_table())
         self._write_text(self.error_text, "")
@@ -148,6 +151,7 @@ class LanguageWorkbench:
     def _clear_output(self) -> None:
         self._write_text(self.output_text, "")
         self._write_text(self.tokens_text, "")
+        self._write_text(self.parse_tree_text, "")
         self._write_text(self.ast_text, "")
         self._write_text(self.types_text, "")
         self._write_text(self.error_text, "")

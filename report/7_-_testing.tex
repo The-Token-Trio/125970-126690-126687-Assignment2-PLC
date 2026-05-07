@@ -25,14 +25,14 @@ Type mismatch & Reassign incompatible type & Type error before runtime \\
 \subsection{Lexer and Symbol Table}
 The lexer was verified manually by running the full pipeline and inspecting
 Stage~1 token output for programs that exercise every token category: integer
-and float literals, Boolean literals, string literals, all six keywords,
+and float literals, Boolean literals, string literals, the five reserved keywords,
 two-character comparison operators (\texttt{==}, \texttt{!=}), single-character
 operators, and delimiters. Identifier scanning with keyword fallback was
 confirmed by checking that \texttt{true} and \texttt{false} are emitted as
-\texttt{BOOL\_LITERAL} tokens, the six reserved words (\texttt{if},
-\texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print})
-as their respective keyword token types, and non-keyword names as
-\texttt{IDENTIFIER} tokens. For example, the source fragment \texttt{x = 10;}
+\texttt{BOOL\_LITERAL} tokens, the five reserved words (\texttt{if},
+\texttt{else}, \texttt{while}, \texttt{def}, \texttt{return})
+as their respective keyword token types, and ordinary names including
+\texttt{print} as \texttt{IDENTIFIER} tokens. For example, the source fragment \texttt{x = 10;}
 produces the token sequence:
 
 \begin{lstlisting}
@@ -56,11 +56,13 @@ is not visible in the outer scope after the block ends. The
 (name, kind, type, initialisation status, parameters) for both variable and
 function symbols.
 
-\subsection{Parser and AST}
+\subsection{Parser, Parse Tree, and AST}
 The parser was verified manually by running the full pipeline and inspecting
-Stage~2 AST output. The following cases were checked:
+both the Stage~2 parse-tree output and the Stage~3 AST output. The following
+cases were checked:
 
 \begin{itemize}
+    \item the parse-tree view contains grammar-oriented labels such as \texttt{program}, \texttt{statement}, \texttt{assignment}, and \texttt{expr}, confirming that the system now exposes a separate parse tree rather than only the executable AST,
     \item arithmetic expressions with mixed precedence (e.g.\ \texttt{x + y * 2}) produce a tree where multiplication is a deeper sub-tree than addition, confirming the \texttt{\_expr}/\texttt{\_additive}/\texttt{\_term}/\texttt{\_factor} precedence encoding,
     \item assignment versus expression statement dispatch: \texttt{x = 5;} produces an \texttt{Assign} node while \texttt{add(1,2);} produces a \texttt{FunctionCall} node at the statement level, confirming the IDENTIFIER+ASSIGN lookahead,
     \item \texttt{if} with and without an \texttt{else} clause: the resulting \texttt{If} node has a non-null \texttt{else\_block} only when the clause is present,
@@ -166,11 +168,11 @@ Test class & Stage covered & Tests \\
 \midrule
 \texttt{LexerTests}        & Tokenisation (\texttt{lexica.py})                &  12 \\
 \texttt{SymbolTableTests}  & Scoped symbol table (\texttt{symbol\_table.py})  &   7 \\
-\texttt{ParserTests}       & Parsing and precedence (\texttt{parser.py})      &   6 \\
+\texttt{ParserTests}       & Parsing, precedence, parse-tree/AST output        &   7 \\
 \texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) &  22 \\
-\texttt{IntegrationTests}  & Full pipeline execution                           &  26 \\
+\texttt{IntegrationTests}  & Full pipeline execution                           &  27 \\
 \midrule
-                           & \textbf{Total}                                   & \textbf{73} \\
+                           & \textbf{Total}                                   & \textbf{75} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -183,11 +185,12 @@ confused with integer followed by a dot operator, that source line numbers are
 tracked across newlines, and that illegal characters and unterminated strings
 raise \texttt{LexerError}.
 
-\noindent\textbf{ParserTests} verify structural correctness of parsing. The 6
+\noindent\textbf{ParserTests} verify structural correctness of parsing. The 7
 tests cover missing-semicolon and unclosed-brace error reporting, integer
 operator precedence (\texttt{*} before \texttt{+}), float operator precedence
 (\texttt{*.} before \texttt{+.}), left-associativity of arithmetic operators,
-and parenthesised expressions overriding precedence.
+parenthesised expressions overriding precedence, and availability of both the
+parse-tree and AST renderings in the pipeline result.
 
 \noindent\textbf{SymbolTableTests} exercise the symbol table directly, without
 going through the full pipeline. They cover variable definition and lookup,
@@ -228,7 +231,7 @@ python3 -m unittest discover -s tests -v
 .\venv\Scripts\python.exe -m unittest discover -s tests -v
 \end{lstlisting}
 
-All 73 tests pass.
+All 75 tests pass.
 
 \section{Error Handling}
 The language system reports errors at three main stages:

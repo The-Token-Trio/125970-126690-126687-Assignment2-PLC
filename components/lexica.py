@@ -11,7 +11,6 @@ KEYWORDS: dict[str, TokenType] = {
     "while": TokenType.WHILE,
     "def": TokenType.DEF,
     "return": TokenType.RETURN,
-    "print": TokenType.PRINT,
     "true": TokenType.BOOL_LITERAL,
     "false": TokenType.BOOL_LITERAL,
 }

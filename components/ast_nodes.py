@@ -74,15 +74,6 @@ class Assign(ASTNode):
 
 
 @dataclass
-class Print(ASTNode):
-    """Built-in print statement.
-
-    Example:  print(x);
-    """
-    expr: ASTNode
-
-
-@dataclass
 class Return(ASTNode):
     """Return statement inside a function body.
 

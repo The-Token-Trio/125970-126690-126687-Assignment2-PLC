@@ -8,7 +8,8 @@ parsing appears in Chapters~3 and~4; Chapter~5 presents the type-inference rules
 that the type checker implements.
 
 \section{Compiler pipeline}
-The system follows a four-stage pipeline. Lexical and syntactic processing are
+The system follows a four-stage execution pipeline, with an additional
+parse-tree rendering view exposed after parsing for inspection. Lexical and syntactic processing are
 kept separate from semantic analysis and execution, which simplifies testing and
 localises errors to the appropriate stage.
 
@@ -46,7 +47,7 @@ Figure~\ref{fig:system-overview-pipeline}.
 \node[box,  right=of src]  (lex) {Lexer};
 \node[data, right=of lex]  (tok) {Tokens};
 \node[box,  right=of tok]  (par) {Parser};
-\node[data, right=of par]  (ast) {AST};
+\node[data, right=of par]  (ast) {Parse Tree\\+ AST};
 \node[box,  right=of ast]  (tck) {Type\\Checker};
 \node[data, right=of tck]  (chk) {Checked\\AST};
 \node[box,  right=of chk]  (itp) {Interpreter};
@@ -78,7 +79,9 @@ Figure~\ref{fig:system-overview-pipeline}.
 
 Source characters are scanned by the lexer into a token stream. The parser
 consumes tokens and builds an AST that reflects program structure (expressions,
-statements, and control flow). The type checker then walks the AST, populates and
+statements, and control flow). The shared pipeline also renders a separate
+parse-tree view from the parsed program so that grammar structure can be
+inspected explicitly in the CLI, UI, and report. The type checker then walks the AST, populates and
 uses the symbol table, infers types, and validates scope and type rules. Only
 programs that pass the type checker proceed to interpretation. The interpreter
 evaluates the checked tree using ordinary Python values; it does not re-run the
@@ -88,15 +91,18 @@ by the command-line runner, the desktop UI, and the test suite.
 
 \subsection{End-to-end pipeline walkthrough}
 
-The following example traces the complete execution of a three-statement program
-through all four pipeline stages, illustrating the correspondence between source
-text, tokens, abstract syntax tree, inferred types, and runtime output.
+The following example traces the complete execution of a five-statement program
+through the exported pipeline views and execution stages, illustrating the
+correspondence between source text, tokens, parse tree, abstract syntax tree,
+inferred types, and runtime output.
 
 \textbf{Source program:}
 \begin{lstlisting}
 a = 3;
 b = 4;
 print(a + b);
+c = 1.5;
+print(c +. c);
 \end{lstlisting}
 
 \textbf{Stage 1 --- Lexer output (token stream):}
@@ -109,32 +115,133 @@ IDENTIFIER     'b'     line 2, col 1
 ASSIGN         '='     line 2, col 3
 INT_LITERAL    '4'     line 2, col 5
 SEMICOLON      ';'     line 2, col 6
-PRINT          'print' line 3, col 1
+IDENTIFIER     'print' line 3, col 1
 LPAREN         '('     line 3, col 6
 IDENTIFIER     'a'     line 3, col 7
 PLUS           '+'     line 3, col 9
 IDENTIFIER     'b'     line 3, col 11
 RPAREN         ')'     line 3, col 12
 SEMICOLON      ';'     line 3, col 13
-EOF                    line 3, col 14
+IDENTIFIER     'c'     line 4, col 1
+ASSIGN         '='     line 4, col 3
+FLOAT_LITERAL  '1.5'   line 4, col 5
+SEMICOLON      ';'     line 4, col 8
+IDENTIFIER     'print' line 5, col 1
+LPAREN         '('     line 5, col 6
+IDENTIFIER     'c'     line 5, col 7
+PLUS_DOT       '+.'    line 5, col 9
+IDENTIFIER     'c'     line 5, col 12
+RPAREN         ')'     line 5, col 13
+SEMICOLON      ';'     line 5, col 14
+EOF                    line 5, col 15
 \end{lstlisting}
 
-\textbf{Stage 2 --- Parser output (abstract syntax tree):}
+\textbf{Stage 2 --- Parser output (textbook-style parse tree):}
 \begin{lstlisting}
-Program  [3 statement(s)]
+program
+    statement
+        assignment
+            IDENTIFIER(a)
+            '='
+            expr
+                additive
+                    term
+                        factor
+                            INT_LITERAL(3)
+            ';'
+    statement
+        assignment
+            IDENTIFIER(b)
+            '='
+            expr
+                additive
+                    term
+                        factor
+                            INT_LITERAL(4)
+            ';'
+    statement
+        expr_stmt
+            expr
+                additive
+                    term
+                        factor
+                            function_call
+                                IDENTIFIER(print)
+                                '('
+                                args
+                                    expr
+                                        additive
+                                            additive
+                                                term
+                                                    factor
+                                                        IDENTIFIER(a)
+                                            '+'
+                                            term
+                                                factor
+                                                    IDENTIFIER(b)
+                                ')'
+            ';'
+    statement
+        assignment
+            IDENTIFIER(c)
+            '='
+            expr
+                additive
+                    term
+                        factor
+                            FLOAT_LITERAL(1.5)
+            ';'
+    statement
+        expr_stmt
+            expr
+                additive
+                    term
+                        factor
+                            function_call
+                                IDENTIFIER(print)
+                                '('
+                                args
+                                    expr
+                                        additive
+                                            additive
+                                                term
+                                                    factor
+                                                        IDENTIFIER(c)
+                                            '+.'
+                                            term
+                                                factor
+                                                    IDENTIFIER(c)
+                                ')'
+            ';'
+    EOF
+\end{lstlisting}
+
+\textbf{Stage 3 --- Parser output (abstract syntax tree):}
+\begin{lstlisting}
+Program  [5 statement(s)]
     Assign  'a'  =
         Literal  3  (int)
     Assign  'b'  =
         Literal  4  (int)
-    Print
-        BinaryOp  '+'
-            left:
-                Identifier  'a'
-            right:
-                Identifier  'b'
+    FunctionCall  'print'  [1 arg(s)]
+        arg[0]:
+            BinaryOp  '+'
+                left:
+                    Identifier  'a'
+                right:
+                    Identifier  'b'
+    Assign  'c'  =
+        Literal  1.5  (float)
+    FunctionCall  'print'  [1 arg(s)]
+        arg[0]:
+            BinaryOp  '+.'
+                left:
+                    Identifier  'c'
+                right:
+                    Identifier  'c'
 \end{lstlisting}
 
-\textbf{Stage 3 --- Type checker output (inferred type environment):}
+\textbf{Stage 4 --- Type checker output (inferred type environment):}
 
 \begin{table}[H]
 \centering
@@ -145,23 +252,31 @@ Program  [3 statement(s)]
 \midrule
 \texttt{a}     & \texttt{Integer} \\
 \texttt{b}     & \texttt{Integer} \\
+\texttt{c}     & \texttt{Float} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent The symbol table records only named symbols (\texttt{a} and \texttt{b}).
-The type checker additionally infers that the sub-expression \texttt{a + b}
-has type \texttt{Integer} (Integer $+$ Integer $\rightarrow$ Integer) during
-AST traversal, but sub-expression types are not stored in the symbol table.
+\noindent The symbol table records only named symbols (\texttt{a}, \texttt{b},
+and \texttt{c}). The type checker additionally infers that the sub-expression
+\texttt{a + b} has type \texttt{Integer} (Integer $+$ Integer $\rightarrow$
+Integer) and that \texttt{c +. c} has type \texttt{Float} (Float $+.$ Float
+$\rightarrow$ Float) during AST traversal, but sub-expression types are not
+stored in the symbol table.
 
-\textbf{Stage 4 --- Interpreter output:}
+\textbf{Stage 5 --- Interpreter output:}
 \begin{lstlisting}
 7 : Integer
+3.0 : Float
 \end{lstlisting}
 
 The example demonstrates the full data flow: source characters are tokenised by
-the lexer, structured into an AST by the parser, validated and annotated by the
-type checker, and finally evaluated by the interpreter to produce typed output.
+the lexer, structured by the parser into both an inspectable parse tree and an
+executable AST, validated and annotated by the type checker, and finally
+evaluated by the interpreter to produce typed output. It also shows that the
+textbook-style parse tree preserves the concrete operator spellings
+\texttt{'+'} and \texttt{'+.'}, making the distinction between integer and
+float arithmetic visible in the exported parser view.
 
 \subsection{Entry points and shared pipeline}
 All stages are orchestrated by \texttt{components/pipeline.py}, which is shared
@@ -178,8 +293,8 @@ python3 ui.py         # open desktop workbench
 .\venv\Scripts\python.exe ui.py
 \end{lstlisting}
 
-\noindent The CLI prints the four pipeline stages in order: tokens, AST text,
-type table, and execution output. The desktop workbench uses the same pipeline
+\noindent The CLI prints five labelled stages in order: tokens, parse tree,
+AST text, type table, and execution output. The desktop workbench uses the same pipeline
 internally, presenting each stage in a separate tab for inspection.
 
 \section{Project structure}
@@ -200,6 +315,7 @@ File & Responsibility \\
 \texttt{components/lexica.py} & Lexical analysis \\
 \texttt{components/ast\_nodes.py} & AST node definitions \\
 \texttt{components/parser.py} & Recursive-descent parser \\
+\texttt{components/parse\_tree\_printer.py} & Parse-tree renderer for inspection \\
 \texttt{components/ast\_printer.py} & AST renderer for debugging and reporting \\
 \texttt{components/symbol\_table.py} & Scoped symbol table and semantic types \\
 \texttt{components/type\_checker.py} & Static type checker and inference \\
@@ -302,18 +418,22 @@ editor from a file. The editor is pre-loaded with the built-in sample program
 on first launch.
 
 \textbf{Right panel (output tabs).}  A \texttt{Notebook} widget presents
-five tabs, each backed by a scrollable read-only \texttt{Text} widget with
+six tabs, each backed by a scrollable read-only \texttt{Text} widget with
 both horizontal and vertical scrollbars:
 \begin{itemize}
   \item \textit{Execution Output} --- the \texttt{print()} values produced
-        by stage~4, formatted as \texttt{value : Type}. The type label is
+        by stage~5, formatted as \texttt{value : Type}. The type label is
         determined at runtime by inspecting the Python type of the evaluated
         value; because the type checker guarantees correctness before execution,
         this always agrees with the statically inferred type;
   \item \textit{Tokens} --- the token stream from stage~1, one token per line
         with type, lexeme, and source position;
-  \item \textit{AST} --- the indented tree text from stage~2;
-  \item \textit{Type Table} --- the symbol table from stage~3 showing each
+  \item \textit{Parse Tree} --- a textbook-style concrete syntax rendering of
+        stage~2 using non-terminal labels such as \texttt{statement},
+        \texttt{assignment}, \texttt{expr}, \texttt{additive},
+        \texttt{term}, and \texttt{factor};
+  \item \textit{AST} --- the indented executable tree from stage~3;
+  \item \textit{Type Table} --- the symbol table from stage~4 showing each
         name, kind, inferred type, initialisation state, and parameter list;
   \item \textit{Errors} --- populated only when a pipeline stage fails;
         shows the error message (e.g.\ \texttt{[line~2, col~5] TypeError: \ldots}).
@@ -351,12 +471,12 @@ and CLI output.
 
 \begin{subfigure}[t]{0.48\textwidth}
   \includegraphics[width=\linewidth]{figures/ui-ast.png}
-  \caption{AST tab (Stage~2).}
+  \caption{AST tab (Stage~3).}
   \label{fig:ui-ast}
 \end{subfigure}\hfill
 \begin{subfigure}[t]{0.48\textwidth}
   \includegraphics[width=\linewidth]{figures/ui-types.png}
-  \caption{Type Table tab (Stage~3).}
+  \caption{Type Table tab (Stage~4).}
   \label{fig:ui-types}
 \end{subfigure}
 
@@ -367,14 +487,14 @@ and CLI output.
   \caption{Errors tab: type error isolated from execution output.}
   \label{fig:ui-error}
 \end{subfigure}
-\caption{Desktop workbench --- five output tabs. Errors are reported in the
+\caption{Desktop workbench --- six output tabs. Errors are reported in the
 dedicated \textit{Errors} tab; all other tabs are cleared on failure.}
 \label{fig:ui-shots}
 \end{figure}
 
 \section{Command-line interface}
 The CLI runner (\texttt{main.py}) accepts an optional script path; without one
-it runs the built-in sample and prints four labelled stages to \texttt{stdout}.
+it runs the built-in sample and prints five labelled stages to \texttt{stdout}.
 Errors are reported cleanly to \texttt{stderr}: if the specified file does not
 exist, the runner prints \texttt{ERROR: File not found: <path>} and exits with
 code~1. If any pipeline stage raises a language error (\texttt{LexerError},
@@ -393,7 +513,7 @@ to the user.
 \end{subfigure}\hfill
 \begin{subfigure}[t]{0.48\textwidth}
   \includegraphics[width=\linewidth,height=0.32\textheight,keepaspectratio]{figures/cli-5.png}
-  \caption{Stage~3 type table and Stage~4 output.}
+  \caption{Stage~4 type table and Stage~5 output.}
   \label{fig:cli-exec}
 \end{subfigure}
 \caption{CLI run of \texttt{python main.py} on the built-in sample.}

@@ -11,9 +11,14 @@ declarations; programs that violate type rules are rejected before execution.
 For uncalled functions, the type checker performs a post-pass to infer parameter
 types from body usage, ensuring type errors are always caught.
 
-The 73 automated tests across five classes --- lexical analysis, symbol table,
-parsing, type checking, and full pipeline --- confirm correct behaviour for all
-language features. Both a command-line runner and a desktop UI are provided.
+To support clearer correspondence between the formal grammar and accepted
+programs, the parser stage now exposes both a grammar-oriented parse-tree view
+and the executable AST used by later stages. The built-in \texttt{print()}
+operation is now implemented as a normal callable built-in rather than a
+dedicated statement form. The 75 automated tests across five
+classes --- lexical analysis, symbol table, parsing, type checking, and full
+pipeline --- confirm correct behaviour for all language features. Both a
+command-line runner and a desktop UI are provided.
 
 The project demonstrates how lexical analysis, parsing, semantic analysis, type
 inference, and interpretation can be integrated into a coherent compiler pipeline

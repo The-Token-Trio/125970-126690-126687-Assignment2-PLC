@@ -88,7 +88,7 @@ Arithmetic operators (integer) & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} 
 Float arithmetic operators & \texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} \\
 Comparison operators & \texttt{==}, \texttt{!=} \\
 Assignment operator & \texttt{=} \\
-Keywords & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return}, \texttt{print} \\
+Keywords & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return} \\
 Delimiters & \texttt{( ) \{ \} , ;} \\
 \bottomrule
 \end{tabular}
@@ -108,7 +108,6 @@ statement -> assignment
 	   | if_stmt
 	   | while_stmt
 	   | func_def
-	   | print_stmt
 	   | return_stmt
 	   | expr ';'
 \end{lstlisting}
@@ -174,23 +173,20 @@ also share the same numeric type (no implicit coercion). Therefore
 assignment  -> IDENTIFIER '=' expr ';'
 if_stmt     -> 'if' '(' expr ')' block ('else' block)?
 while_stmt  -> 'while' '(' expr ')' block
-print_stmt  -> 'print' '(' expr ')' ';'
 return_stmt -> 'return' expr ';'
 block       -> '{' statement* '}'
 \end{lstlisting}
 
-\subsubsection*{Design note: \texttt{print} as a built-in statement}
-\texttt{print} is realised as a built-in statement form rather than a
-user-callable function.  We chose this design for three reasons:
-(a)~the language has no first-class functions or void-returning user functions,
-so a built-in callable would be the only member of its kind;
-(b)~the syntactic form \texttt{print(expr);} is identical to a function call
-from the user's perspective, so there is no usability cost;
-(c)~it allows the print operator to emit \texttt{value : Type} deterministically
-without threading an output type through the function-call machinery.
-Semantically, \texttt{print} behaves as a unary built-in of type
-\texttt{T $\rightarrow$ ()}, but is parsed into a dedicated \texttt{Print}
-AST node and handled as a statement by both the type checker and the interpreter.
+\subsubsection*{Design note: \texttt{print} as a built-in callable}
+\texttt{print} is implemented as a normal function-call expression rather than
+as a dedicated statement form. Lexically, \texttt{print} is tokenised as an
+\texttt{IDENTIFIER}; syntactically, \texttt{print(x)} is parsed through the same
+\texttt{FunctionCall} path used for user-defined calls. Semantically it is a
+unary built-in of type \texttt{T $\rightarrow$ ()}: it accepts one argument of
+any programmer-visible type, emits \texttt{value : Type} immediately at
+runtime, and returns the internal \texttt{Void} type. As with any void-returning
+call, \texttt{print(...)} may be used as a standalone expression statement but
+not as the right-hand side of an assignment.
 
 \subsection{Function Definitions and Calls}
 \begin{lstlisting}
@@ -201,6 +197,14 @@ args     -> expr (',' expr)*
 
 Function calls use value parameter passing. This means the argument values are
 evaluated before the call and copied into the function's local environment.
+
+The built-in \texttt{print()} function uses exactly the same surface syntax as
+other calls:
+
+\begin{lstlisting}
+print(x);
+print(3.14);
+\end{lstlisting}
 
 \textbf{Return type uniformity.}
 A function's return type is inferred from its \texttt{return} statements.

@@ -127,7 +127,9 @@ user-defined names. Notably, \texttt{true} and \texttt{false} are also entries
 in this map, mapping to \texttt{TokenType.BOOL\_LITERAL} rather than a
 keyword-specific type. This means boolean literals are recognised through
 the same keyword-fallback mechanism as reserved words, preventing them from
-being scanned as user-defined identifiers.
+being scanned as user-defined identifiers. In contrast, \texttt{print} is
+\emph{not} reserved: it is scanned as an ordinary \texttt{IDENTIFIER} and later
+treated as a built-in callable by the type checker and interpreter.
 
 \begin{lstlisting}
 KEYWORDS: dict[str, TokenType] = {
@@ -193,7 +195,7 @@ numeric literal token \\
 error \\
 \texttt{\_identifier()} & Parses identifiers, resolves keyword vs user-defined
 & keyword or identifier token \\
-\texttt{KEYWORDS} map & Maps reserved words to token types & token type
+\texttt{KEYWORDS} map & Maps reserved words and Boolean literals to token types & token type
 selection \\
 \texttt{SINGLE\_CHAR\_TOKENS} map & Maps single-character symbols & token type
 selection \\
@@ -277,12 +279,14 @@ scopes, and validating type correctness.
 def run_pipeline(source_code: str) -> PipelineResult:
    tokens = Lexer(source_code).tokenize()
    tree = Parser(tokens).parse()
+   parse_tree_text = ParseTreePrinter().print(tree)
    ast_text = ASTPrinter().print(tree)
    checked_scope = TypeChecker().check(tree)
    outputs: list[str] = []
    Interpreter(output_callback=outputs.append).execute(tree)
    return PipelineResult(
        tokens=tokens,
+       parse_tree_text=parse_tree_text,
        ast_text=ast_text,
        checked_scope=checked_scope,
        outputs=outputs,
