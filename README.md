@@ -17,7 +17,7 @@ Assignment 2 | Asian Institute of Technology
 
 | Name                              | Student ID | Assignment Scope                                                                                                                                     |
 | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Parse-tree/AST stage exposure and documentation alignment; Automated test suite (`tests/test_pipeline.py`, 75 tests) |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing and type checking; Assignment, if, while, function, and `print()` execution; Unary minus inference/execution; Pipeline integration; Parse-tree/AST exposure; Automated testing (75 tests) |
 | Applegate T. Tun Oo               | st126690   | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
 | Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
 

@@ -25,15 +25,15 @@ class ParseTreeNode:
 
 
 class ParseTreePrinter:
-    """Renders a textbook-style concrete parse tree in compact horizontal form."""
+    """Renders a textbook-style concrete parse tree using ASCII branches."""
 
     def print(self, node: Program) -> str:
         root = self._program_node(node)
         lines: list[str] = []
-        self._render_compact(root, lines, prefix="", is_last=True, is_root=True)
+        self._render(root, lines, prefix="", is_last=True, is_root=True)
         return "\n".join(lines)
 
-    def _render_compact(
+    def _render(
         self,
         node: ParseTreeNode,
         lines: list[str],
@@ -41,26 +41,19 @@ class ParseTreePrinter:
         is_last: bool,
         is_root: bool = False,
     ) -> None:
-        chain_labels = [node.label]
-        current = node
-        while len(current.children) == 1:
-            current = current.children[0]
-            chain_labels.append(current.label)
-
-        text = " -> ".join(chain_labels)
         if is_root:
-            lines.append(text)
+            lines.append(node.label)
         else:
             branch = "`-- " if is_last else "|-- "
-            lines.append(f"{prefix}{branch}{text}")
+            lines.append(f"{prefix}{branch}{node.label}")
 
         child_prefix = prefix + ("    " if is_last else "|   ")
-        for index, child in enumerate(current.children):
-            self._render_compact(
+        for index, child in enumerate(node.children):
+            self._render(
                 child,
                 lines,
                 prefix=child_prefix if not is_root else "",
-                is_last=index == len(current.children) - 1,
+                is_last=index == len(node.children) - 1,
             )
 
     def _program_node(self, node: Program) -> ParseTreeNode:
