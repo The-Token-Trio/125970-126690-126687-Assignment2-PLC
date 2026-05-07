@@ -17,7 +17,7 @@ Assignment 2 | Asian Institute of Technology
 
 | Name                              | Student ID | Assignment Scope                                                                                                                                     |
 | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 62 tests) |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing rules; Type checking; Assignment execution; If execution; While execution; Function execution; `print()` execution; Unary minus type inference and execution; Pipeline integration (`pipeline.py`); Automated test suite (`tests/test_pipeline.py`, 73 tests) |
 | Applegate T. Tun Oo               | st126690   | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
 | Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
 
@@ -166,7 +166,7 @@ Each run prints four labelled stages: token list, AST, inferred type table, and 
 .\.venv\Scripts\python.exe ui.py
 ```
 
-Edit a script on the left panel and click Run. Results appear in tabbed panes on the right: Tokens, AST, Types, and Output.
+Edit a script on the left panel and click Run. Results appear in five tabbed panes on the right: Execution Output, Tokens, AST, Type Table, and Errors. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
 
 If Python is already on your `PATH`, `python` or `python3` can be used in place of the explicit virtual-environment interpreter above.
 
@@ -178,15 +178,15 @@ If Python is already on your `PATH`, `python` or `python3` can be used in place 
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-62 tests across 5 classes in `tests/test_pipeline.py`:
+73 tests across 5 classes in `tests/test_pipeline.py`:
 
 | Class | Stage | Tests |
 |---|---|---|
 | `LexerTests` | Tokenisation | 12 |
 | `SymbolTableTests` | Scoped symbol table | 7 |
-| `ParserTests` | Parsing and precedence | 5 |
-| `TypeCheckerTests` | Static type inference and error detection | 18 |
-| `IntegrationTests` | Full pipeline execution | 20 |
+| `ParserTests` | Parsing and precedence | 6 |
+| `TypeCheckerTests` | Static type inference and error detection | 22 |
+| `IntegrationTests` | Full pipeline execution | 26 |
 
 ---
 
