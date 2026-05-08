@@ -1,0 +1,23 @@
+def add(a, b) {
+    result = a + b;
+    return result;
+}
+
+def addf(a, b) {
+    result = a +. b;
+    return result;
+}
+
+def multiply(a, b) {
+    result = a * b;
+    return result;
+}
+
+z = add(10, 20);
+print(z);
+
+w = addf(1.5, 2.5);
+print(w);
+
+m = multiply(6, 7);
+print(m);

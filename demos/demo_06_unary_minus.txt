@@ -1,0 +1,11 @@
+x = 10;
+neg = -x;
+print(neg);
+
+y = 3;
+neg2 = -y * 2;
+print(neg2);
+
+f = 3.14;
+negf = -.f;
+print(negf);

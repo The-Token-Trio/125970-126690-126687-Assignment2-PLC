@@ -1,0 +1,20 @@
+x = 42;
+y = 7;
+result = x + y;
+print(result);
+
+pi = 3.14;
+r = 2.0;
+area = pi *. r;
+print(area);
+
+dividend = 10.0;
+divisor = 4.0;
+quotient = dividend /. divisor;
+print(quotient);
+
+name = "hello";
+print(name);
+
+flag = true;
+print(flag);

@@ -33,6 +33,25 @@ representation consumed by the type checker and interpreter. An automated
 regression suite of 75 tests verifies correctness across all
 stages and language features.
 
+The main contributions of this project are:
+
+\begin{itemize}[leftmargin=1.5em, itemsep=2pt]
+    \item Design of a statically-typed programming language supporting Integer,
+    Float, Boolean, and String types without operator overloading.
+    \item Implementation of a hand-written lexer and a recursive-descent parser
+    with explicit parse-tree and abstract syntax tree generation.
+    \item Development of a syntax-directed type inference and static
+    type-checking system without explicit type declarations.
+    \item Separation of integer and floating-point arithmetic operators
+    following the Caml~Light convention to eliminate semantic ambiguity.
+    \item Construction of a complete end-to-end execution pipeline consisting
+    of lexical analysis, parsing, semantic analysis, and interpretation.
+    \item Development of both command-line and graphical interfaces exposing
+    all compiler pipeline stages for inspection and debugging.
+    \item Validation of the implementation through automated regression
+    testing and semantic error verification.
+\end{itemize}
+
 The remainder of this report is organised as follows.
 Chapter~2 presents the language design, token specification, grammar, and
 operator precedence rules. Chapters~3 and~4 cover the front-end implementation

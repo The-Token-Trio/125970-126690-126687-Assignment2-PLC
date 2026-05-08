@@ -13,6 +13,10 @@ Assignment 2 | Asian Institute of Technology
 | Applegate T. Tun Oo               | st126690   |
 | Win Htut Naing                    | st126687   |
 
+## Video Walkthrough
+
+[https://youtu.be/sR2JRm6eYzM](https://youtu.be/sR2JRm6eYzM)
+
 ## Contribution Table
 
 | Name                              | Student ID | Assignment Scope                                                                                                                                     |

@@ -1,0 +1,13 @@
+count = 0;
+count = count + 1;
+count = count + 1;
+count = count + 1;
+print(count);
+
+score = 9;
+score = score * 2;
+print(score);
+
+ratio = 1.0;
+ratio = ratio +. 0.5;
+print(ratio);
