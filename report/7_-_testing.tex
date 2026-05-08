@@ -240,19 +240,20 @@ The tests can be run with:
 python3 -m unittest discover -s tests -v
 
 # Windows
-.\venv\Scripts\python.exe -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 \end{lstlisting}
 
 All 75 tests pass.
 
 \section{Error Handling}
-The language system reports errors at three main stages:
+The language system reports errors at four stages:
 
 \begin{itemize}
 	\item lexical errors for malformed characters or unterminated strings,
 	\item parse errors for invalid syntax such as missing semicolons,
-	\item type errors for programs that violate static typing rules.
+	\item type errors for programs that violate static typing rules,
+	\item runtime errors for division by zero and other execution failures.
 \end{itemize}
 
-Runtime errors are also reported with source positions whenever execution
-reaches an invalid state such as an undefined variable reference.
+All error messages include a source position in the form
+\texttt{[line~X, col~Y]} to aid debugging.

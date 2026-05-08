@@ -374,8 +374,8 @@ python3 main.py       # run CLI (built-in sample or script file)
 python3 ui.py         # open desktop workbench
 
 # Windows
-.\venv\Scripts\python.exe main.py
-.\venv\Scripts\python.exe ui.py
+python main.py
+python ui.py
 \end{lstlisting}
 
 \noindent The CLI prints five labelled stages in order: tokens, parse tree,
@@ -497,7 +497,8 @@ opens at $1200 \times 760$ pixels in a horizontal split layout.
 Script}, \textit{Run}, and \textit{Clear Output} --- and a right-aligned
 status label that reports \textit{Ready} on launch,
 \textit{Loaded \textless{}filename\textgreater{}} after a script is opened,
-\textit{Ran \textless{}name\textgreater{}} after a successful run, or
+\textit{Ran \textless{}filename\textgreater{}} after a successful run on a loaded script file or
+\textit{Ran editor contents} when running the built-in editor program directly, or
 \textit{Run failed} when a pipeline stage raises an error.
 
 \textbf{Left panel (source editor).}  A monospaced \texttt{Text} widget
