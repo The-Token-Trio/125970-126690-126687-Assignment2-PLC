@@ -297,7 +297,7 @@ class TypeCheckerTests(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class IntegrationTests(unittest.TestCase):
-    """End-to-end tests through all four pipeline stages."""
+    """End-to-end tests through the full pipeline."""
 
     # --- Unary minus ---
 

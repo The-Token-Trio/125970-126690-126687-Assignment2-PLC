@@ -342,8 +342,9 @@ the pipeline. It can then be displayed or used for further analysis.
 This separation of concerns keeps lexical analysis focused on tokenization,
 while semantic meaning is enforced during type checking. For user-defined
 functions, definitions are pre-registered in the global scope so that forward
-references can be resolved during checking. Parameter types are fixed from the
-first call site encountered and held constant; the function body is then
-verified with those fixed types. All subsequent calls must supply arguments
-that match the established types. For functions that are never called, a
-separate post-pass infers types from body usage.
+references can be resolved during checking. For functions that are called,
+parameter types are fixed from the first call site encountered and held
+constant; the function body is then verified with those fixed types. All
+subsequent calls must supply arguments that match the established types. For
+functions that are never called, a separate post-pass infers types from body
+usage.

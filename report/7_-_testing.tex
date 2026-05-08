@@ -125,10 +125,10 @@ terminates when the condition becomes false, with \texttt{print()} producing
 one output line per pass rather than accumulating output until loop exit.
 
 \subsection{Functions}
-Function tests covered value parameter passing, local scope execution, and
-return value propagation. The type checker correctly inferred parameter types
-from the first call site and enforced that signature for all subsequent
-calls to the same function.
+Function tests covered value parameter passing (call-by-value), local scope
+execution, and return value propagation. For called functions, the type
+checker correctly fixed parameter types from the first call site and enforced
+that signature for all subsequent calls to the same function.
 
 \subsection{Print}
 The built-in \texttt{print()} function was tested with all supported runtime
@@ -237,7 +237,7 @@ type mismatch, non-Boolean conditions, undefined variables, wrong argument
 count and type, and uncalled-function body checking for both invalid and valid
 cases.
 
-\noindent\textbf{IntegrationTests} run programs through all four pipeline
+\noindent\textbf{IntegrationTests} run programs through multiple pipeline
 stages and verify final output. Cases include unary negation on all numeric
 types, division by zero for both \texttt{/} and \texttt{/.}, both branches of
 \texttt{if}/\texttt{else}, while-loop countdown, \texttt{print()} with every

@@ -1,7 +1,7 @@
-# 125970-126690-126687 — Programming Languages and  Compiler
+# 125970-126690-126687 - Programming Languages and Compiler
 
 <p align="center">
-  <strong>AT70.07 · Programming Languages and Compilers</strong><br>
+  <strong>AT70.07 - Programming Languages and Compilers</strong><br>
   Assignment 2 &nbsp;|&nbsp; Asian Institute of Technology &nbsp;|&nbsp; <em>The Token Trio</em>
 </p>
 
@@ -14,14 +14,14 @@
     <img src="https://img.shields.io/badge/YouTube-Video%20Walkthrough-FF0000?logo=youtube" alt="YouTube">
   </a>
   &nbsp;
-  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python">
   &nbsp;
   <img src="https://img.shields.io/badge/Tests-77%20passing-brightgreen" alt="Tests">
 </p>
 
 ---
 
-A statically-typed interpreted language built from scratch in Python — no external dependencies. The full compiler pipeline runs from raw source text through lexing, parsing, type checking, and tree-walking interpretation, with both a CLI and a desktop GUI exposing every stage for inspection.
+A statically-typed interpreted language built from scratch in Python with no external dependencies. The implementation follows four processing phases: lexing, parsing, type checking, and tree-walking interpretation. The CLI and desktop GUI expose five inspection outputs: tokens, parse tree, AST, type table, and execution output.
 
 ---
 
@@ -38,7 +38,7 @@ A statically-typed interpreted language built from scratch in Python — no exte
 ## Demo
 
 <p align="center">
-  <img src="demo.gif" width="90%" alt="Live demo — CLI and Desktop UI walkthrough"/>
+  <img src="demo.gif" width="90%" alt="Live demo - CLI and Desktop UI walkthrough"/>
 </p>
 <p align="center"><em>Full walkthrough on <a href="https://youtu.be/sR2JRm6eYzM">YouTube</a></em></p>
 
@@ -51,22 +51,22 @@ A statically-typed interpreted language built from scratch in Python — no exte
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="report/figures/ui-main.png" width="100%" alt="UI — Execution Output"/><br>
-      <sub><b>Execution Output</b> — values printed with inferred type</sub>
+      <img src="report/figures/ui-main.png" width="100%" alt="UI - Execution Output"/><br>
+      <sub><b>Execution Output</b> - values printed with inferred type</sub>
     </td>
     <td align="center" width="50%">
-      <img src="report/figures/ui-types.png" width="100%" alt="UI — Type Table"/><br>
-      <sub><b>Type Table</b> — global-scope variables and functions with inferred types</sub>
+      <img src="report/figures/ui-types.png" width="100%" alt="UI - Type Table"/><br>
+      <sub><b>Type Table</b> - global-scope variables and functions with inferred types</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="report/figures/ui-tokens.png" width="100%" alt="UI — Tokens"/><br>
-      <sub><b>Tokens</b> — full token stream with type, lexeme, line and column</sub>
+      <img src="report/figures/ui-tokens.png" width="100%" alt="UI - Tokens"/><br>
+      <sub><b>Tokens</b> - full token stream with type, lexeme, line and column</sub>
     </td>
     <td align="center" width="50%">
-      <img src="report/figures/ui-error.png" width="100%" alt="UI — Error tab"/><br>
-      <sub><b>Errors tab</b> — type error with exact line and column</sub>
+      <img src="report/figures/ui-error.png" width="100%" alt="UI - Error tab"/><br>
+      <sub><b>Errors tab</b> - type error with exact line and column</sub>
     </td>
   </tr>
 </table>
@@ -76,12 +76,12 @@ A statically-typed interpreted language built from scratch in Python — no exte
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="report/figures/cli-1.png" width="100%" alt="CLI — Token stage"/><br>
-      <sub><b>Stage 1 — Tokens</b></sub>
+      <img src="report/figures/cli-1.png" width="100%" alt="CLI - Token stage"/><br>
+      <sub><b>Stage 1 - Tokens</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="report/figures/cli-4.png" width="100%" alt="CLI — Type Check and Execution"/><br>
-      <sub><b>Stage 4 — Type Check &amp; Stage 5 — Execution</b></sub>
+      <img src="report/figures/cli-4.png" width="100%" alt="CLI - Type Check and Execution"/><br>
+      <sub><b>Stage 4 - Type Check and Stage 5 - Execution</b></sub>
     </td>
   </tr>
 </table>
@@ -93,14 +93,14 @@ A statically-typed interpreted language built from scratch in Python — no exte
 | Feature | Detail |
 | ------- | ------ |
 | **Types** | `Integer`, `Float`, `Boolean`, `String` |
-| **Typing** | Static · inferred on first assignment · no annotations needed |
+| **Typing** | Static; inferred on first assignment; no annotations needed |
 | **Integer arithmetic** | `+` `-` `*` `/` (floor division) |
-| **Float arithmetic** | `+.` `-.` `*.` `/.` — no overloading with integer operators |
+| **Float arithmetic** | `+.` `-.` `*.` `/.`; no overloading with integer operators |
 | **Comparisons** | `==` `!=` between two same-type numeric expressions |
 | **Unary minus** | `-x` and `-.x` (desugared to `0 - x` / `0.0 -. x`) |
-| **Control flow** | `if` / `else` · `while` |
-| **Functions** | Definition · value parameters · `return` · type-inferred parameters |
-| **Built-in** | `print(expr)` — outputs `value : Type` |
+| **Control flow** | `if` / `else`; `while` |
+| **Functions** | Definition; call-by-value parameters; `return`; called functions fix parameter types at first call site (never-called functions use body-based inference) |
+| **Built-in** | `print(expr)` - outputs `value : Type` |
 
 ---
 
@@ -110,20 +110,23 @@ A statically-typed interpreted language built from scratch in Python — no exte
   <img src="report/figures/system-overview-pipeline.png" width="90%" alt="Pipeline diagram"/>
 </p>
 
-```
+The implementation follows four processing phases: lexical analysis, parsing, static type checking, and interpretation.
+The shared pipeline exposes five labelled outputs because the parsing phase produces two inspectable artefacts: Stage 2 parse tree and Stage 3 AST.
+
+```text
 Source code
-    │
-    ▼
-  Lexer          →  STAGE 1: token stream
-    │
-    ▼
-  Parser         →  STAGE 2: Parse Tree  +  STAGE 3: AST
-    │
-    ▼
-  Type Checker   →  STAGE 4: symbol table with inferred types
-    │
-    ▼
-  Interpreter    →  STAGE 5: execution output
+    |
+    v
+  Lexer          -> STAGE 1: token stream
+    |
+    v
+  Parser         -> STAGE 2: parse tree + STAGE 3: AST
+    |
+    v
+  Type Checker   -> STAGE 4: symbol table with inferred types
+    |
+    v
+  Interpreter    -> STAGE 5: execution output
 ```
 
 All stages are wired through `components/pipeline.py` and shared by the CLI, desktop UI, and test suite.
@@ -133,27 +136,30 @@ All stages are wired through `components/pipeline.py` and shared by the CLI, des
 ## Quick Start
 
 **Run the built-in sample program:**
+
 ```bash
 python main.py
 ```
 
 **Run a source file:**
+
 ```bash
 python main.py demos/demo_01_basics.txt
 ```
 
 **Open the desktop GUI:**
+
 ```bash
 python ui.py
 ```
 
-Use `python3` on macOS / Linux. No external packages required.
+Use `python3` on macOS / Linux. Python 3.10+ is required. No external packages are required.
 
 ---
 
 ## Quick Example
 
-```
+```text
 def add(a, b) {
     result = a + b;
     return result;
@@ -182,7 +188,8 @@ print(z);
 ```
 
 **Output:**
-```
+
+```text
 "plc" : String
 3 : Integer
 2 : Integer
@@ -194,18 +201,18 @@ print(z);
 
 ## Project Structure
 
-```
+```text
 components/
-├── tokens.py             Token model and TokenType enum
-├── lexica.py             Lexer: source → list[Token]
-├── symbol_table.py       Scoped symbol and type storage
-├── ast_nodes.py          AST node dataclasses
-├── parser.py             Recursive-descent parser
-├── parse_tree_printer.py Grammar-oriented parse-tree renderer
-├── ast_printer.py        AST pretty-printer
-├── type_checker.py       Static type inference and checking
-├── interpreter.py        Tree-walking interpreter
-└── pipeline.py           Shared runner for CLI / UI / tests
+|-- tokens.py             Token model and TokenType enum
+|-- lexica.py             Lexer: source -> list[Token]
+|-- symbol_table.py       Scoped symbol and type storage
+|-- ast_nodes.py          AST node dataclasses
+|-- parser.py             Recursive-descent parser
+|-- parse_tree_printer.py Grammar-oriented parse-tree renderer
+|-- ast_printer.py        AST pretty-printer
+|-- type_checker.py       Static type inference and checking
+|-- interpreter.py        Tree-walking interpreter
+`-- pipeline.py           Shared runner for CLI / UI / tests
 main.py                   CLI entry point
 ui.py                     Tkinter desktop UI
 tests/test_pipeline.py    77 automated regression tests
@@ -252,5 +259,3 @@ Errors surface at the earliest possible stage with source position:
 | Aye Khin Khin Hpone (Yolanda Lim) | st125970 | Static typing and type checking; tree-walking interpreter (assignment, if, while, function, `print()`); unary minus inference/execution; Desktop UI; CLI; pipeline integration; automated testing (77 tests) |
 | Applegate T. Tun Oo | st126690 | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
 | Win Htut Naing | st126687 | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions and calls; `print()` syntax; parse-tree and AST construction |
-
-

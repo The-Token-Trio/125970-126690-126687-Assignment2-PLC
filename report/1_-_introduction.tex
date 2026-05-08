@@ -6,7 +6,7 @@ evaluated output requires a coherent pipeline of components, each of which must
 correctly transform its input before passing it downstream. Lexical analysis
 identifies atomic tokens; parsing imposes hierarchical structure; static type
 checking validates semantic correctness before execution; and interpretation
-evaluates the validated program. When these stages are connected cleanly, errors
+evaluates the validated program \citep{aho2006compilers,nystrom2021crafting}. When these stages are connected cleanly, errors
 are caught at the earliest possible point, and the overall system remains
 tractable to reason about, test, and extend.
 
@@ -40,7 +40,8 @@ The main contributions of this project are:
     \item Development of a syntax-directed type inference and static
     type-checking system without explicit type declarations.
     \item Separation of integer and floating-point arithmetic operators
-    following the Caml~Light convention to eliminate semantic ambiguity.
+    following the Caml~Light convention to eliminate semantic ambiguity
+    \citep{nystrom2021crafting}.
     \item Construction of a complete end-to-end execution pipeline consisting
     of lexical analysis, parsing, semantic analysis, and interpretation.
     \item Development of both command-line and graphical interfaces exposing

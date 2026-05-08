@@ -8,10 +8,12 @@ parsing appears in Chapters~3 and~4; Chapter~5 presents the type-inference rules
 that the type checker implements.
 
 \section{Compiler pipeline}
-The system follows a pipeline with five stages, each exposing a labelled output
-section through the shared pipeline. Lexical and syntactic processing are
-kept separate from semantic analysis and execution, which simplifies testing and
-localises errors to the appropriate stage.
+The implementation follows four processing phases: lexical analysis, parsing,
+static type checking, and interpretation. The shared pipeline exposes five
+labelled outputs because the parsing phase produces two inspectable artefacts:
+a grammar-oriented parse tree and an executable AST. Lexical and syntactic
+processing are kept separate from semantic analysis and execution, which
+simplifies testing and localises errors to the appropriate stage.
 
 The overall flow of data through the system is shown in
 Figure~\ref{fig:system-overview-pipeline}.
@@ -49,7 +51,7 @@ Figure~\ref{fig:system-overview-pipeline}.
 \node[box,  right=of tok]  (par) {Parser};
 \node[data, right=of par]  (ast) {Parse Tree\\+ AST};
 \node[box,  right=of ast]  (tck) {Type\\Checker};
-\node[data, right=of tck]  (chk) {Checked\\AST};
+\node[data, right=of tck]  (chk) {Original AST\\(validated)};
 \node[box,  right=of chk]  (itp) {Interpreter};
 \node[data, right=of itp]  (out) {Output};
 
@@ -82,10 +84,12 @@ consumes tokens and builds an AST that reflects program structure (expressions,
 statements, and control flow). The shared pipeline also renders a separate
 parse-tree view from the parsed program so that grammar structure can be
 inspected explicitly in the CLI, UI, and report. The type checker then walks the AST, populates and
-uses the symbol table, infers types, and validates scope and type rules. Only
-programs that pass the type checker proceed to interpretation. The interpreter
-evaluates the checked tree using ordinary Python values; it does not re-run the
-type rules, since correctness at runtime is guaranteed by the prior static pass.
+uses the symbol table, infers types, and validates scope and type rules. The
+pipeline does not construct a separate checked-AST object; instead, the
+original AST proceeds to interpretation only after successful type checking.
+The interpreter evaluates that validated tree using ordinary Python values; it
+does not re-run the type rules, since correctness at runtime is guaranteed by
+the prior static pass.
 All stages are orchestrated through \texttt{pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite.
 
@@ -100,8 +104,8 @@ Table~\ref{tab:pipeline-errors} shows a representative error for each stage.
 \toprule
 Stage & Example error & Effect \\
 \midrule
-Lexer        & Unrecognised character (\texttt{\#})   & \texttt{LexError} reported; pipeline halts \\
-Parser       & Missing closing \texttt{)}              & \texttt{SyntaxError} reported; pipeline halts \\
+Lexer        & Unrecognised character (\texttt{\#})   & \texttt{LexerError} reported; pipeline halts \\
+Parser       & Missing closing \texttt{)}              & \texttt{ParseError} reported; pipeline halts \\
 Type checker & \texttt{3 + 4.0} (mixed numeric types) & \texttt{TypeError} reported; interpreter not reached \\
 Interpreter  & Integer division by zero                & \texttt{RuntimeError} reported at execution time \\
 \bottomrule
@@ -291,7 +295,7 @@ stored in the symbol table.
 
 The example demonstrates the full data flow: source characters are tokenised by
 the lexer, structured by the parser into both an inspectable parse tree and an
-executable AST, validated and annotated by the type checker, and finally
+executable AST, validated by the type checker, and finally
 evaluated by the interpreter to produce typed output. It also shows that the
 ASCII branch parse tree preserves the concrete operator spellings
 \texttt{'+'} and \texttt{'+.'}, making the distinction between integer and
@@ -397,8 +401,8 @@ python main.py
 python ui.py
 \end{lstlisting}
 
-\noindent The CLI prints five labelled stages in order: tokens, parse tree,
-AST text, type table, and execution output. The desktop workbench uses the same pipeline
+\noindent The CLI prints five labelled stage outputs in order: tokens, parse
+tree, AST text, type table, and execution output. The desktop workbench uses the same pipeline
 internally, presenting each stage in a separate tab for inspection.
 
 \section{Project structure}
@@ -431,7 +435,9 @@ File & Responsibility \\
 
 \section{Technology stack}
 The project uses Python and standard-library tools only
-(Table~\ref{tab:technology-stack}).
+(Table~\ref{tab:technology-stack}), including \texttt{dataclasses} for AST
+structures, \texttt{tkinter} for the desktop interface, and \texttt{unittest}
+for automated verification \citep{pythonDocsDataclasses,pythonDocsTkinter,pythonDocsUnittest}.
 
 \begin{table}[H]
 \centering
@@ -454,10 +460,10 @@ The \texttt{TypeChecker} class implements the inference and checking rules
 described in Chapter~5. It traverses the AST before execution, uses the symbol
 table to record variable and function information, infers types on first
 assignment, validates arithmetic and comparison expressions, enforces Boolean
-conditions for control flow, fixes function parameter types from the first call
-site and validates all subsequent calls against those types
-(or infers from body usage for uncalled functions), and infers function return
-types from \texttt{return} statements. Programs that
+conditions for control flow, fixes function parameter types for called
+functions from the first call site and validates all subsequent calls against
+those types (or infers from body usage for uncalled functions), and infers
+function return types from \texttt{return} statements. Programs that
 fail these rules are rejected before interpretation.
 
 \subsection{Scope of the implemented type system}
@@ -469,13 +475,14 @@ semantically valid program:
 	flow, and functions,
 	\item type checking for expressions and statements,
 	\item variable type inference from initial binding,
-	\item function parameter type fixation at the first call site, with consistent validation of all subsequent calls (or body-based inference for uncalled functions),
+	\item function parameter type fixation for called functions at the first call site, with consistent validation of all subsequent calls (or body-based inference for uncalled functions),
 	\item function return type inference from \texttt{return} statements,
 	\item source-positioned type errors when a program violates a typing rule.
 \end{itemize}
 
 \section{Interpreter}
-The interpreter is a tree-walking evaluator over the checked AST. It maintains
+The interpreter is a tree-walking evaluator over the original AST after
+successful type checking. It maintains
 nested runtime environments for variables and function calls. Assignments write
 through the current or nearest enclosing scope; \texttt{if} selects a branch;
 \texttt{while} repeats until its condition becomes false; function calls bind
@@ -501,7 +508,7 @@ pipeline:
 	\item assignment execution,
 	\item \texttt{if} execution,
 	\item \texttt{while} execution,
-	\item function execution with value parameter passing,
+	\item function execution with call-by-value parameter passing,
 	\item \texttt{print()} execution with immediate output,
 	\item execution behind the same \texttt{run\_pipeline} path used by the CLI,
 	UI, and tests.

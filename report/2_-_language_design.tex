@@ -214,8 +214,8 @@ block       -> '{' statement* '}'
 as a dedicated statement form. Lexically, \texttt{print} is tokenised as an
 \texttt{IDENTIFIER}; syntactically, \texttt{print(x)} is parsed through the same
 \texttt{FunctionCall} path used for user-defined calls. Semantically it is a
-unary built-in of type \texttt{T $\rightarrow$ ()}: it accepts one argument of
-any programmer-visible type, emits \texttt{value : Type} at runtime, and
+unary built-in of type \texttt{T $\rightarrow$ Void}: it accepts one argument
+of any programmer-visible type, emits \texttt{value : Type} at runtime, and
 returns the internal \texttt{Void} type. As with any void-returning call,
 \texttt{print(...)} may be used as a standalone expression statement but not as
 the right-hand side of an assignment.
@@ -227,15 +227,16 @@ params   -> IDENTIFIER (',' IDENTIFIER)*  | epsilon
 args     -> expr (',' expr)*              | epsilon
 \end{lstlisting}
 
-The \texttt{?} suffix on \texttt{params?} in \texttt{func\_def} (and on
-\texttt{args?} in the call form below) marks the construct as optional in EBNF
-form. The corresponding parse-tree renderer makes this explicit by emitting a
-single \texttt{epsilon} leaf as the only child of an empty \texttt{params} or
-\texttt{args} node, so an empty parameter or argument list is still labelled in
-the tree.
+In EBNF notation, the parameter list and argument list are optional in these
+forms. Concretely, this means the grammar allows both \texttt{def f() \{\}}
+and \texttt{f()}. The corresponding parse-tree renderer makes the empty case
+explicit by emitting a single \texttt{epsilon} leaf as the only child of an
+empty \texttt{params} or \texttt{args} node, so an empty parameter or argument
+list is still labelled in the tree.
 
-Function calls use value parameter passing. This means the argument values are
-evaluated before the call and copied into the function's local environment.
+Function calls use value parameter passing, that is, call-by-value. The
+argument values are evaluated before the call and copied into the function's
+local environment.
 
 The built-in \texttt{print()} function uses exactly the same surface syntax as
 other calls:
@@ -248,7 +249,7 @@ print(3.14);
 \textbf{Return type uniformity.}
 A function's return type is inferred from its \texttt{return} statements.
 All \texttt{return} expressions within a function body must yield the same
-type; mixed return types are a compile-time error. A function with no
+type; mixed return types are a static type error. A function with no
 \texttt{return} statement is assigned the special internal type \texttt{Void}
 and may only be invoked as a standalone statement, not used as an expression.
 Assigning the result of a \texttt{Void} function to a variable (e.g.\

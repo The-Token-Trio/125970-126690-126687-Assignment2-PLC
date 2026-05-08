@@ -100,8 +100,8 @@ $\Gamma$ = current type environment / symbol table
   \item \textbf{If} \textit{node} is a \textbf{FunctionCall}:
         \begin{itemize}[nosep, leftmargin=1.5em]
           \item If the function is the built-in \texttt{print}:\quad
-                require exactly one argument, infer that argument type, and
-                return \texttt{Void}.
+          require exactly one argument, infer that argument type,
+          reject \texttt{Void} arguments, and return \texttt{Void}.
           \item Otherwise, infer all argument types, validate them against the
                 function signature, type-check the callee body if needed, and
                 return the inferred function return type.
@@ -285,11 +285,12 @@ $\Gamma \vdash c : \texttt{Boolean} \quad \Gamma' \vdash B$
 
 \subsection{Function Definition and Call}
 Function definitions are pre-registered in the global scope so that forward
-references can be resolved. Parameter types are fixed at the first call site
-encountered and held constant for all subsequent calls, which must supply
-arguments of the same types. The return type is inferred from the
-\texttt{return} statements in the function body, which is verified with the
-fixed parameter types. Inconsistent return types are reported as a type error.
+references can be resolved. For functions that are called, parameter types are
+fixed at the first call site encountered and then held constant for all
+subsequent calls, which must supply arguments of the same types. The return
+type is inferred from the \texttt{return} statements in the function body,
+which is verified with those fixed parameter types. Inconsistent return types
+are reported as a type error.
 Furthermore, if a function's inferred return type is non-\texttt{Void}, the
 type checker enforces that the function returns on every execution path; a body
 where \texttt{return} appears only inside one branch of an \texttt{if} without
@@ -306,9 +307,9 @@ supporting them would require additional fixed-point inference or explicit
 recursion handling that is orthogonal to the core type-inference algorithm.
 
 \subsubsection*{Value parameter passing example}
-The language uses value parameter passing: each argument is evaluated in the
-caller's environment and a copy of its value is bound to the corresponding
-parameter in the callee's environment. Figure~\ref{fig:value-param-passing}
+The language uses value parameter passing, or call-by-value: each argument is
+evaluated in the caller's environment and a copy of its value is bound to the
+corresponding parameter in the callee's environment. Figure~\ref{fig:value-param-passing}
 shows the runtime environment before, during, and after a call to a function
 that mutates its parameter.
 
@@ -350,7 +351,7 @@ Global scope: \quad x $\rightarrow$ 5
 A parameter receives a copy of the argument value rather than a
 shared reference, modifications to \texttt{a} inside the function do not
 affect \texttt{x} in the caller environment. This demonstrates standard
-value parameter passing semantics and avoids aliasing effects associated with
+call-by-value semantics and avoids aliasing effects associated with
 reference-based mechanisms.
 
 \section{Type Error Reporting}
