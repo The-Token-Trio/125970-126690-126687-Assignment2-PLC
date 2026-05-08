@@ -152,13 +152,13 @@ report/              - LaTeX report source and compiled PDF
 **CLI — built-in sample:**
 
 ```bash
-.\.venv\Scripts\python.exe main.py
+python main.py
 ```
 
 **CLI — run a source file:**
 
 ```bash
-.\.venv\Scripts\python.exe main.py path\to\script.txt
+python main.py path\to\script.txt
 ```
 
 Each run prints five labelled stages: token list, parse tree, AST, inferred type table, and execution output.
@@ -166,19 +166,19 @@ Each run prints five labelled stages: token list, parse tree, AST, inferred type
 **Desktop UI:**
 
 ```bash
-.\.venv\Scripts\python.exe ui.py
+python ui.py
 ```
 
 Edit a script on the left panel and click Run. Results appear in six tabbed panes on the right: Execution Output, Tokens, Parse Tree, AST, Type Table, and Errors. The Parse Tree tab shows a grammar-oriented ASCII branch tree, while the AST tab shows the simplified executable tree. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
 
-If Python is already on your `PATH`, `python` or `python3` can be used in place of the explicit virtual-environment interpreter above.
+No external Python packages are required. Use `python3` on macOS/Linux.
 
 ---
 
 ## Running Tests
 
 ```bash
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
 
 75 tests across 5 classes in `tests/test_pipeline.py`:
@@ -202,5 +202,6 @@ Errors are reported at the appropriate stage with source positions:
 | Lexer        | `[line 1, col 7] LexerError: Unterminated string literal`                    |
 | Parser       | `[line 2, col 1] ParseError: Expected ';' after expression`                  |
 | Type checker | `[line 3, col 5] TypeError: Cannot assign String to variable 'x' of type Integer` |
+| Interpreter  | `[line 4, col 5] RuntimeError: Division by zero`                             |
 
 

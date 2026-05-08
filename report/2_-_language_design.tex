@@ -75,7 +75,12 @@ any execution occurs:
 
 \begin{lstlisting}
 x = 5;
-x = "hello";   (* TypeError: Cannot assign String to variable 'x' of type Integer *)
+x = "hello";
+\end{lstlisting}
+
+\noindent The type checker rejects the second assignment with:
+\begin{lstlisting}
+[line 2, col 1] TypeError: Cannot assign String to variable 'x' of type Integer
 \end{lstlisting}
 
 \noindent This contrasts with dynamically-typed languages, where the same
@@ -170,9 +175,11 @@ control-flow conditions and as ordinary expressions. Their inferred type is
 passed as arguments, or printed:
 
 \begin{lstlisting}
-flag = (x == y);    (* flag inferred as Boolean *)
-print(a != b);      (* prints true/false : Boolean *)
+flag = (x == y);
+print(a != b);
 \end{lstlisting}
+
+\noindent Here \texttt{flag} is inferred as \texttt{Boolean} from the assignment, and \texttt{print(a != b)} outputs \texttt{true : Boolean} or \texttt{false : Boolean}.
 
 \textbf{Strict arithmetic operands.}
 The specification states that \texttt{==} and \texttt{!=} operate between two
