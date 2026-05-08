@@ -134,19 +134,28 @@ statement -> assignment
 
 \subsection{Expressions}
 \begin{lstlisting}
-expr      -> additive (('==' | '!=') additive)?
-additive  -> term (('+' | '-' | '+.' | '-.') term)*
-term      -> factor (('*' | '/' | '*.' | '/.') factor)*
-factor    -> '-'  factor     (* integer unary negation *)
-	   | '-.' factor    (* float unary negation *)
-	   | INT_LITERAL
-	   | FLOAT_LITERAL
-	   | STRING_LITERAL
-	   | BOOL_LITERAL
-	   | IDENTIFIER
-	   | IDENTIFIER '(' args? ')'
-	   | '(' expr ')'
+expr        -> comparison | additive
+comparison  -> additive ('==' | '!=') additive
+additive    -> term (('+' | '-' | '+.' | '-.') term)*
+term        -> factor (('*' | '/' | '*.' | '/.') factor)*
+factor      -> '-'  factor     (* integer unary negation *)
+	     | '-.' factor    (* float unary negation *)
+	     | INT_LITERAL
+	     | FLOAT_LITERAL
+	     | STRING_LITERAL
+	     | BOOL_LITERAL
+	     | IDENTIFIER
+	     | IDENTIFIER '(' args? ')'
+	     | '(' expr ')'
 \end{lstlisting}
+
+The \texttt{comparison} non-terminal is introduced so that the parse-tree
+renderer can label equality and inequality expressions explicitly. When an
+\texttt{expr} contains no \texttt{==} or \texttt{!=}, it expands directly to an
+\texttt{additive}; otherwise, it expands to a \texttt{comparison} node whose
+two operands are themselves \texttt{additive} sub-trees. Comparisons remain
+non-associative (one comparison per expression) and produce a
+\texttt{Boolean} result.
 
 The operators \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/} operate
 exclusively on \texttt{Integer} operands. The dot-suffixed operators
@@ -213,9 +222,16 @@ not as the right-hand side of an assignment.
 \subsection{Function Definitions and Calls}
 \begin{lstlisting}
 func_def -> 'def' IDENTIFIER '(' params? ')' block
-params   -> IDENTIFIER (',' IDENTIFIER)*
-args     -> expr (',' expr)*
+params   -> IDENTIFIER (',' IDENTIFIER)*  | epsilon
+args     -> expr (',' expr)*              | epsilon
 \end{lstlisting}
+
+The \texttt{?} suffix on \texttt{params?} in \texttt{func\_def} (and on
+\texttt{args?} in the call form below) marks the construct as optional in EBNF
+form. The corresponding parse-tree renderer makes this explicit by emitting a
+single \texttt{epsilon} leaf as the only child of an empty \texttt{params} or
+\texttt{args} node, so an empty parameter or argument list is still labelled in
+the tree.
 
 Function calls use value parameter passing. This means the argument values are
 evaluated before the call and copied into the function's local environment.
@@ -257,6 +273,37 @@ Precedence & Operators & Associativity \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[H]
+\centering
+\caption{Formal arithmetic and comparison operator signatures}
+\label{tab:operator-signatures}
+\begin{tabular}{lll}
+\toprule
+Operator & Operand types & Result type \\
+\midrule
+\texttt{+}  & Integer $\times$ Integer & Integer \\
+\texttt{-}  & Integer $\times$ Integer & Integer \\
+\texttt{*}  & Integer $\times$ Integer & Integer \\
+\texttt{/}  & Integer $\times$ Integer & Integer \\
+\texttt{+.} & Float $\times$ Float     & Float \\
+\texttt{-.} & Float $\times$ Float     & Float \\
+\texttt{*.} & Float $\times$ Float     & Float \\
+\texttt{/.} & Float $\times$ Float     & Float \\
+\texttt{==} & Integer $\times$ Integer & Boolean \\
+\texttt{==} & Float $\times$ Float     & Boolean \\
+\texttt{!=} & Integer $\times$ Integer & Boolean \\
+\texttt{!=} & Float $\times$ Float     & Boolean \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Any operand combination not listed in
+Table~\ref{tab:operator-signatures} is rejected during static type checking.
+Because each operator token maps to exactly one valid operand signature
+(or, for \texttt{==} and \texttt{!=}, two same-type signatures), operator
+meaning can be determined without overload resolution or implicit type
+coercion.
 
 \section{Design Decisions: No Overloading}
 \label{sec:no-overloading}

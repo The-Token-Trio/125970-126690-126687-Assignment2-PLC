@@ -8,8 +8,8 @@ parsing appears in Chapters~3 and~4; Chapter~5 presents the type-inference rules
 that the type checker implements.
 
 \section{Compiler pipeline}
-The system follows a pipeline with four processing stages and five labelled output
-sections exposed by the shared pipeline. Lexical and syntactic processing are
+The system follows a pipeline with five stages, each exposing a labelled output
+section through the shared pipeline. Lexical and syntactic processing are
 kept separate from semantic analysis and execution, which simplifies testing and
 localises errors to the appropriate stage.
 
@@ -497,9 +497,11 @@ opens at $1200 \times 760$ pixels in a horizontal split layout.
 Script}, \textit{Run}, and \textit{Clear Output} --- and a right-aligned
 status label that reports \textit{Ready} on launch,
 \textit{Loaded \textless{}filename\textgreater{}} after a script is opened,
-\textit{Ran \textless{}filename\textgreater{}} after a successful run on a loaded script file or
-\textit{Ran editor contents} when running the built-in editor program directly, or
-\textit{Run failed} when a pipeline stage raises an error.
+\textit{Ran \textless{}filename\textgreater{}} after a successful run on a loaded script file,
+\textit{Ran editor contents} when running the editor buffer directly without
+having opened a file, \textit{Run failed} when a pipeline stage raises an
+error, and \textit{Output cleared} after the \textit{Clear Output} button is
+pressed.
 
 \textbf{Left panel (source editor).}  A monospaced \texttt{Text} widget
 with both horizontal and vertical scrollbars allows the user to enter or
@@ -520,8 +522,8 @@ both horizontal and vertical scrollbars:
         with type, lexeme, and source position;
   \item \textit{Parse Tree} --- a grammar-oriented ASCII branch rendering of
         stage~2 using non-terminal labels such as \texttt{statement},
-        \texttt{assignment}, \texttt{expr}, \texttt{additive},
-        \texttt{term}, and \texttt{factor};
+        \texttt{assignment}, \texttt{expr}, \texttt{comparison},
+        \texttt{additive}, \texttt{term}, and \texttt{factor};
   \item \textit{AST} --- the indented executable tree from stage~3;
   \item \textit{Type Table} --- the symbol table from stage~4 showing each
         name, kind, inferred type, initialisation state, and parameter list;

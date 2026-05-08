@@ -1,49 +1,153 @@
-# Programming Language Project
+# 125970-126690-126687 — Programming Language Compiler
 
-**AT70.07 — Programming Languages and Compilers**  
-Assignment 2 | Asian Institute of Technology
+<p align="center">
+  <strong>AT70.07 · Programming Languages and Compilers</strong><br>
+  Assignment 2 &nbsp;|&nbsp; Asian Institute of Technology &nbsp;|&nbsp; <em>The Token Trio</em>
+</p>
 
----
-
-## Team Members
-
-| Name                              | Student ID |
-| --------------------------------- | ---------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   |
-| Applegate T. Tun Oo               | st126690   |
-| Win Htut Naing                    | st126687   |
-
-## Video Walkthrough
-
-[https://youtu.be/sR2JRm6eYzM](https://youtu.be/sR2JRm6eYzM)
-
-## Contribution Table
-
-| Name                              | Student ID | Assignment Scope                                                                                                                                     |
-| --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970   | Static typing and type checking; Assignment, if, while, function, and `print()` execution; Unary minus inference/execution; Pipeline integration; Parse-tree/AST exposure; Automated testing (75 tests) |
-| Applegate T. Tun Oo               | st126690   | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
-| Win Htut Naing                    | st126687   | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions; Function calls; `print()` syntax |
+<p align="center">
+  <a href="https://github.com/The-Token-Trio/125970-126690-126687-Assignment2-PLC">
+    <img src="https://img.shields.io/badge/GitHub-Repository-181717?logo=github" alt="GitHub">
+  </a>
+  &nbsp;
+  <a href="https://youtu.be/sR2JRm6eYzM">
+    <img src="https://img.shields.io/badge/YouTube-Video%20Walkthrough-FF0000?logo=youtube" alt="YouTube">
+  </a>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
+  &nbsp;
+  <img src="https://img.shields.io/badge/Tests-75%20passing-brightgreen" alt="Tests">
+</p>
 
 ---
 
-## Overview
+A statically-typed interpreted language built from scratch in Python — no external dependencies. The full compiler pipeline runs from raw source text through lexing, parsing, type checking, and tree-walking interpretation, with both a CLI and a desktop GUI exposing every stage for inspection.
 
-A statically-typed interpreted language built from scratch in Python, implementing the full pipeline from source text to execution output.
+---
 
-| Feature       | Detail                                                        |
-| ------------- | ------------------------------------------------------------- |
-| Types         | `Integer`, `Float`, `Boolean`, `String`                       |
-| Typing        | Static, with type inference — no explicit declarations needed |
-| Arithmetic    | `+`, `-`, `*`, `/` (Integer); `+.`, `-.`, `*.`, `/.` (Float); no overloading |
-| Comparisons   | `==`, `!=` between two same-type arithmetic expressions        |
-| Control flow  | `if`/`else`, `while`                                          |
-| Functions     | Definition, value-parameter calls, `return`                   |
-| Built-in      | `print()` — callable built-in function that outputs `value : Type` |
+## Team The Token Trio
 
-No external Python packages are required. The project uses only the Python standard library.
+| Name | Student ID |
+| ---- | ---------- |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970 |
+| Applegate T. Tun Oo | st126690 |
+| Win Htut Naing | st126687 |
 
-**Repository:** https://github.com/The-Token-Trio/125970-126690-126687-Assignment2-PLC
+---
+
+## Demo
+
+<p align="center">
+  <img src="demo.gif" width="90%" alt="Live demo — CLI and Desktop UI walkthrough"/>
+</p>
+<p align="center"><em>Full walkthrough on <a href="https://youtu.be/sR2JRm6eYzM">YouTube</a></em></p>
+
+---
+
+## Screenshots
+
+### Desktop UI
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="report/figures/ui-main.png" width="100%" alt="UI — Execution Output"/><br>
+      <sub><b>Execution Output</b> — values printed with inferred type</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="report/figures/ui-types.png" width="100%" alt="UI — Type Table"/><br>
+      <sub><b>Type Table</b> — all variables and functions with inferred types</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="report/figures/ui-tokens.png" width="100%" alt="UI — Tokens"/><br>
+      <sub><b>Tokens</b> — full token stream with type, lexeme, line and column</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="report/figures/ui-error.png" width="100%" alt="UI — Error tab"/><br>
+      <sub><b>Errors tab</b> — type error with exact line and column</sub>
+    </td>
+  </tr>
+</table>
+
+### CLI
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="report/figures/cli-1.png" width="100%" alt="CLI — Token stage"/><br>
+      <sub><b>Stage 1 — Tokens</b></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="report/figures/cli-4.png" width="100%" alt="CLI — Type Check and Execution"/><br>
+      <sub><b>Stage 4 — Type Check &amp; Stage 5 — Execution</b></sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Language Features
+
+| Feature | Detail |
+| ------- | ------ |
+| **Types** | `Integer`, `Float`, `Boolean`, `String` |
+| **Typing** | Static · inferred on first assignment · no annotations needed |
+| **Integer arithmetic** | `+` `-` `*` `/` (floor division) |
+| **Float arithmetic** | `+.` `-.` `*.` `/.` — no overloading with integer operators |
+| **Comparisons** | `==` `!=` between two same-type numeric expressions |
+| **Unary minus** | `-x` and `-.x` (desugared to `0 - x` / `0.0 -. x`) |
+| **Control flow** | `if` / `else` · `while` |
+| **Functions** | Definition · value parameters · `return` · type-inferred parameters |
+| **Built-in** | `print(expr)` — outputs `value : Type` |
+
+---
+
+## Pipeline
+
+<p align="center">
+  <img src="report/figures/system-overview-pipeline.png" width="90%" alt="Pipeline diagram"/>
+</p>
+
+```
+Source code
+    │
+    ▼
+  Lexer          →  STAGE 1: token stream
+    │
+    ▼
+  Parser         →  STAGE 2: Parse Tree  +  STAGE 3: AST
+    │
+    ▼
+  Type Checker   →  STAGE 4: symbol table with inferred types
+    │
+    ▼
+  Interpreter    →  STAGE 5: execution output
+```
+
+All stages are wired through `components/pipeline.py` and shared by the CLI, desktop UI, and test suite.
+
+---
+
+## Quick Start
+
+**Run the built-in sample program:**
+```bash
+python main.py
+```
+
+**Run a source file:**
+```bash
+python main.py demos/demo_01_basics.txt
+```
+
+**Open the desktop GUI:**
+```bash
+python ui.py
+```
+
+Use `python3` on macOS / Linux. No external packages required.
 
 ---
 
@@ -52,20 +156,12 @@ No external Python packages are required. The project uses only the Python stand
 ```
 def add(a, b) {
     result = a + b;
-    print(result);
-    return result;
-}
-
-def addf(a, b) {
-    result = a +. b;
-    print(result);
     return result;
 }
 
 x = 10;
 y = 20;
 pi = 3.14;
-half = 0.5;
 name = "plc";
 flag = true;
 
@@ -83,49 +179,16 @@ while (i != 0) {
 
 z = add(x, y);
 print(z);
-
-w = addf(pi, half);
-print(w);
 ```
 
-Output:
-
+**Output:**
 ```
 "plc" : String
 3 : Integer
 2 : Integer
 1 : Integer
 30 : Integer
-30 : Integer
-3.64 : Float
-3.64 : Float
 ```
-
----
-
-## Pipeline
-
-Source code flows through four processing stages, exposing five labelled output sections:
-
-```
-Source code
-    │
-    ▼
-  Lexer          →  token list
-    │
-    ▼
-  Parser         →  Parse Tree + Abstract Syntax Tree (AST)
-    │
-    ▼
-  Type Checker   →  validates types; populates symbol table
-    │
-    ▼
-  Interpreter    →  execution output
-```
-
-All stages are wired together in `components/pipeline.py` and shared by the CLI runner, desktop UI, and test suite.
-
-For inspection purposes, the pipeline now exposes both a grammar-oriented parse tree and the executable AST. The parser still builds the AST used by the type checker and interpreter; the parse tree is an additional ASCII branch rendering that shows grammar layers such as `expr`, `additive`, `term`, `factor`, `args`, punctuation tokens, and `EOF` so the grammar-to-program correspondence is explicit in the submission.
 
 ---
 
@@ -133,79 +196,61 @@ For inspection purposes, the pipeline now exposes both a grammar-oriented parse 
 
 ```
 components/
-├── tokens.py        - Token model and TokenType enum
-├── lexica.py        - Lexer: source → list[Token]
-├── symbol_table.py  - Scoped symbol/type storage
-├── ast_nodes.py     - AST node dataclasses
-├── parser.py        - Recursive-descent parser
-├── parse_tree_printer.py - Parse-tree renderer for debug/report
-├── ast_printer.py   - AST pretty-printer for debug/report
-├── type_checker.py  - Static typing and inference
-├── interpreter.py   - Tree-walking interpreter
-└── pipeline.py      - Shared runner for CLI/UI/tests
-main.py              - CLI runner for demo or script files
-ui.py                - Tkinter desktop UI
-tests/               - Automated regression tests
-report/              - LaTeX report source and compiled PDF
+├── tokens.py             Token model and TokenType enum
+├── lexica.py             Lexer: source → list[Token]
+├── symbol_table.py       Scoped symbol and type storage
+├── ast_nodes.py          AST node dataclasses
+├── parser.py             Recursive-descent parser
+├── parse_tree_printer.py Grammar-oriented parse-tree renderer
+├── ast_printer.py        AST pretty-printer
+├── type_checker.py       Static type inference and checking
+├── interpreter.py        Tree-walking interpreter
+└── pipeline.py           Shared runner for CLI / UI / tests
+main.py                   CLI entry point
+ui.py                     Tkinter desktop UI
+tests/test_pipeline.py    75 automated regression tests
+demos/                    Demo scripts for each language feature
+report/                   LaTeX source and compiled PDF
 ```
 
 ---
 
-## Running
-
-**CLI — built-in sample:**
-
-```bash
-python main.py
-```
-
-**CLI — run a source file:**
-
-```bash
-python main.py path\to\script.txt
-```
-
-Each run prints five labelled stages: token list, parse tree, AST, inferred type table, and execution output.
-
-**Desktop UI:**
-
-```bash
-python ui.py
-```
-
-Edit a script on the left panel and click Run. Results appear in six tabbed panes on the right: Execution Output, Tokens, Parse Tree, AST, Type Table, and Errors. The Parse Tree tab shows a grammar-oriented ASCII branch tree, while the AST tab shows the simplified executable tree. On success the Errors tab is cleared; on failure all other tabs are cleared and the error message appears in the Errors tab.
-
-No external Python packages are required. Use `python3` on macOS/Linux.
-
----
-
-## Running Tests
+## Tests
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-75 tests across 5 classes in `tests/test_pipeline.py`:
-
 | Class | Stage | Tests |
-|---|---|---|
+| ----- | ----- | ----: |
 | `LexerTests` | Tokenisation | 12 |
 | `SymbolTableTests` | Scoped symbol table | 7 |
-| `ParserTests` | Parsing and precedence | 7 |
-| `TypeCheckerTests` | Static type inference and error detection | 22 |
+| `ParserTests` | Parsing and operator precedence | 7 |
+| `TypeCheckerTests` | Type inference and error detection | 22 |
 | `IntegrationTests` | Full pipeline execution | 27 |
+| **Total** | | **75** |
 
 ---
 
 ## Error Reporting
 
-Errors are reported at the appropriate stage with source positions:
+Errors surface at the earliest possible stage with source position:
 
-| Stage        | Example message                                                              |
-| ------------ | ---------------------------------------------------------------------------- |
-| Lexer        | `[line 1, col 7] LexerError: Unterminated string literal`                    |
-| Parser       | `[line 2, col 1] ParseError: Expected ';' after expression`                  |
-| Type checker | `[line 3, col 5] TypeError: Cannot assign String to variable 'x' of type Integer` |
-| Interpreter  | `[line 4, col 5] RuntimeError: Division by zero`                             |
+| Stage | Example |
+| ----- | ------- |
+| Lexer | `[line 2, col 5] LexerError: Unexpected '!'. Did you mean '!='?` |
+| Parser | `[line 2, col 1] ParseError: Expected ';' after assignment` |
+| Type checker | `[line 2, col 1] TypeError: Cannot assign String to variable 'x' of type Integer` |
+| Interpreter | `[line 3, col 12] RuntimeError: Division by zero` |
+
+---
+
+## Contribution
+
+| Name | Student ID | Assignment Scope |
+| ---- | ---------- | ---------------- |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970 | Static typing and type checking; tree-walking interpreter (assignment, if, while, function, `print()`); unary minus inference/execution; Desktop UI; CLI; pipeline integration; automated testing (75 tests) |
+| Applegate T. Tun Oo | st126690 | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
+| Win Htut Naing | st126687 | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions and calls; `print()` syntax; parse-tree and AST construction |
 
 

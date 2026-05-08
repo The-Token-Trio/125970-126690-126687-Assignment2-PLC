@@ -43,6 +43,11 @@ report/*.fdb_latexmk
 report/*.blg
 report/*.bbl
 
+# Video files
+*.mp4
+*.mov
+*.avi
+
 # Test / coverage artefacts
 .pytest_cache/
 .coverage

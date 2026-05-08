@@ -165,6 +165,29 @@ shown below.
 [line 5, col 9] TypeError: Argument 1 of 'add' must be Integer, got String
 \end{lstlisting}
 
+\begin{table}[H]
+\centering
+\caption{Representative negative semantic test cases}
+\label{tab:negative-tests}
+\small
+\begin{tabular}{ll}
+\toprule
+Program fragment & Expected result \\
+\midrule
+\texttt{1 + 2.0}             & TypeError \\
+\texttt{x = 5; x = true;}    & TypeError \\
+\texttt{if (3) \{ \}}        & TypeError \\
+\texttt{print(1, 2)}         & TypeError \\
+\texttt{"a" + "b"}           & TypeError \\
+\texttt{true == false}       & TypeError \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These negative cases provide direct evidence that the type system enforces
+the no-overloading and same-type-comparison rules, rather than relying on
+positive cases alone.
+
 \section{Automated Test Suite}
 The automated regression suite is located in \texttt{tests/test\_pipeline.py}
 and uses Python's built-in \texttt{unittest} framework. The tests are
@@ -257,3 +280,19 @@ The language system reports errors at four stages:
 
 All error messages include a source position in the form
 \texttt{[line~X, col~Y]} to aid debugging.
+
+\section{Limitations and Future Work}
+The implemented language intentionally restricts several advanced
+programming-language features in order to focus on core compiler construction
+principles and static type inference.
+
+The current implementation does not support recursive functions, arrays,
+records, polymorphic typing, closures, or garbage collection. Type inference
+is syntax-directed and deterministic rather than based on full unification
+algorithms such as Hindley--Milner inference. The execution model is
+interpreted directly from the AST rather than compiled into bytecode or
+machine code.
+
+Future extensions may include recursive function support, richer data
+structures, additional control-flow constructs, optimisation passes, and
+compilation to a lower-level intermediate representation.

@@ -106,6 +106,38 @@ $\Gamma$ = current type environment / symbol table
         \end{itemize}
 \end{enumerate}
 
+\subsection{Example type inference trace}
+Table~\ref{tab:type-inference-trace} traces the algorithm step by step for
+the program fragment
+
+\begin{lstlisting}
+x = 3;
+y = 4;
+z = x + y;
+\end{lstlisting}
+
+\noindent showing how the type environment $\Gamma$ grows as each
+sub-expression is inferred.
+
+\begin{table}[H]
+\centering
+\caption{Step-by-step type inference trace for \texttt{x = 3; y = 4; z = x + y;}}
+\label{tab:type-inference-trace}
+\small
+\begin{tabular}{clll}
+\toprule
+Step & Expression & Inferred type & Environment $\Gamma$ \\
+\midrule
+1 & \texttt{3}         & Integer & $\emptyset$ \\
+2 & \texttt{x = 3}     & Integer & $\{x\!:\!\textit{Integer}\}$ \\
+3 & \texttt{4}         & Integer & $\{x\!:\!\textit{Integer}\}$ \\
+4 & \texttt{y = 4}     & Integer & $\{x\!:\!\textit{Integer},\ y\!:\!\textit{Integer}\}$ \\
+5 & \texttt{x + y}     & Integer & unchanged \\
+6 & \texttt{z = x + y} & Integer & $\{x\!:\!\textit{Integer},\ y\!:\!\textit{Integer},\ z\!:\!\textit{Integer}\}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Inference Rules}
 
 \subsection{Literals}
@@ -265,6 +297,54 @@ Recursive calls are intentionally outside the scope of this implementation;
 supporting them would require additional fixed-point inference or explicit
 recursion handling that is orthogonal to the core type-inference algorithm.
 
+\subsubsection*{Value parameter passing example}
+The language uses value parameter passing: each argument is evaluated in the
+caller's environment and a copy of its value is bound to the corresponding
+parameter in the callee's environment. Figure~\ref{fig:value-param-passing}
+shows the runtime environment before, during, and after a call to a function
+that mutates its parameter.
+
+Source program:
+
+\begin{lstlisting}
+x = 5;
+
+def f(a) {
+    a = a + 1;
+}
+
+f(x);
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\begin{tcolorbox}[colback=codebg, colframe=codeframe, boxrule=0.4pt,
+                  left=6pt, right=6pt, top=4pt, bottom=4pt]
+\footnotesize\ttfamily
+\textbf{Before the call}\\[2pt]
+Global scope: \quad x $\rightarrow$ 5
+
+\vspace{0.5em}
+\textbf{During the call}\\[2pt]
+Global scope:\quad x $\rightarrow$ 5\\
+Function scope (f): \quad a $\rightarrow$ 5,\ then a $\rightarrow$ 6
+
+\vspace{0.5em}
+\textbf{After the call}\\[2pt]
+Global scope: \quad x $\rightarrow$ 5
+\end{tcolorbox}
+\caption{Value parameter passing: the parameter \texttt{a} receives a copy of
+\texttt{x}, so mutating \texttt{a} inside \texttt{f} does not affect
+\texttt{x} in the caller.}
+\label{fig:value-param-passing}
+\end{figure}
+
+Because the parameter receives a copy of the argument value rather than a
+shared reference, modifications to \texttt{a} inside the function do not
+affect \texttt{x} in the caller environment. This demonstrates standard
+value parameter passing semantics and avoids aliasing effects associated with
+reference-based mechanisms.
+
 \section{Type Error Reporting}
 Type errors are reported with source positions so that the user can locate the
 problem quickly. The format used by the system is:
@@ -276,6 +356,25 @@ problem quickly. The format used by the system is:
 Examples include assigning a \texttt{String} to an \texttt{Integer} variable,
 using a non-Boolean condition in an \texttt{if} statement, or supplying the
 wrong argument type to a function.
+
+\begin{table}[H]
+\centering
+\caption{Representative type errors detected by the static type checker}
+\label{tab:type-errors}
+\small
+\begin{tabular}{p{5.4cm}p{5.4cm}p{2.4cm}}
+\toprule
+Invalid program & Reason & Detection stage \\
+\midrule
+\texttt{x = 5; x = "hello";} & Inconsistent variable type & Type checker \\
+\texttt{3 + 4.0}             & Mixed arithmetic types     & Type checker \\
+\texttt{if (3) \{ ... \}}    & Condition not Boolean      & Type checker \\
+\texttt{print()}             & Wrong argument count       & Type checker \\
+\texttt{x = print(5);}       & Void assigned to variable  & Type checker \\
+\texttt{true == false}       & Boolean comparison unsupported & Type checker \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Example Type Inference Traces}
 Consider the following program fragment:

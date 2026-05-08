@@ -268,6 +268,47 @@ Errors related to semantic violations are handled via
 scope, references to undefined symbols, and invalid operations such as
 attempting to mark a non-variable symbol as initialized.
 
+\subsection{Example symbol table hierarchy}
+Figure~\ref{fig:symbol-table-example} illustrates a small two-scope symbol
+table after the type checker has processed a program containing two top-level
+variables and a function definition.
+
+\begin{figure}[H]
+\centering
+\begin{tcolorbox}[colback=codebg, colframe=codeframe, boxrule=0.4pt,
+                  left=6pt, right=6pt, top=4pt, bottom=4pt]
+\footnotesize\ttfamily
+\begin{tabular}{@{}lll@{}}
+\multicolumn{3}{l}{\textbf{Global scope}} \\
+\midrule
+Name  & Kind     & Type \\
+\midrule
+x     & Variable & Integer \\
+y     & Variable & Float \\
+addf  & Function & Float $\times$ Float $\rightarrow$ Float \\
+\end{tabular}
+
+\vspace{0.6em}
+
+\begin{tabular}{@{}lll@{}}
+\multicolumn{3}{l}{\textbf{Function scope: addf}} \\
+\midrule
+Name  & Kind      & Type \\
+\midrule
+a     & Parameter & Float \\
+b     & Parameter & Float \\
+\end{tabular}
+\end{tcolorbox}
+\caption{Example symbol table hierarchy with one global scope and one
+function scope.}
+\label{fig:symbol-table-example}
+\end{figure}
+
+The global scope stores top-level variables and function definitions, while
+each function invocation creates a child scope containing parameter bindings
+and local variables. Lookup operations recursively search parent scopes when
+identifiers are not found in the current environment.
+
 \section{Role of the symbol table in the pipeline}
 The symbol table is constructed during the type-checking phase rather than
 during lexical analysis. This guideline is followed in the implementation.
