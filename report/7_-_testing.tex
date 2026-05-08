@@ -47,7 +47,7 @@ Error paths were also checked: supplying a bare \texttt{!} character raises a
 \texttt{!=}, and an unterminated string literal raises a \texttt{LexerError}
 citing the opening line.
 
-The symbol table was verified through the type checker and the Stage~3 output.
+The symbol table was verified through the type checker and the Stage~4 output.
 Duplicate variable definitions were confirmed to raise a
 \texttt{SymbolTableError} before execution. Scope isolation was verified with
 nested blocks: a variable defined inside an \texttt{if} or \texttt{while} body
@@ -62,13 +62,13 @@ both the Stage~2 parse-tree output and the Stage~3 AST output. The following
 cases were checked:
 
 \begin{itemize}
-    \item the parse-tree view contains grammar-oriented labels such as \texttt{program}, \texttt{statement}, \texttt{assignment}, and \texttt{expr}, confirming that the system now exposes a separate parse tree rather than only the executable AST,
-    \item arithmetic expressions with mixed precedence (e.g.\ \texttt{x + y * 2}) produce a tree where multiplication is a deeper sub-tree than addition, confirming the \texttt{\_expr}/\texttt{\_additive}/\texttt{\_term}/\texttt{\_factor} precedence encoding,
-    \item assignment versus expression statement dispatch: \texttt{x = 5;} produces an \texttt{Assign} node while \texttt{add(1,2);} produces a \texttt{FunctionCall} node at the statement level, confirming the IDENTIFIER+ASSIGN lookahead,
-    \item \texttt{if} with and without an \texttt{else} clause: the resulting \texttt{If} node has a non-null \texttt{else\_block} only when the clause is present,
-    \item function definitions store only parameter names in the \texttt{FunctionDef} node; the AST printer output was inspected to confirm no type annotations are present at this stage,
-    \item string literals in \texttt{Literal} nodes have their surrounding double-quotes stripped; \texttt{print("hello")} prints \texttt{"hello" : String} at runtime (the interpreter re-adds the quotes when formatting string output),
-    \item parse errors: missing semicolons, unmatched parentheses, and unexpected tokens all produce \texttt{[line X, col Y] ParseError:} messages with correct source positions.
+    \item the parse-tree view contains grammar-oriented labels such as \texttt{program}, \texttt{statement}, \texttt{assignment}, and \texttt{expr},
+    \item arithmetic expressions with mixed precedence (e.g.\ \texttt{x + y * 2}) place multiplication in a deeper subtree than addition,
+    \item \texttt{x = 5;} produces an \texttt{Assign} node, while \texttt{add(1,2);} produces a statement-level \texttt{FunctionCall}, confirming the IDENTIFIER+ASSIGN lookahead,
+    \item \texttt{if} with and without an \texttt{else} clause yields an \texttt{If} node whose \texttt{else\_block} is present only when required,
+    \item function definitions store only parameter names in \texttt{FunctionDef}, with no type annotations at this stage,
+    \item string literals in \texttt{Literal} nodes have surrounding double-quotes stripped, while runtime output restores them for \texttt{String} values,
+    \item missing semicolons, unmatched parentheses, and unexpected tokens all produce source-positioned \texttt{ParseError} messages.
 \end{itemize}
 
 \subsection{Arithmetic Expressions}
@@ -89,16 +89,14 @@ mixed-type arithmetic is rejected:
   \item \texttt{1.0 +. 2.0 *. 3.0} --- evaluates to \texttt{7.0} confirming \texttt{*.} binds more tightly than \texttt{+.}.
 \end{itemize}
 
-These rejection tests are not incidental --- they are the primary evidence that
-the language satisfies the specification's no-overloading requirement. In a
-promotion-based language, the expressions \texttt{1 + 2.5} and \texttt{2 +. 3}
-would silently succeed (returning \texttt{3.5 : Float} and \texttt{5.0 : Float}
-respectively). The fact that both are rejected as \texttt{TypeError}s
-demonstrates that each operator token has a single, fixed type signature and
-that no implicit type coercion occurs. The test suite contains 7 dedicated
-type-error tests for mixed-type and wrong-type operator usage (see
-Table~\ref{tab:test-summary}, \texttt{TypeCheckerTests}), ensuring that the
-no-overloading guarantee is verified mechanically rather than by assertion alone.
+These rejection tests are the primary evidence for the no-overloading
+requirement. In a promotion-based language, \texttt{1 + 2.5} and
+\texttt{2 +. 3} would silently succeed; here, both are rejected as
+\texttt{TypeError}s, showing that each operator token has a single fixed type
+signature and that no implicit coercion occurs. The suite includes 7 dedicated
+mixed-type and wrong-type operator tests (Table~\ref{tab:test-summary},
+\texttt{TypeCheckerTests}), so this guarantee is verified mechanically rather
+than asserted informally.
 
 \subsection{Boolean Expressions}
 Boolean expressions were tested inside \texttt{if} and \texttt{while}
@@ -108,10 +106,10 @@ or \texttt{String} operand produced a source-positioned \texttt{TypeCheckError}
 before any execution.
 
 \subsection{Assignment Statements}
-Assignments were tested for both first-use type inference and reassignment
-consistency. Assigning \texttt{5} to a variable and subsequently assigning
-\texttt{"hello"} to the same variable correctly produced a type error,
-confirming that the inferred type is fixed after first assignment.
+Assignments were tested for first-use type inference and reassignment
+consistency. For example, assigning \texttt{5} and then \texttt{"hello"} to
+the same variable correctly produced a type error, confirming that the inferred
+type is fixed after the initial binding.
 
 \subsection{If-Then-Else}
 Conditional programs were constructed to verify that exactly one branch
@@ -205,9 +203,9 @@ Test class & Stage covered & Tests \\
 \texttt{SymbolTableTests}  & Scoped symbol table (\texttt{symbol\_table.py})  &   7 \\
 \texttt{ParserTests}       & Parsing, precedence, parse-tree/AST output        &   7 \\
 \texttt{TypeCheckerTests}  & Static type inference (\texttt{type\_checker.py}) &  22 \\
-\texttt{IntegrationTests}  & Full pipeline execution                           &  27 \\
+\texttt{IntegrationTests}  & Full pipeline execution                           &  29 \\
 \midrule
-                           & \textbf{Total}                                   & \textbf{75} \\
+                           & \textbf{Total}                                   & \textbf{77} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -221,40 +219,32 @@ tracked across newlines, and that illegal characters and unterminated strings
 raise \texttt{LexerError}.
 
 \noindent\textbf{ParserTests} verify structural correctness of parsing. The 7
-tests cover missing-semicolon and unclosed-brace error reporting, integer
-operator precedence (\texttt{*} before \texttt{+}), float operator precedence
-(\texttt{*.} before \texttt{+.}), left-associativity of arithmetic operators,
-parenthesised expressions overriding precedence, and availability of both the
-parse-tree and AST renderings in the pipeline result.
+tests cover missing-semicolon and unclosed-brace error reporting, integer and
+float operator precedence, left-associativity, parenthesised expressions
+overriding precedence, and availability of both parse-tree and AST renderings
+in the pipeline result.
 
 \noindent\textbf{SymbolTableTests} exercise the symbol table directly, without
 going through the full pipeline. They cover variable definition and lookup,
-duplicate definition raising \texttt{SymbolTableError} for both variables and
-functions, parent-scope lookup through \texttt{child\_scope()}, undefined-symbol
-lookup error, and the \texttt{format\_table()} output for both variable and
-function symbol rows.
+duplicate definitions for variables and functions, parent-scope lookup through
+\texttt{child\_scope()}, undefined-symbol errors, and \texttt{format\_table()}
+output for variable and function rows.
 
 \noindent\textbf{TypeCheckerTests} verify static type inference and error
-detection. The 22 tests cover integer and float arithmetic (all four
-dot-suffixed operators \texttt{+.} \texttt{-.} \texttt{*.} \texttt{/.} each
-verified to produce \texttt{Float}), integer floor division producing
-\texttt{Integer}, strict type separation (mixed Integer/Float rejected for both
-arithmetic and comparison operators, and integers used with a dot operator
-rejected), string and boolean type inference, assignment type mismatch,
-non-Boolean conditions, undefined variables, wrong argument count and type, and
-two tests for uncalled-function body checking: one confirms that a type error
-inside a never-called function body is detected, and another confirms that a
-valid uncalled function raises no error.
+detection. The 22 tests cover integer and float arithmetic, integer floor
+division, strict type separation, string and Boolean type inference, assignment
+type mismatch, non-Boolean conditions, undefined variables, wrong argument
+count and type, and uncalled-function body checking for both invalid and valid
+cases.
 
 \noindent\textbf{IntegrationTests} run programs through all four pipeline
-stages and verify the final output. Cases include unary negation on all
-numeric types (including \texttt{-.} applied to a float variable), division by
-zero for both \texttt{/} and \texttt{/.} (each must raise
-\texttt{InterpreterError}), both branches of \texttt{if}/\texttt{else},
-while-loop countdown, \texttt{print()} with every type, value-parameter
-isolation, nested function calls, comparison results assigned to variables and
-printed directly, variable reassignment, and scope isolation (variables
-declared inside an \texttt{if} block are not visible outside it).
+stages and verify final output. Cases include unary negation on all numeric
+types, division by zero for both \texttt{/} and \texttt{/.}, both branches of
+\texttt{if}/\texttt{else}, while-loop countdown, \texttt{print()} with every
+type, value-parameter isolation, nested function calls, comparison results
+assigned and printed directly, variable reassignment, scope isolation, rejection
+of passing a void-returning function to \texttt{print()}, and rejection of a
+function with a non-total \texttt{return}.
 
 The tests can be run with:
 
@@ -266,7 +256,7 @@ python3 -m unittest discover -s tests -v
 python -m unittest discover -s tests -v
 \end{lstlisting}
 
-All 75 tests pass.
+All 77 tests pass.
 
 \section{Error Handling}
 The language system reports errors at four stages:
@@ -283,7 +273,7 @@ All error messages include a source position in the form
 
 \section{Limitations and Future Work}
 The implemented language intentionally restricts several advanced
-programming-language features in order to focus on core compiler construction
+programming-language features to focus on core compiler construction
 principles and static type inference.
 
 The current implementation does not support recursive functions, arrays,

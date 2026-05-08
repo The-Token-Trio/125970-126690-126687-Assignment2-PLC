@@ -17,20 +17,17 @@ arithmetic and equality expressions, assignment, conditional and iterative
 control flow, user-defined functions with value parameter passing, and a
 built-in callable \texttt{print()} function. Types are inferred from program context
 rather than declared explicitly, combining the safety of static typing with the
-conciseness of a declaration-free syntax. The implementation spans three
+conciseness of a declaration-free syntax. The implementation comprises three
 principal components developed in pipeline order: the lexer and symbol table,
-the recursive-descent parser together with parse-tree and abstract-syntax-tree
-views, and the type checker with
-interpreter. Each component was completed before the next was begun, since each
-stage consumes the structured output of its predecessor.
+the recursive-descent parser with parse-tree and abstract-syntax-tree views,
+and the type checker and interpreter.
 
-The implemented system can be invoked from the command line or through an
-interactive desktop interface, both of which surface the five pipeline stages
---- tokens, parse tree, AST, inferred type table, and execution output --- for
-inspection. The parse tree is provided as a grammar-oriented view for
-submission and debugging, while the AST remains the executable intermediate
+The system can be invoked from the command line or through an interactive
+desktop interface, both exposing five inspection views --- tokens, parse tree,
+AST, inferred type table, and execution output. The parse tree supports
+reporting and debugging, while the AST remains the executable intermediate
 representation consumed by the type checker and interpreter. An automated
-regression suite of 75 tests verifies correctness across all
+regression suite of 77 tests verifies correctness across all
 stages and language features.
 
 The main contributions of this project are:
@@ -52,12 +49,11 @@ The main contributions of this project are:
     testing and semantic error verification.
 \end{itemize}
 
-The remainder of this report is organised as follows.
-Chapter~2 presents the language design, token specification, grammar, and
-operator precedence rules. Chapters~3 and~4 cover the front-end implementation
-in pipeline order: lexical analysis and the symbol table, then recursive-descent
-parsing and the AST. Chapter~5 explains the type inference algorithm and the
-semantic rules used by the checker. Chapter~6 presents the system architecture
-and implementation, including the end-to-end pipeline, project layout, and
-technology stack. Chapter~7 discusses testing and verification, and Chapter~8
-concludes the report.
+The remainder of this report is organised as follows. Chapter~2 presents the
+language design, token specification, grammar, and operator precedence rules.
+Chapters~3 and~4 cover the front end in pipeline order: lexical analysis and
+the symbol table, followed by recursive-descent parsing and the AST.
+Chapter~5 explains the type inference algorithm and semantic rules.
+Chapter~6 presents the system architecture and implementation, including the
+end-to-end pipeline, project layout, and technology stack. Chapter~7 discusses
+testing and verification, and Chapter~8 concludes the report.

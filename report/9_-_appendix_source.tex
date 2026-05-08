@@ -1,19 +1,25 @@
 \chapter*{APPENDIX A: SOURCE CODE}
 \addcontentsline{toc}{chapter}{APPENDIX A: SOURCE CODE}
 
-The complete source code is available on GitHub:
+This appendix includes representative source files that highlight the core
+implementation of the language processor. The selected listings focus on the
+principal implementation stages: lexical analysis, parsing, static semantic
+analysis, interpretation, and program entry. The complete codebase is
+available in the linked repository.
+
+Source code repository:
 
 \begin{center}
 \textbf{https://github.com/The-Token-Trio/125970-126690-126687-Assignment2-PLC}
 \end{center}
 
-A video walkthrough of the CLI and GUI is available at:
+Video walkthrough:
 
 \begin{center}
 \textbf{https://youtu.be/sR2JRm6eYzM}
 \end{center}
 
-The project can be run from the command line or the desktop UI:
+Run commands:
 
 \begin{lstlisting}
 # macOS / Linux
@@ -29,23 +35,25 @@ python -m unittest discover -s tests -v
 
 No external Python dependencies are required.
 
-% Compact style for appendix listings: tiny font, no line numbers, tight spacing
+% Compact style for appendix listings: smaller font, no line numbers, tight spacing
 \lstdefinestyle{appendix}{
-  basicstyle=\footnotesize\ttfamily,
-  numbers=left,
-  numberstyle=\tiny\color{gray},
-  numbersep=8pt,
+  basicstyle=\scriptsize\ttfamily,
+  numbers=none,
   breaklines=true,
-  lineskip=0.4ex,
+  lineskip=0.2ex,
   frame=single,
   backgroundcolor=\color{codebg},
   rulecolor=\color{codeframe},
   showstringspaces=false,
   tabsize=4,
-  captionpos=b,
+  captionpos=t,
+  aboveskip=3pt,
+  belowskip=3pt,
+  xleftmargin=0pt,
+  xrightmargin=0pt,
   inputencoding=utf8,
   extendedchars=true,
-  literate={—}{{---}}1 {→}{{$\rightarrow$}}1
+  literate={}
 }
 
 % -----------------------------------------------------------------------
@@ -63,7 +71,7 @@ No external Python dependencies are required.
 \toprule
 \textbf{Name} & \textbf{Student ID} & \textbf{Contributions} \\
 \midrule
-Aye Khin Khin Hpone (Yolanda Lim) & st125970 & Static typing and type checking; tree-walking interpreter (assignment, if, while, function, \texttt{print()}); unary minus inference/execution; Desktop UI; CLI; pipeline integration; automated testing (75 tests) \\
+Aye Khin Khin Hpone (Yolanda Lim) & st125970 & Static typing and type checking; tree-walking interpreter (assignment, if, while, function, \texttt{print()}); unary minus inference/execution; Desktop UI; CLI; pipeline integration; automated testing (77 tests) \\
 Applegate T. Tun Oo & st126690 & Lexer implementation (scanning, tokenisation, line/column tracking, error reporting); token definitions; keywords, operators, identifiers, and literals; symbol table (variable/function/type storage) \\
 Win Htut Naing & st126687 & Arithmetic expressions (incl.\ unary minus); boolean expressions; assignment statements; if-then-else; while-loop; function definitions and calls; \texttt{print()} syntax; parse-tree and AST construction \\
 \bottomrule
@@ -71,78 +79,44 @@ Win Htut Naing & st126687 & Arithmetic expressions (incl.\ unary minus); boolean
 \end{table}
 
 % -----------------------------------------------------------------------
-\section*{A.1\quad Entry Points}
+\section*{A.1\quad Representative Source Files}
 % -----------------------------------------------------------------------
 
 \lstinputlisting[style=appendix,
-  caption={main.py --- command-line entry point},
+  caption={main.py},
   label={lst:main}
 ]{../main.py}
 
 \lstinputlisting[style=appendix,
-  caption={ui.py --- Tkinter desktop workbench},
-  label={lst:ui}
-]{../ui.py}
-
-% -----------------------------------------------------------------------
-\section*{A.2\quad Core Components}
-% -----------------------------------------------------------------------
-
-\lstinputlisting[style=appendix,
-  caption={components/tokens.py --- token type enumeration and Token dataclass},
-  label={lst:tokens}
-]{../components/tokens.py}
-
-\lstinputlisting[style=appendix,
-  caption={components/lexica.py --- lexical analyser},
+  caption={components/lexica.py},
   label={lst:lexica}
 ]{../components/lexica.py}
 
 \lstinputlisting[style=appendix,
-  caption={components/ast\_nodes.py --- AST node definitions},
-  label={lst:astnodes}
-]{../components/ast_nodes.py}
-
-\lstinputlisting[style=appendix,
-  caption={components/parser.py --- recursive-descent parser},
+  caption={components/parser.py},
   label={lst:parser}
 ]{../components/parser.py}
 
 \lstinputlisting[style=appendix,
-  caption={components/parse\_tree\_printer.py --- parse-tree renderer},
-  label={lst:parsetreeprinter}
-]{../components/parse_tree_printer.py}
-
-\lstinputlisting[style=appendix,
-  caption={components/ast\_printer.py --- AST pretty-printer},
-  label={lst:astprinter}
-]{../components/ast_printer.py}
-
-\lstinputlisting[style=appendix,
-  caption={components/symbol\_table.py --- scoped symbol table},
-  label={lst:symboltable}
-]{../components/symbol_table.py}
-
-\lstinputlisting[style=appendix,
-  caption={components/type\_checker.py --- static type checker with inference},
+  caption={components/type\_checker.py},
   label={lst:typechecker}
 ]{../components/type_checker.py}
 
 \lstinputlisting[style=appendix,
-  caption={components/interpreter.py --- tree-walking interpreter},
+  caption={components/interpreter.py},
   label={lst:interpreter}
 ]{../components/interpreter.py}
 
 \lstinputlisting[style=appendix,
-  caption={components/pipeline.py --- shared pipeline (CLI, UI, and tests)},
+  caption={components/pipeline.py},
   label={lst:pipeline}
 ]{../components/pipeline.py}
 
 % -----------------------------------------------------------------------
-\section*{A.3\quad Test Suite}
+\section*{A.2\quad Representative Test File}
 % -----------------------------------------------------------------------
 
 \lstinputlisting[style=appendix,
-  caption={tests/test\_pipeline.py --- automated regression suite (75 tests)},
+  caption={tests/test\_pipeline.py},
   label={lst:tests}
 ]{../tests/test_pipeline.py}

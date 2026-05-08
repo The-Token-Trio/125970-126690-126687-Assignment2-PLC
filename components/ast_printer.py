@@ -23,7 +23,7 @@ class ASTPrinter:
         tree = Parser(tokens).parse()
         print(ASTPrinter().print(tree))
 
-    Output style — resembles the original source but annotated with node types,
+    Output style -- resembles the original source but annotated with node types,
     making it easy to verify the tree structure during development and in reports.
     """
 

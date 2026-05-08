@@ -24,7 +24,7 @@ and typical \texttt{TokenType} values.
 \caption{Token categories and representative \texttt{TokenType} values}
 \label{tab:token-categories}
 \small
-\begin{tabular}{p{0.16\textwidth}p{0.32\textwidth}p{0.45\textwidth}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.46\textwidth}}
 \toprule
 Category & Example lexemes & Representative \texttt{TokenType} \\
 \midrule
@@ -125,9 +125,9 @@ alphanumeric characters and underscores, and then checked against the
 \texttt{KEYWORDS} map to determine whether they are reserved words or
 user-defined names. Notably, \texttt{true} and \texttt{false} are also entries
 in this map, mapping to \texttt{TokenType.BOOL\_LITERAL} rather than a
-keyword-specific type. This means boolean literals are recognised through
-the same keyword-fallback mechanism as reserved words, preventing them from
-being scanned as user-defined identifiers. In contrast, \texttt{print} is
+keyword-specific type. Boolean literals are therefore recognised through the
+same keyword-fallback mechanism as reserved words, preventing them from being
+scanned as user-defined identifiers. In contrast, \texttt{print} is
 \emph{not} reserved: it is scanned as an ordinary \texttt{IDENTIFIER} and later
 treated as a built-in callable by the type checker and interpreter.
 
@@ -181,7 +181,7 @@ in \texttt{components/lexica.py} and their roles.
 \caption{Key functions and data in \texttt{lexica.py}}
 \label{tab:lexica-functions}
 \small
-\begin{tabular}{p{0.25\textwidth}p{0.4\textwidth}p{0.28\textwidth}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
 \toprule
 Function / data & Responsibility & Output / effect \\
 \midrule
@@ -311,10 +311,9 @@ identifiers are not found in the current environment.
 
 \section{Role of the symbol table in the pipeline}
 The symbol table is constructed during the type-checking phase rather than
-during lexical analysis. This guideline is followed in the implementation.
-The type checker initialises a global symbol table and populates it while
-traversing the AST, including defining variables and functions, managing nested
-scopes, and validating type correctness.
+during lexical analysis. Accordingly, the type checker initialises a global
+symbol table and populates it while traversing the AST, defining variables and
+functions, managing nested scopes, and validating type correctness.
 
 \begin{lstlisting}
 def run_pipeline(source_code: str) -> PipelineResult:
@@ -342,7 +341,9 @@ the pipeline. It can then be displayed or used for further analysis.
 
 This separation of concerns keeps lexical analysis focused on tokenization,
 while semantic meaning is enforced during type checking. For user-defined
-functions, definitions are first registered in the global scope with placeholder
-parameter and return types. These are inferred from the first valid call and
-refined through body checking; subsequent calls must match the inferred
-parameter types.
+functions, definitions are pre-registered in the global scope so that forward
+references can be resolved during checking. Parameter types are fixed from the
+first call site encountered and held constant; the function body is then
+verified with those fixed types. All subsequent calls must supply arguments
+that match the established types. For functions that are never called, a
+separate post-pass infers types from body usage.

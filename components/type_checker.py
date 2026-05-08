@@ -195,7 +195,14 @@ class TypeChecker:
             raise TypeCheckError(
                 self._error_at(node, f"Built-in function 'print' expects 1 argument, got {len(node.args)}")
             )
-        self._infer_expr_type(node.args[0], scope)
+        arg_type = self._infer_expr_type(node.args[0], scope)
+        if arg_type == LanguageType.VOID:
+            raise TypeCheckError(
+                self._error_at(
+                    node.args[0],
+                    "Argument to 'print' must not be Void; a void-returning function cannot be used as an expression",
+                )
+            )
         return LanguageType.VOID
 
     def _check_function_body(self, function_state: _FunctionState, function_symbol: FunctionSymbol) -> None:
@@ -213,6 +220,17 @@ class TypeChecker:
         function_symbol.symbol_type = function_context.return_type or LanguageType.VOID
         function_state.body_checked = True
 
+        if (
+            function_symbol.symbol_type != LanguageType.VOID
+            and not self._definitely_returns(function_state.node.body)
+        ):
+            raise TypeCheckError(
+                self._error_at(
+                    function_state.node,
+                    f"Function '{function_state.node.name}' does not return a value on all execution paths",
+                )
+            )
+
     def _check_uncalled_functions(self) -> None:
         """After all call-site checks, type-check any function whose body was never visited."""
         for name, state in self._functions.items():
@@ -226,6 +244,20 @@ class TypeChecker:
                 inferred_params = self._infer_param_types_from_body(state.node)
                 function_symbol.parameters = inferred_params
                 self._check_function_body(state, function_symbol)
+
+    @staticmethod
+    def _definitely_returns(block: Block) -> bool:
+        """Return True if every execution path through block ends in a return statement."""
+        for statement in block.statements:
+            if isinstance(statement, Return):
+                return True
+            if isinstance(statement, If) and statement.else_block is not None:
+                if (
+                    TypeChecker._definitely_returns(statement.then_block)
+                    and TypeChecker._definitely_returns(statement.else_block)
+                ):
+                    return True
+        return False
 
     def _infer_param_types_from_body(self, node: FunctionDef) -> list[tuple[str, LanguageType]]:
         """Infer parameter types by scanning the body for expression contexts.

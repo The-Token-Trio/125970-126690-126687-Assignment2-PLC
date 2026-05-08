@@ -118,7 +118,7 @@ class FunctionDef(ASTNode):
 
     Example:  def add(a, b) { return a + b; }
 
-    Note: parameter types are unknown at parse time — Member 3's type checker
+    Note: parameter types are unknown at parse time -- Member 3's type checker
     will infer them from usage. We store only the parameter names here.
     """
     name: str

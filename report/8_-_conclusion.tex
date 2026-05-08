@@ -1,38 +1,22 @@
 \chapter{CONCLUSION}
 
-This project delivered a complete, statically-typed interpreted language
-supporting Integer, Float, Boolean, and String types, with arithmetic,
-comparisons, assignments, if-then-else, while-loops, functions with value
-parameter passing, and a built-in \texttt{print()} function.
+This report has presented a complete statically-typed interpreted language with
+four primitive types --- Integer, Float, Boolean, and String --- together with
+assignment, control flow, user-defined functions, and a built-in
+\texttt{print()} function. The implementation integrates lexical analysis,
+parsing, static semantic analysis, and interpretation into a coherent
+four-stage pipeline. Types are inferred without explicit declarations, and
+ill-typed programs are rejected before execution.
 
-The system follows a four-stage pipeline: lexer, parser, type checker, and
-interpreter. Variable and function types are inferred without explicit
-declarations; programs that violate type rules are rejected before execution.
-For uncalled functions, the type checker performs a post-pass to infer parameter
-types from body usage, ensuring type errors are always caught. A central design
-decision --- following the Caml~Light convention of using separate operator
-tokens for integer and float arithmetic --- ensures that the specification's
-no-overloading requirement is satisfied in the strongest possible sense: every
-operator token carries exactly one type signature, and the compiler never
-inspects operand types to resolve operator meaning. This eliminates not only
-traditional overloading but also the implicit numeric promotion found in many
-mainstream languages, resulting in fully deterministic type inference where
-every expression's type is derivable from the operator tokens and literal forms
-alone.
+A key design decision is the use of distinct operator tokens for integer and
+floating-point arithmetic, following the Caml~Light convention. This eliminates
+implicit numeric promotion and ensures that each operator has exactly one type
+signature, yielding deterministic type inference. The system also exposes both
+a grammar-oriented parse-tree view and an executable AST, while the automated
+test suite of 77 tests confirms correct behaviour across lexical analysis,
+symbol-table handling, parsing, type checking, and end-to-end execution.
 
-To support clearer correspondence between the formal grammar and accepted
-programs, the parser stage now exposes both a grammar-oriented parse-tree view
-and the executable AST used by later stages. The built-in \texttt{print()}
-operation is now implemented as a normal callable built-in rather than a
-dedicated statement form. The 75 automated tests across five
-classes --- lexical analysis, symbol table, parsing, type checking, and full
-pipeline --- confirm correct behaviour for all language features. Both a
-command-line runner and a desktop UI are provided.
-
-The project demonstrates how lexical analysis, parsing, semantic analysis, type
-inference, and interpretation can be integrated into a coherent compiler pipeline
-with clear separation of responsibilities between stages. The implementation
-prioritised semantic clarity, deterministic type inference, and modular compiler
-structure over advanced language features.
-Future work could extend the language with recursive functions, richer data
-structures, and code generation.
+The result is a clear and modular language-processing pipeline with strong
+static guarantees and inspectable intermediate forms. Future work could extend
+the language with recursive functions, richer data structures, and code
+generation.

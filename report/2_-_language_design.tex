@@ -19,25 +19,23 @@ performs floor division and returns \texttt{Integer}: for example,
 \texttt{10 / 3} evaluates to \texttt{3 : Integer}.
 
 The language intentionally does not perform implicit numeric promotion between
-\texttt{Integer} and \texttt{Float} values. This design decision follows
-directly from the assignment specification, which requires ``no overloading with
-the usual precedence of multiplication and division over addition and
-subtraction.'' In a language where a single \texttt{+} operator accepts both
+\texttt{Integer} and \texttt{Float} values. This choice follows directly from
+the design requirement of ``no overloading with the usual precedence of
+multiplication and division over addition and subtraction.'' In a language
+where a single \texttt{+} operator accepts both
 $(\textit{Integer}, \textit{Integer}) \rightarrow \textit{Integer}$ and
 $(\textit{Integer}, \textit{Float}) \rightarrow \textit{Float}$, the operator
-effectively carries multiple type signatures --- the compiler must inspect both
-operand types to determine the result type. This constitutes a form of operator
+effectively carries multiple type signatures, since the compiler must inspect
+operand types to determine the result type. This constitutes operator
 overloading, even when described as ``numeric promotion'' or ``widening
-coercion.'' To eliminate all such ambiguity, the language follows the
-Caml~Light convention of using separate operator tokens for integer and
-floating-point arithmetic: \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}
-operate exclusively on \texttt{Integer} operands, while \texttt{+.},
-\texttt{-.}, \texttt{*.}, \texttt{/.} operate exclusively on \texttt{Float}
-operands. Mixed-type arithmetic such as \texttt{1 + 2.5} is rejected by the
-type checker. Under this design, every operator token uniquely determines its
-operand types and result type --- the compiler never needs to inspect operand
-types to resolve operator meaning, which is the defining property of a language
-without operator overloading.
+coercion.'' To eliminate that ambiguity, the language follows the Caml~Light
+convention of using separate operator tokens for integer and floating-point
+arithmetic: \texttt{+}, \texttt{-}, \texttt{*}, and \texttt{/} operate only on
+\texttt{Integer} operands, whereas \texttt{+.}, \texttt{-.}, \texttt{*.}, and
+\texttt{/.} operate only on \texttt{Float} operands. Mixed-type arithmetic such
+as \texttt{1 + 2.5} is therefore rejected by the type checker. Under this
+design, each operator token uniquely determines both operand and result types,
+so operator meaning never depends on post hoc type resolution.
 
 \subsection{Boolean}
 The Boolean type represents logical truth values. The two Boolean literals are
@@ -62,7 +60,7 @@ statement, allowing the symbol table to record a consistent entry for every
 function regardless of whether it produces a value. \texttt{Void} cannot appear
 in source code and is never visible to the programmer; it is a bookkeeping
 device used internally by the type checker. Therefore, \texttt{Void} does not
-extend the programmer-visible type system required by the assignment.
+extend the programmer-visible source-level type system.
 
 \section{Static Typing}
 The language employs static typing, meaning that type errors are detected at
@@ -177,7 +175,7 @@ and raises a \texttt{RuntimeError}.
 
 \subsection{Boolean Expressions}
 Comparison operators \texttt{==} and \texttt{!=} are the lowest-precedence
-binary operators and produce \texttt{Boolean} values. Because they are part
+binary operators and produce \texttt{Boolean} values. As they are part
 of the general \texttt{expr} rule, Boolean expressions may appear both as
 control-flow conditions and as ordinary expressions. Their inferred type is
 \texttt{Boolean}, allowing comparison results to be assigned to variables,
@@ -188,13 +186,16 @@ flag = (x == y);
 print(a != b);
 \end{lstlisting}
 
-\noindent Here \texttt{flag} is inferred as \texttt{Boolean} from the assignment, and \texttt{print(a != b)} outputs \texttt{true : Boolean} or \texttt{false : Boolean}.
+\noindent Here \texttt{flag} is inferred as \texttt{Boolean}, and
+\texttt{print(a != b)} outputs either \texttt{true : Boolean} or
+\texttt{false : Boolean}.
 
 \textbf{Strict arithmetic operands.}
 The specification states that \texttt{==} and \texttt{!=} operate between two
-arithmetic expressions. We interpret ``arithmetic'' strictly as \texttt{Integer}
-and \texttt{Float}, consistent with the no-overloading rule. Both operands must
-also share the same numeric type (no implicit coercion). Therefore
+arithmetic expressions. In this language, ``arithmetic'' is interpreted
+strictly as \texttt{Integer} and \texttt{Float}, consistent with the
+no-overloading rule. Both operands must also share the same numeric type, with
+no implicit coercion. Therefore
 \texttt{Integer == Integer} and \texttt{Float == Float} are well-typed;
 \texttt{Integer == Float}, \texttt{Boolean == Boolean}, and
 \texttt{String == String} are all rejected at type-check time.
@@ -214,10 +215,10 @@ as a dedicated statement form. Lexically, \texttt{print} is tokenised as an
 \texttt{IDENTIFIER}; syntactically, \texttt{print(x)} is parsed through the same
 \texttt{FunctionCall} path used for user-defined calls. Semantically it is a
 unary built-in of type \texttt{T $\rightarrow$ ()}: it accepts one argument of
-any programmer-visible type, emits \texttt{value : Type} immediately at
-runtime, and returns the internal \texttt{Void} type. As with any void-returning
-call, \texttt{print(...)} may be used as a standalone expression statement but
-not as the right-hand side of an assignment.
+any programmer-visible type, emits \texttt{value : Type} at runtime, and
+returns the internal \texttt{Void} type. As with any void-returning call,
+\texttt{print(...)} may be used as a standalone expression statement but not as
+the right-hand side of an assignment.
 
 \subsection{Function Definitions and Calls}
 \begin{lstlisting}
@@ -252,7 +253,9 @@ type; mixed return types are a compile-time error. A function with no
 and may only be invoked as a standalone statement, not used as an expression.
 Assigning the result of a \texttt{Void} function to a variable (e.g.\
 \texttt{x = f();} where \texttt{f} returns nothing) is rejected by the type
-checker.
+checker. Passing a \texttt{Void}-returning function as an argument ---
+for example \texttt{print(f())} where \texttt{f} returns nothing --- is also
+rejected, since \texttt{Void} is not a printable value.
 
 \section{Operator Precedence and Associativity}
 Operator precedence is encoded structurally in the recursive-descent parser.
@@ -300,14 +303,14 @@ Operator & Operand types & Result type \\
 
 Any operand combination not listed in
 Table~\ref{tab:operator-signatures} is rejected during static type checking.
-Because each operator token maps to exactly one valid operand signature
+Each operator token maps to exactly one valid operand signature
 (or, for \texttt{==} and \texttt{!=}, two same-type signatures), operator
 meaning can be determined without overload resolution or implicit type
 coercion.
 
 \section{Design Decisions: No Overloading}
 \label{sec:no-overloading}
-The assignment specification states: ``No overloading with the usual precedence
+The language definition adopted for this project states: ``No overloading with the usual precedence
 of multiplication and division over addition and subtraction. Hence no explicit
 declaration.'' This section explains how the language design satisfies this
 requirement and why alternatives were rejected.
@@ -323,7 +326,7 @@ floating-point addition $(\textit{Float}, \textit{Float}) \rightarrow \textit{Fl
 $(\textit{Integer}, \textit{Float}) \rightarrow \textit{Float}$ --- overloads the
 \texttt{+} symbol.
 
-\textbf{Our approach: distinct operator tokens.}
+\textbf{Distinct operator tokens.}
 Following the Caml~Light convention, this language assigns a unique token to
 each arithmetic meaning. Integer arithmetic uses \texttt{+}, \texttt{-},
 \texttt{*}, \texttt{/}; floating-point arithmetic uses \texttt{+.},
@@ -342,13 +345,13 @@ difficult to sustain formally: the operator \texttt{+} would have three distinct
 input-type combinations --- $(\textit{Integer}, \textit{Integer})$,
 $(\textit{Integer}, \textit{Float})$, and $(\textit{Float}, \textit{Float})$ ---
 with two different result types, a dispatch table that the compiler must resolve
-from operand types, which is the hallmark of overloading. The assignment
-specification also states ``hence no explicit declaration,'' implying that type
+from operand types, which is the hallmark of overloading. The same language
+definition also states ``hence no explicit declaration,'' implying that type
 inference should be unambiguous; implicit promotion introduces cases where the
 inferred result type depends on operand types rather than on the operator itself.
 
 \textbf{Connection to type inference.}
-Because every operator token uniquely determines its operand and result types,
+Since every operator token uniquely determines its operand and result types,
 the type inference algorithm described in Chapter~5 can determine the type of
 any expression without backtracking, unification, or constraint solving. This
 determinism directly satisfies the specification's coupling of ``no

@@ -16,7 +16,7 @@ from components.type_checker import TypeCheckError
 # ---------------------------------------------------------------------------
 
 class LexerTests(unittest.TestCase):
-    """Tests for components/lexica.py — lexical analysis and tokenisation."""
+    """Tests for components/lexica.py -- lexical analysis and tokenisation."""
 
     def test_integer_literal_token(self) -> None:
         tokens = Lexer("42").tokenize()
@@ -89,7 +89,7 @@ class LexerTests(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class SymbolTableTests(unittest.TestCase):
-    """Tests for components/symbol_table.py — scoped symbol table and semantic types."""
+    """Tests for components/symbol_table.py -- scoped symbol table and semantic types."""
 
     def test_define_variable_and_lookup(self) -> None:
         table = SymbolTable()
@@ -142,7 +142,7 @@ class SymbolTableTests(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class ParserTests(unittest.TestCase):
-    """Tests for components/parser.py — recursive-descent parsing."""
+    """Tests for components/parser.py -- recursive-descent parsing."""
 
     def _parse(self, source: str):
         return Parser(Lexer(source).tokenize()).parse()
@@ -193,7 +193,7 @@ class ParserTests(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 class TypeCheckerTests(unittest.TestCase):
-    """Tests for components/type_checker.py — static type inference and checking."""
+    """Tests for components/type_checker.py -- static type inference and checking."""
 
     def test_integer_arithmetic_stays_integer(self) -> None:
         result = run_pipeline("x = 3 + 4; print(x);")
@@ -438,6 +438,16 @@ class IntegrationTests(unittest.TestCase):
     def test_builtin_print_assignment_raises_type_error(self) -> None:
         with self.assertRaises(TypeCheckError):
             run_pipeline("x = print(42);")
+
+    def test_print_void_function_raises_type_error(self) -> None:
+        # print(greet()) where greet() is void must be rejected -- Void is not a printable value
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("def greet() { print(42); } print(greet());")
+
+    def test_non_total_function_raises_type_error(self) -> None:
+        # A function with a return only in some branches must be rejected
+        with self.assertRaises(TypeCheckError):
+            run_pipeline("def f(a) { if (a == 1) { return 5; } } x = f(1); print(x);")
 
 
 if __name__ == "__main__":

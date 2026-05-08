@@ -89,6 +89,25 @@ type rules, since correctness at runtime is guaranteed by the prior static pass.
 All stages are orchestrated through \texttt{pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite.
 
+Table~\ref{tab:pipeline-errors} shows a representative error for each stage.
+
+\begin{table}[H]
+\centering
+\caption{Representative errors detected at each pipeline stage}
+\label{tab:pipeline-errors}
+\small
+\begin{tabular}{p{2.8cm}p{4.5cm}p{5.5cm}}
+\toprule
+Stage & Example error & Effect \\
+\midrule
+Lexer        & Unrecognised character (\texttt{\#})   & \texttt{LexError} reported; pipeline halts \\
+Parser       & Missing closing \texttt{)}              & \texttt{SyntaxError} reported; pipeline halts \\
+Type checker & \texttt{3 + 4.0} (mixed numeric types) & \texttt{TypeError} reported; interpreter not reached \\
+Interpreter  & Integer division by zero                & \texttt{RuntimeError} reported at execution time \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{End-to-end pipeline walkthrough}
 
 The following example traces the complete execution of a five-statement program
@@ -390,7 +409,7 @@ Table~\ref{tab:main-source-files}.
 \centering
 \caption{Main source files}
 \label{tab:main-source-files}
-\begin{tabular}{ll}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.44\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}}
 \toprule
 File & Responsibility \\
 \midrule
@@ -435,9 +454,10 @@ The \texttt{TypeChecker} class implements the inference and checking rules
 described in Chapter~5. It traverses the AST before execution, uses the symbol
 table to record variable and function information, infers types on first
 assignment, validates arithmetic and comparison expressions, enforces Boolean
-conditions for control flow, infers function parameter types from the first call
-(or from body usage for uncalled functions), and infers function return types
-from \texttt{return} statements. Programs that
+conditions for control flow, fixes function parameter types from the first call
+site and validates all subsequent calls against those types
+(or infers from body usage for uncalled functions), and infers function return
+types from \texttt{return} statements. Programs that
 fail these rules are rejected before interpretation.
 
 \subsection{Scope of the implemented type system}
@@ -448,8 +468,8 @@ semantically valid program:
 	\item static typing rules for arithmetic, comparison, assignment, control
 	flow, and functions,
 	\item type checking for expressions and statements,
-	\item variable type inference from first assignment,
-	\item function parameter inference from the first call (or from body usage for uncalled functions),
+	\item variable type inference from initial binding,
+	\item function parameter type fixation at the first call site, with consistent validation of all subsequent calls (or body-based inference for uncalled functions),
 	\item function return type inference from \texttt{return} statements,
 	\item source-positioned type errors when a program violates a typing rule.
 \end{itemize}
@@ -490,46 +510,32 @@ pipeline:
 \section{Graphical user interface}
 The desktop workbench (\texttt{ui.py}) is implemented with Python's
 \texttt{tkinter} standard library and requires no additional dependencies.
-The window is titled \textit{125970-126690-126687-Ass2-PLC} and
-opens at $1200 \times 760$ pixels in a horizontal split layout.
+It uses a horizontal split layout with a source editor on the left and
+pipeline outputs on the right.
 
-\textbf{Toolbar.}  A top toolbar provides three buttons --- \textit{Open
-Script}, \textit{Run}, and \textit{Clear Output} --- and a right-aligned
-status label that reports \textit{Ready} on launch,
-\textit{Loaded \textless{}filename\textgreater{}} after a script is opened,
-\textit{Ran \textless{}filename\textgreater{}} after a successful run on a loaded script file,
-\textit{Ran editor contents} when running the editor buffer directly without
-having opened a file, \textit{Run failed} when a pipeline stage raises an
-error, and \textit{Output cleared} after the \textit{Clear Output} button is
-pressed.
+\textbf{Toolbar.}  A top toolbar provides \textit{Open Script},
+\textit{Run}, and \textit{Clear Output} controls together with a status
+label.
 
 \textbf{Left panel (source editor).}  A monospaced \texttt{Text} widget
 with both horizontal and vertical scrollbars allows the user to enter or
-paste arbitrary source code. The \textit{Open Script} button populates the
-editor from a file. The editor is pre-loaded with the built-in sample program
-on first launch.
+paste source code. The editor can also be populated from a file and is
+pre-loaded with the sample program on first launch.
 
 \textbf{Right panel (output tabs).}  A \texttt{Notebook} widget presents
-six tabs, each backed by a scrollable read-only \texttt{Text} widget with
-both horizontal and vertical scrollbars:
+six scrollable read-only tabs:
 \begin{itemize}
   \item \textit{Execution Output} --- the \texttt{print()} values produced
-        by stage~5, formatted as \texttt{value : Type}. The type label is
-        determined at runtime by inspecting the Python type of the evaluated
-        value; because the type checker guarantees correctness before execution,
-        this always agrees with the statically inferred type;
+        by stage~5, formatted as \texttt{value : Type};
   \item \textit{Tokens} --- the token stream from stage~1, one token per line
         with type, lexeme, and source position;
   \item \textit{Parse Tree} --- a grammar-oriented ASCII branch rendering of
-        stage~2 using non-terminal labels such as \texttt{statement},
-        \texttt{assignment}, \texttt{expr}, \texttt{comparison},
-        \texttt{additive}, \texttt{term}, and \texttt{factor};
+        stage~2;
   \item \textit{AST} --- the indented executable tree from stage~3;
   \item \textit{Type Table} --- the symbol table from stage~4 showing each
         name, kind, inferred type, initialisation state, and parameter list;
-  \item \textit{Errors} --- populated only when a pipeline stage fails;
-        shows the error message (e.g.\ \texttt{[line~2, col~5] TypeError: \ldots}).
-        On a successful run this tab is cleared automatically.
+  \item \textit{Errors} --- populated only when a pipeline stage fails and
+        cleared automatically after a successful run.
 \end{itemize}
 
 \textbf{Error handling.}  If any pipeline stage raises an exception, the

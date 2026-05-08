@@ -152,7 +152,7 @@ class Parser:
     # -----------------------------------------------------------------------
 
     def _params(self) -> list[str]:
-        """IDENTIFIER (',' IDENTIFIER)*  — returns list of param names."""
+        """IDENTIFIER (',' IDENTIFIER)*  -- returns list of param names."""
         params: list[str] = []
         if self._check(TokenType.IDENTIFIER):
             params.append(self._advance().lexeme)
@@ -167,7 +167,7 @@ class Parser:
     # -----------------------------------------------------------------------
 
     def _expr(self) -> ASTNode:
-        """additive (('==' | '!=') additive)?  — non-associative comparison"""
+        """additive (('==' | '!=') additive)?  -- non-associative comparison"""
         node = self._additive()
         if self._check(TokenType.EQUAL_EQUAL) or self._check(TokenType.BANG_EQUAL):
             op_tok = self._advance()
@@ -243,7 +243,7 @@ class Parser:
             self._advance()
             return Literal(value=tok.lexeme[1:-1], line=tok.line, column=tok.column)
 
-        # Identifier — could be a plain variable or a function call
+        # Identifier -- could be a plain variable or a function call
         if tok.token_type == TokenType.IDENTIFIER:
             self._advance()
             if self._check(TokenType.LPAREN):

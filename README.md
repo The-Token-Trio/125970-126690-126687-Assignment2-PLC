@@ -1,4 +1,4 @@
-# 125970-126690-126687 — Programming Language Compiler
+# 125970-126690-126687 — Programming Languages and  Compiler
 
 <p align="center">
   <strong>AT70.07 · Programming Languages and Compilers</strong><br>
@@ -16,7 +16,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white" alt="Python">
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-75%20passing-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-77%20passing-brightgreen" alt="Tests">
 </p>
 
 ---
@@ -56,7 +56,7 @@ A statically-typed interpreted language built from scratch in Python — no exte
     </td>
     <td align="center" width="50%">
       <img src="report/figures/ui-types.png" width="100%" alt="UI — Type Table"/><br>
-      <sub><b>Type Table</b> — all variables and functions with inferred types</sub>
+      <sub><b>Type Table</b> — global-scope variables and functions with inferred types</sub>
     </td>
   </tr>
   <tr>
@@ -208,7 +208,7 @@ components/
 └── pipeline.py           Shared runner for CLI / UI / tests
 main.py                   CLI entry point
 ui.py                     Tkinter desktop UI
-tests/test_pipeline.py    75 automated regression tests
+tests/test_pipeline.py    77 automated regression tests
 demos/                    Demo scripts for each language feature
 report/                   LaTeX source and compiled PDF
 ```
@@ -227,8 +227,8 @@ python -m unittest discover -s tests -v
 | `SymbolTableTests` | Scoped symbol table | 7 |
 | `ParserTests` | Parsing and operator precedence | 7 |
 | `TypeCheckerTests` | Type inference and error detection | 22 |
-| `IntegrationTests` | Full pipeline execution | 27 |
-| **Total** | | **75** |
+| `IntegrationTests` | Full pipeline execution | 29 |
+| **Total** | | **77** |
 
 ---
 
@@ -249,7 +249,7 @@ Errors surface at the earliest possible stage with source position:
 
 | Name | Student ID | Assignment Scope |
 | ---- | ---------- | ---------------- |
-| Aye Khin Khin Hpone (Yolanda Lim) | st125970 | Static typing and type checking; tree-walking interpreter (assignment, if, while, function, `print()`); unary minus inference/execution; Desktop UI; CLI; pipeline integration; automated testing (75 tests) |
+| Aye Khin Khin Hpone (Yolanda Lim) | st125970 | Static typing and type checking; tree-walking interpreter (assignment, if, while, function, `print()`); unary minus inference/execution; Desktop UI; CLI; pipeline integration; automated testing (77 tests) |
 | Applegate T. Tun Oo | st126690 | Lexer implementation (character scanning, tokenisation, line/column tracking, error reporting); Token definitions; Keywords and operators; Identifiers and literals; Variable/function storage; Type storage |
 | Win Htut Naing | st126687 | Arithmetic expressions (incl. unary minus); Boolean expressions; Assignment statements; If-then-else; While-loop; Function definitions and calls; `print()` syntax; parse-tree and AST construction |
 

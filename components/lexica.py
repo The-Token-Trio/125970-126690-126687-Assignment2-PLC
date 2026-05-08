@@ -85,7 +85,7 @@ class Lexer:
         if arith is not None:
             int_tok, float_tok = arith
             # Unary-minus lookahead: '-' followed by a digit is NOT '-.' even if
-            # next char is '.' — we still need to check char after '.' is not digit
+            # next char is '.' -- we still need to check char after '.' is not digit
             # (to avoid consuming the '.' of a float literal like 3.14).
             # Rule: X. is a float operator only when the char after '.' is NOT a digit.
             if self._peek() == "." and not self._peek_next().isdigit():
