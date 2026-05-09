@@ -13,10 +13,15 @@ The type checker runs after parsing. It receives the AST and validates the
 program before execution. Any inconsistent use of types is reported as a type
 error, and execution is stopped.
 
-The interpreter stage does not repeat this validation: it walks the same AST
+This implementation is not Hindley--Milner inference; it uses a
+syntax-directed local strategy with first-call parameter fixation for called
+functions and a body-usage post-pass for never-called functions.
+
+The interpreter stage does not repeat static type validation: it walks the same AST
 with ordinary Python representations of values. Static type information remains
 in the symbol table produced by the checker; run-time values are not separately
-labelled with \texttt{LanguageType}, except that \texttt{print()} formats output
+labelled with \texttt{LanguageType}, except that the built-in \texttt{print}
+formats output
 by inspecting the value's Python type.
 
 \section{Type Environment}
@@ -27,7 +32,7 @@ mapping
 $\Gamma : \textit{Identifier} \rightarrow \textit{Type}$
 \end{center}
 
-The environment grows as the checker visits the AST. On initial binding, a
+The environment grows as the checker visits the AST, and on initial binding a
 variable name is inserted with its inferred type. When a new block or a
 function call is entered, a child environment is created so that nested scopes
 can be checked independently while still accessing outer bindings when needed.
@@ -93,7 +98,9 @@ $\Gamma$ = current type environment / symbol table
   \item \textbf{If} \textit{node} is a \textbf{FunctionDef}:
         \begin{itemize}[nosep, leftmargin=1.5em]
           \item Register the function name in $\Gamma$.
-          \item Parameter types are initially unknown.
+          \item Parameter types start as placeholders; for called functions they
+                are fixed by the first call site, while never-called functions
+                are assigned using body-usage inference in the post-pass.
           \item Return type is inferred from \texttt{return} statements in the body.
         \end{itemize}
 
@@ -123,8 +130,7 @@ sub-expression is inferred.
 
 \begin{table}[H]
 \centering
-\caption{Step-by-step type inference trace for \texttt{x = 3; y = 4; z = x + y;}}
-\label{tab:type-inference-trace}
+\caption{Step-by-step type inference trace for \texttt{x = 3; y = 4; z = x + y;}.\label{tab:type-inference-trace}}
 \small
 \begin{tabular}{clll}
 \toprule
@@ -142,15 +148,30 @@ Step & Expression & Inferred type & Environment $\Gamma$ \\
 
 \section{Inference Rules}
 
+\subsection{Judgement Forms}
+The static semantics are written using the following judgement forms:
+\[
+\Gamma \vdash e : T
+\]
+which reads ``under type environment $\Gamma$, expression $e$ has type $T$'', and
+\[
+\Gamma \vdash e : \texttt{TypeError}
+\]
+which denotes a statically rejected expression.
+
 \subsection{Literals}
 Literal nodes have direct types:
 
-\begin{align*}
-\Gamma \vdash 42 &: \texttt{Integer} \\
-\Gamma \vdash 3.14 &: \texttt{Float} \\
-\Gamma \vdash \texttt{true} &: \texttt{Boolean} \\
-\Gamma \vdash \texttt{``hi''} &: \texttt{String}
-\end{align*}
+\[
+\frac{}{\Gamma \vdash 42 : \texttt{Integer}}\ \textsc{(T-IntLit)}
+\qquad
+\frac{}{\Gamma \vdash 3.14 : \texttt{Float}}\ \textsc{(T-FloatLit)}
+\]
+\[
+\frac{}{\Gamma \vdash \texttt{true} : \texttt{Boolean}}\ \textsc{(T-BoolLit)}
+\qquad
+\frac{}{\Gamma \vdash \texttt{"hi"} : \texttt{String}}\ \textsc{(T-StringLit)}
+\]
 
 \subsection{No Operator Overloading}
 The language does not support operator overloading. Following the Caml~Light
@@ -179,8 +200,7 @@ and a \texttt{Float} with any operator is a type error.
 
 \begin{table}[H]
 \centering
-\caption{Arithmetic operator type rules}
-\label{tab:arithmetic-result-types}
+\caption{Arithmetic operator type rules.\label{tab:arithmetic-result-types}}
 \small
 \begin{tabular}{llll}
 \toprule
@@ -195,34 +215,35 @@ Any & any & \texttt{String} or \texttt{Boolean} & \texttt{TypeError} \\
 \end{tabular}
 \end{table}
 
-The following formal typing judgements capture these rules precisely. For
-integer operators ($\mathtt{op} \in \{+,\,-,\,*,\,/\}$):
+The following grouped derivation rules capture these constraints:
 \[
-  \frac{\Gamma \vdash e_1 : \textit{Integer} \qquad
-         \Gamma \vdash e_2 : \textit{Integer}}
-       {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \textit{Integer}}
+\frac{\Gamma \vdash e_1 : \texttt{Integer} \qquad \Gamma \vdash e_2 : \texttt{Integer}}
+     {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \texttt{Integer}}
+\ \textsc{(T-IntOp)},\ \mathtt{op} \in \{+,\,-,\,*,\,/\}
 \]
-For float operators ($\mathtt{op} \in \{+.,\,-.,\,*.,\,/.\}$):
 \[
-  \frac{\Gamma \vdash e_1 : \textit{Float} \qquad
-         \Gamma \vdash e_2 : \textit{Float}}
-       {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \textit{Float}}
+\frac{\Gamma \vdash e_1 : \texttt{Float} \qquad \Gamma \vdash e_2 : \texttt{Float}}
+     {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \texttt{Float}}
+\ \textsc{(T-FloatOp)},\ \mathtt{op} \in \{+.,\,-.,\,*.,\,/.\}
 \]
-For mixed-type operands with any operator (and symmetrically for
-$\textit{Float} / \textit{Integer}$):
 \[
-  \frac{\Gamma \vdash e_1 : \textit{Integer} \qquad
-         \Gamma \vdash e_2 : \textit{Float}}
-       {\text{TypeError}}
+\frac{\Gamma \vdash e_1 : \texttt{Integer} \qquad \Gamma \vdash e_2 : \texttt{Float}}
+     {\Gamma \vdash e_1\ \mathtt{op}\ e_2 : \texttt{TypeError}}
+\ \textsc{(T-MixedError)}
+\]
+For the concrete mixed arithmetic expression discussed in this report:
+\[
+\Gamma \vdash 3 + 4.0 : \texttt{TypeError}
 \]
 Note that each rule is keyed on the operator token, not on the operand types.
 This is only possible because integer and float arithmetic use distinct tokens
 --- the property that eliminates operator overloading.
 
 \subsubsection*{Unary negation}
-Unary integer negation (\texttt{-x}) is desugared by the parser to
-\texttt{0 - x}. Unary float negation (\texttt{-.x}) is desugared to
-\texttt{0.0 -. x}. The type checker therefore applies the standard binary rules
+Unary integer negation (\texttt{-x}) is represented internally as the
+equivalent subtraction form \texttt{0 - x}. Unary float negation (\verb|-. x|)
+is represented internally as \verb|0.0 -. x|. The type checker therefore
+applies the standard binary rules
 in both cases.
 
 \subsection{Boolean Expressions}
@@ -245,8 +266,8 @@ by promotion (implicitly converting \texttt{Integer} to \texttt{Float}) or by
 value identity, introducing the same ambiguity that the separate-operator design
 eliminates for arithmetic. Rejecting mixed-type comparisons ensures that
 \texttt{==} and \texttt{!=} each have exactly two valid type signatures ---
-$(\textit{Integer}, \textit{Integer}) \rightarrow \textit{Boolean}$ and
-$(\textit{Float}, \textit{Float}) \rightarrow \textit{Boolean}$ --- rather than a
+$(\texttt{Integer}, \texttt{Integer}) \rightarrow \texttt{Boolean}$ and
+$(\texttt{Float}, \texttt{Float}) \rightarrow \texttt{Boolean}$ --- rather than a
 third mixed-type signature.
 
 \subsection{Assignment Statement}
@@ -255,33 +276,48 @@ exist in the type environment, the checker infers the type of the right-hand
 side and inserts the variable into the environment. If the variable already
 exists, the new value must have the same type.
 
-\begin{center}
-If $x \notin \Gamma$ and $\Gamma \vdash e : T$, then $\Gamma, x:T \vdash x = e$
-\end{center}
-
-\begin{center}
-If $x:T \in \Gamma$ and $\Gamma \vdash e : T$, then $\Gamma \vdash x = e$
-\end{center}
+\[
+  \frac{x \notin \Gamma \qquad \Gamma \vdash e : T}
+       {\Gamma \vdash x = e : (\Gamma, x:T)}
+\]
+\[
+  \frac{x:T \in \Gamma \qquad \Gamma \vdash e : T}
+       {\Gamma \vdash x = e : \Gamma}
+\]
+\[
+  \frac{x:T_1 \in \Gamma \qquad \Gamma \vdash e : T_2 \qquad T_1 \neq T_2}
+  {\Gamma \vdash x = e : \texttt{TypeError}}
+\]
 
 \subsection{If-Then-Else}
 The condition of an \texttt{if} statement must be \texttt{Boolean}. The
 then-block and else-block are checked in child scopes so that local operations
 can be validated cleanly.
 
-\begin{center}
-$\Gamma \vdash c : \texttt{Boolean} \quad \Gamma' \vdash B_{then} \quad \Gamma'' \vdash B_{else}$
-\quad $\Longrightarrow$ \quad $\Gamma \vdash \texttt{if}\,(c)\,B_{then}\,\texttt{else}\,B_{else}$
-\end{center}
+\[
+  \frac{\Gamma \vdash c : \texttt{Boolean} \qquad
+        \Gamma' \vdash B_{then} \qquad
+        \Gamma'' \vdash B_{else}}
+       {\Gamma \vdash \texttt{if}(c)\ B_{then}\ \texttt{else}\ B_{else}}
+\]
+\[
+  \frac{\Gamma \vdash c : T \qquad T \neq \texttt{Boolean}}
+  {\Gamma \vdash \texttt{if}(c)\ B_{then}\ \texttt{else}\ B_{else} : \texttt{TypeError}}
+\]
 
 \subsection{While-Loop}
 The condition of a \texttt{while} loop must also be \texttt{Boolean}. The loop
 body is checked in a child scope and must not violate the types of variables
 already introduced in the surrounding environment.
 
-\begin{center}
-$\Gamma \vdash c : \texttt{Boolean} \quad \Gamma' \vdash B$
-\quad $\Longrightarrow$ \quad $\Gamma \vdash \texttt{while}\,(c)\,B$
-\end{center}
+\[
+  \frac{\Gamma \vdash c : \texttt{Boolean} \qquad \Gamma' \vdash B}
+       {\Gamma \vdash \texttt{while}(c)\ B}
+\]
+\[
+  \frac{\Gamma \vdash c : T \qquad T \neq \texttt{Boolean}}
+  {\Gamma \vdash \texttt{while}(c)\ B : \texttt{TypeError}}
+\]
 
 \subsection{Function Definition and Call}
 Function definitions are pre-registered in the global scope so that forward
@@ -306,12 +342,124 @@ Recursive calls are intentionally outside the scope of this implementation;
 supporting them would require additional fixed-point inference or explicit
 recursion handling that is orthogonal to the core type-inference algorithm.
 
+\subsubsection*{Formal rules for function inference}
+Let $\Sigma$ denote the function-signature environment, where
+$\Sigma(f) = (T_1,\ldots,T_n) \rightarrow T_r$.
+
+First-call parameter binding for called functions:
+\[
+  \frac{\Gamma \vdash a_1 : T_1 \quad \cdots \quad \Gamma \vdash a_n : T_n \qquad f \notin \Sigma}
+       {\Sigma \cup \{f:(T_1,\ldots,T_n)\rightarrow \texttt{Void}\},\ \Gamma \vdash f(a_1,\ldots,a_n)}
+\ \textsc{(F-FirstCall)}
+\]
+
+Subsequent call checking:
+\[
+  \frac{\Sigma(f)=(T_1,\ldots,T_n)\rightarrow T_r \qquad
+        \Gamma \vdash a_1:T_1 \quad \cdots \quad \Gamma \vdash a_n:T_n}
+       {\Sigma,\Gamma \vdash f(a_1,\ldots,a_n):T_r}
+\ \textsc{(F-Call)}
+\]
+
+Return-type consistency:
+\[
+  \frac{\Sigma(f)=(T_1,\ldots,T_n)\rightarrow \texttt{Void} \qquad
+        \Gamma_f \vdash r_1:T \quad \cdots \quad \Gamma_f \vdash r_k:T}
+       {\Sigma(f)=(T_1,\ldots,T_n)\rightarrow T}
+\ \textsc{(F-ReturnConsistent)}
+\]
+\[
+  \frac{\Gamma_f \vdash r_i:T_i \qquad \Gamma_f \vdash r_j:T_j \qquad T_i \neq T_j}
+  {\Gamma_f \vdash \texttt{FunctionDef}(f) : \texttt{TypeError}}
+\ \textsc{(F-ReturnMismatch)}
+\]
+
+Never-called function fallback used in this implementation:
+\[
+\frac{p \in \texttt{params}(f) \qquad p\ \text{has no arithmetic-context constraint}}
+     {\Sigma(f).p = \texttt{Integer}}
+\ \textsc{(F-UncalledDefaultInt)}
+\]
+
+Worked derivation (single call):
+\begin{lstlisting}
+def add(a, b) {
+    return a + b;
+}
+
+z = add(3, 4);
+\end{lstlisting}
+
+\[
+\Gamma \vdash 3 : \texttt{Integer}
+\qquad
+\Gamma \vdash 4 : \texttt{Integer}
+\]
+\[
+\Sigma(add) = (\texttt{Integer},\texttt{Integer}) \rightarrow \texttt{Integer}
+\]
+\[
+\frac{\Gamma \vdash 3 : \texttt{Integer} \qquad \Gamma \vdash 4 : \texttt{Integer}}
+  {\Sigma,\Gamma \vdash add(3,4) : \texttt{Integer}}
+\]
+Hence $\Gamma \vdash z = add(3,4)$ extends $\Gamma$ with
+$z:\texttt{Integer}$.
+
 \subsubsection*{Value parameter passing example}
 The language uses value parameter passing, or call-by-value: each argument is
 evaluated in the caller's environment and a copy of its value is bound to the
 corresponding parameter in the callee's environment. Figure~\ref{fig:value-param-passing}
 shows the runtime environment before, during, and after a call to a function
 that mutates its parameter.
+
+Using semantic-configuration notation with environment $\rho$ and store $\sigma$,
+call-by-value is expressed as:
+\[
+\frac{\begin{aligned}
+  &\rho,\sigma \vdash e_i \Downarrow v_i,\sigma_i \quad (1 \le i \le n)\\
+  &\rho_f = [x_1 \mapsto v_1,\ldots,x_n \mapsto v_n]\\
+  &\rho_f,\sigma_n \vdash B_f \Downarrow \sigma'
+\end{aligned}}
+{\rho,\sigma \vdash f(e_1,\ldots,e_n) \Downarrow v_{ret},\sigma'}
+\qquad \textsc{(S-CallByValue)}
+\]
+The key point is that each formal parameter $x_i$ is bound to the evaluated
+argument value $v_i$ in a fresh activation record for the callee.
+
+The same behavior can be visualized as environment frames:
+
+\begin{table}[H]
+\centering
+\caption{Activation-record view for one call to \texttt{f}.\label{tab:activation-record-f}}
+\small
+\begin{tabular}{p{3.4cm}p{8.9cm}}
+\toprule
+Record field & Content \\
+\midrule
+Function name & \texttt{f} \\
+Caller link & Global frame \\
+Parameters & \texttt{a = 5} (copied from caller argument \texttt{x}) \\
+Locals after body step & \texttt{a = 6} \\
+Return value & \texttt{Void} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Runtime environment frames for call-by-value.\label{tab:runtime-frames-cbv}}
+\small
+\begin{tabular}{p{3.4cm}p{8.9cm}}
+\toprule
+Phase & Frame contents \\
+\midrule
+Before call & Global frame: $\{x:5\}$ \\
+Call entry & Global frame: $\{x:5\}$; new frame for \texttt{f}: $\{a:5\}$ \\
+Inside body & Frame \texttt{f}: assignment \texttt{a = a + 1} updates local frame to $\{a:6\}$ \\
+After return & Function frame destroyed; global frame remains $\{x:5\}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Source program:
 
@@ -344,8 +492,7 @@ Global scope: \quad x $\rightarrow$ 5
 \end{tcolorbox}
 \caption{Value parameter passing: the parameter \texttt{a} receives a copy of
 \texttt{x}, so mutating \texttt{a} inside \texttt{f} does not affect
-\texttt{x} in the caller.}
-\label{fig:value-param-passing}
+\texttt{x} in the caller.\label{fig:value-param-passing}}
 \end{figure}
 
 A parameter receives a copy of the argument value rather than a
@@ -368,18 +515,17 @@ wrong argument type to a function.
 
 \begin{table}[H]
 \centering
-\caption{Representative type errors detected by the static type checker}
-\label{tab:type-errors}
+\caption{Representative type errors detected by the static type checker.\label{tab:type-errors}}
 \small
 \begin{tabular}{p{5.4cm}p{5.4cm}p{2.4cm}}
 \toprule
 Invalid program & Reason & Detection stage \\
 \midrule
-\texttt{x = 5; x = "hello";} & Inconsistent variable type & Type checker \\
+\verb|x = 5; x = "hello";| & Inconsistent variable type & Type checker \\
 \texttt{3 + 4.0}             & Mixed arithmetic types     & Type checker \\
-\texttt{if (3) \{ ... \}}    & Condition not Boolean      & Type checker \\
-\texttt{print()}             & Wrong argument count       & Type checker \\
-\texttt{x = print(5);}       & Void assigned to variable  & Type checker \\
+\texttt{if (3) \{ \ldots \}} & Condition not Boolean      & Type checker \\
+\verb|print()|               & Wrong argument count       & Type checker \\
+\verb|x = print(5);|         & Void assigned to variable  & Type checker \\
 \texttt{true == false}       & Boolean comparison unsupported & Type checker \\
 \bottomrule
 \end{tabular}
@@ -425,8 +571,7 @@ the type checker.
 
 \begin{table}[H]
 \centering
-\caption{Static semantics summary: constructs and their typing rules}
-\label{tab:static-semantics}
+\caption{Static semantics summary: constructs and their typing rules.\label{tab:static-semantics}}
 \small
 \begin{tabular}{p{5.5cm}p{7.5cm}}
 \toprule
@@ -434,7 +579,7 @@ Construct & Rule \\
 \midrule
 Integer arithmetic ($+$, $-$, $*$, $/$) &
   \texttt{Integer} $\times$ \texttt{Integer} $\rightarrow$ \texttt{Integer} \\
-Float arithmetic ($+.$, $-.$, $*.$, $/.$) &
+Float arithmetic (\texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.}) &
   \texttt{Float} $\times$ \texttt{Float} $\rightarrow$ \texttt{Float} \\
 Equality / inequality (\texttt{==}, \texttt{!=}) &
   Same numeric type $\rightarrow$ \texttt{Boolean}; Boolean/String operands rejected \\

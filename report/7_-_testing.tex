@@ -1,5 +1,28 @@
 \chapter{TESTING AND VERIFICATION}
 
+\section{Compiler-Theory Test Taxonomy}
+To align practical validation with compiler-theory reporting conventions, test
+evidence is grouped into lexical, syntax, semantic/type, and runtime classes,
+with both valid and invalid representatives.
+
+\begin{table}[H]
+\centering
+\caption{Formal test taxonomy used in this project}
+\label{tab:formal-test-taxonomy}
+\small
+\begin{tabular}{p{3.2cm}p{3.7cm}p{4.8cm}p{2.3cm}}
+\toprule
+Category & Valid case & Invalid case & Expected stage \\
+\midrule
+Lexical analysis & Tokenise identifiers, literals, keywords & Bare \texttt{!}, unterminated string & Lexer \\
+Syntax analysis & Parse precedence-correct expressions and blocks & Missing semicolon, unmatched parenthesis & Parser \\
+Static semantics & Well-typed assignment and function calls & Mixed numeric operators, non-Boolean condition & Type checker \\
+Function typing & Consistent parameter and return types & Wrong argument type, inconsistent returns & Type checker \\
+Runtime semantics & Correct arithmetic and loop execution & Division by zero & Interpreter \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \section{Manual Testing}
 Prior to the construction of the automated suite, each language feature was
 exercised manually by running the full pipeline and inspecting stage outputs.
@@ -48,8 +71,11 @@ Error paths were also checked: supplying a bare \texttt{!} character raises a
 citing the opening line.
 
 The symbol table was verified through the type checker and the Stage~4 output.
-Duplicate variable definitions were confirmed to raise a
-\texttt{SymbolTableError} before execution. Scope isolation was verified with
+Direct symbol-table API tests confirmed that duplicate declarations in the
+same table raise \texttt{SymbolTableError}. In normal source-language
+execution, reassignment to an existing variable is permitted when the assigned
+type matches the inferred variable type, and rejected as \texttt{TypeError}
+only when the type is inconsistent. Scope isolation was verified with
 nested blocks: a variable defined inside an \texttt{if} or \texttt{while} body
 is not visible in the outer scope after the block ends. The
 \texttt{format\_table()} output was checked against the expected column layout

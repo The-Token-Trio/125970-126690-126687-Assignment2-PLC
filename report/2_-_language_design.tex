@@ -118,16 +118,20 @@ $G = (V_N, V_T, P, S)$, where $V_N$ is the set of non-terminals, $V_T$ is the
 set of terminals, $P$ is the set of production rules, and $S$ is the start
 symbol \texttt{program}. The grammar is implemented through recursive-descent
 parsing functions.
+For readability, the presentation below mixes classical CFG productions with
+EBNF shorthand in selected rules; both notations correspond to the same parser
+implementation.
 
 \subsection{Program Structure}
 \begin{lstlisting}
-program   -> statement* EOF
+program   -> stmt_list EOF
 statement -> assignment
 	   | if_stmt
 	   | while_stmt
 	   | func_def
 	   | return_stmt
 	   | expr ';'
+stmt_list -> statement stmt_list | epsilon
 \end{lstlisting}
 
 \subsection{Expressions}
@@ -161,8 +165,10 @@ exclusively on \texttt{Integer} operands. The dot-suffixed operators
 \texttt{Float} operands. This follows the Caml~Light convention of using
 distinct operator tokens for integer and float arithmetic, eliminating the need
 for implicit numeric promotion. Unary negation is similarly split:
-\texttt{-x} negates an \texttt{Integer} (desugared to \texttt{0 - x}), and
-\texttt{-.x} negates a \texttt{Float} (desugared to \texttt{0.0 -. x}).
+\texttt{-x} negates an \texttt{Integer} (represented internally as the
+equivalent subtraction form \texttt{0 - x}), and
+\texttt{-.x} negates a \texttt{Float} (represented internally as
+\texttt{0.0 -. x}).
 
 \textbf{Integer division and division by zero.}
 \texttt{/} is floor (integer) division: both operands must be \texttt{Integer},
@@ -203,10 +209,12 @@ no implicit coercion. Therefore
 \subsection{Statements}
 \begin{lstlisting}
 assignment  -> IDENTIFIER '=' expr ';'
-if_stmt     -> 'if' '(' expr ')' block ('else' block)?
+if_stmt     -> 'if' '(' expr ')' block else_part
+else_part   -> 'else' block | epsilon
 while_stmt  -> 'while' '(' expr ')' block
 return_stmt -> 'return' expr ';'
-block       -> '{' statement* '}'
+block       -> '{' stmt_list '}'
+stmt_list   -> statement stmt_list | epsilon
 \end{lstlisting}
 
 \subsubsection*{Design note: \texttt{print} as a built-in callable}
@@ -219,17 +227,21 @@ of any programmer-visible type, emits \texttt{value : Type} at runtime, and
 returns the internal \texttt{Void} type. As with any void-returning call,
 \texttt{print(...)} may be used as a standalone expression statement but not as
 the right-hand side of an assignment.
+\texttt{Void} is internal bookkeeping only: it never appears as a source-level
+type annotation or source-level type literal.
 
 \subsection{Function Definitions and Calls}
 \begin{lstlisting}
-func_def -> 'def' IDENTIFIER '(' params? ')' block
-params   -> IDENTIFIER (',' IDENTIFIER)*  | epsilon
-args     -> expr (',' expr)*              | epsilon
+func_def    -> 'def' IDENTIFIER '(' params ')' block
+params      -> IDENTIFIER param_tail | epsilon
+param_tail  -> ',' IDENTIFIER param_tail | epsilon
+args        -> expr arg_tail | epsilon
+arg_tail    -> ',' expr arg_tail | epsilon
 \end{lstlisting}
 
-In EBNF notation, the parameter list and argument list are optional in these
-forms. Concretely, this means the grammar allows both \texttt{def f() \{\}}
-and \texttt{f()}. The corresponding parse-tree renderer makes the empty case
+The parser implementation accepts the equivalent EBNF shorthand with optional
+parameter and argument lists. Concretely, this means the grammar allows both
+\texttt{def f() \{\}} and \texttt{f()}. The corresponding parse-tree renderer makes the empty case
 explicit by emitting a single \texttt{epsilon} leaf as the only child of an
 empty \texttt{params} or \texttt{args} node, so an empty parameter or argument
 list is still labelled in the tree.
@@ -333,7 +345,7 @@ each arithmetic meaning. Integer arithmetic uses \texttt{+}, \texttt{-},
 \texttt{*}, \texttt{/}; floating-point arithmetic uses \texttt{+.},
 \texttt{-.}, \texttt{*.}, \texttt{/.}. Each token has exactly one type
 signature. The type of any expression can be determined from the operator token
-alone, without inspecting operand types. This is the strongest possible
+alone, without inspecting operand types. This is a strict
 interpretation of ``no overloading.''
 
 \textbf{Rejected alternative: implicit numeric promotion.}
@@ -354,7 +366,8 @@ inferred result type depends on operand types rather than on the operator itself
 \textbf{Connection to type inference.}
 Since every operator token uniquely determines its operand and result types,
 the type inference algorithm described in Chapter~5 can determine the type of
-any expression without backtracking, unification, or constraint solving. This
+any expression without backtracking, global unification, or global constraint
+propagation. This
 determinism directly satisfies the specification's coupling of ``no
 overloading'' with ``no explicit declaration.''
 
@@ -382,8 +395,8 @@ Table~\ref{tab:operator-design-comparison} contrasts the two designs.
   & \texttt{3 : Integer} (floor division)
   & \texttt{3.333\ldots{} : Float} (or \texttt{3 : Integer}, design-dependent) \\
 Type signatures of \texttt{+}
-  & One: $(\textit{Int},\textit{Int}) \rightarrow \textit{Int}$
-  & Three: $(\textit{Int},\textit{Int})$, $(\textit{Int},\textit{Float})$, $(\textit{Float},\textit{Float})$ \\
+	& One: $(\texttt{Integer},\texttt{Integer}) \rightarrow \texttt{Integer}$
+	& Three: $(\texttt{Integer},\texttt{Integer})$, $(\texttt{Integer},\texttt{Float})$, $(\texttt{Float},\texttt{Float})$ \\
 Overloaded?
   & No
   & Arguably yes \\

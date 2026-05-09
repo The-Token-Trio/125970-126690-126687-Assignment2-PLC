@@ -88,8 +88,10 @@ uses the symbol table, infers types, and validates scope and type rules. The
 pipeline does not construct a separate checked-AST object; instead, the
 original AST proceeds to interpretation only after successful type checking.
 The interpreter evaluates that validated tree using ordinary Python values; it
-does not re-run the type rules, since correctness at runtime is guaranteed by
-the prior static pass.
+does not re-run the type rules. The prior static pass guarantees type safety
+properties (for example, no mixed numeric operators), but runtime faults that
+depend on concrete values (such as division by zero) can still occur during
+execution.
 All stages are orchestrated through \texttt{pipeline.py}, which is shared
 by the command-line runner, the desktop UI, and the test suite.
 
@@ -479,6 +481,24 @@ semantically valid program:
 	\item function return type inference from \texttt{return} statements,
 	\item source-positioned type errors when a program violates a typing rule.
 \end{itemize}
+
+\subsection{Static-vs-runtime function scope model}
+The static checker and runtime interpreter intentionally use different
+environment-parent links for function calls.
+
+\begin{itemize}
+  \item During type checking, a function body is checked in a child scope of
+  the global scope, because parameter and return constraints are validated
+  against the globally registered function signatures.
+  \item During execution, a function call frame is created with the caller
+  environment as its parent, so ordinary dynamic variable lookup proceeds from
+  local bindings to caller-visible bindings.
+\end{itemize}
+
+For this project's feature set, both models enforce the same intended language
+rules for typed assignments, control flow, and first-call parameter fixation.
+The distinction is documented here to avoid implying that both stages use
+identical scope-parent construction.
 
 \section{Interpreter}
 The interpreter is a tree-walking evaluator over the original AST after
