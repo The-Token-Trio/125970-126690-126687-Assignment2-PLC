@@ -85,29 +85,112 @@ x = "hello";
 program would run without error until (or unless) a type-dependent operation
 was attempted.
 
-\section{Token Specification}
-Table \ref{tab:token-specification} summarises the major token classes used by
-the language.
+\section{Lexeme Grammar}
+\label{sec:lexeme-grammar}
+The \textbf{lexeme grammar} operates at the character level: it defines the
+regular expressions the lexer uses to scan raw source characters into lexeme
+strings. The notation below uses \texttt{+} (one or more), \texttt{*} (zero or
+more), \texttt{|} (alternation), and \texttt{[\ldots]} (character class).
+
+\begin{lstlisting}
+(* Character classes *)
+digit   ::=  [0-9]
+letter  ::=  [a-zA-Z] | '_'
+
+(* Literals *)
+INT_LITERAL     ::=  digit+
+FLOAT_LITERAL   ::=  digit+ '.' digit+
+BOOL_LITERAL    ::=  'true' | 'false'
+STRING_LITERAL  ::=  '"' [^"\n]* '"'
+
+(* Identifiers and keywords *)
+IDENTIFIER  ::=  letter (letter | digit)*
+                 -- where the lexeme is not in the KEYWORDS set
+KEYWORD     ::=  'if' | 'else' | 'while' | 'def' | 'return'
+
+(* Arithmetic operators -- integer and float variants *)
+PLUS        ::=  '+'     PLUS_DOT    ::=  '+.'
+MINUS       ::=  '-'     MINUS_DOT   ::=  '-.'
+STAR        ::=  '*'     STAR_DOT    ::=  '*.'
+SLASH       ::=  '/'     SLASH_DOT   ::=  '/.'
+
+(* Comparison and assignment *)
+EQUAL_EQUAL ::=  '=='
+BANG_EQUAL  ::=  '!='
+ASSIGN      ::=  '='
+
+(* Delimiters *)
+LPAREN ::= '('   RPAREN    ::= ')'
+LBRACE ::= '{'   RBRACE    ::= '}'
+COMMA  ::= ','   SEMICOLON ::= ';'
+\end{lstlisting}
+
+\noindent\textbf{Maximal-munch rule.}
+The lexer applies the maximal-munch (longest-match) principle: at each
+position it consumes the longest character sequence that matches any rule.
+This ensures, for example, that \texttt{==} is scanned as one
+\texttt{EQUAL\_EQUAL} token rather than two \texttt{ASSIGN} tokens, and that
+\texttt{+.} is scanned as one \texttt{PLUS\_DOT} token rather than a
+\texttt{PLUS} followed by a stray dot (unless the \texttt{.} is followed by a
+digit, in which case it starts a \texttt{FLOAT\_LITERAL} and the preceding
+\texttt{+} is emitted as \texttt{PLUS}).
+
+\noindent\textbf{Keyword and boolean priority.}
+\texttt{IDENTIFIER} and \texttt{KEYWORD} share the same character-level
+pattern. The lexer resolves ambiguity by scanning an identifier-shaped lexeme
+first, then consulting the \texttt{KEYWORDS} map. If the lexeme matches a
+keyword entry (including \texttt{true} and \texttt{false}, which map to
+\texttt{BOOL\_LITERAL}), the keyword token type is emitted; otherwise an
+\texttt{IDENTIFIER} token is produced. The name \texttt{print} is not a
+keyword and is therefore always scanned as an \texttt{IDENTIFIER}.
+
+\section{Token Grammar}
+\label{sec:token-grammar}
+The \textbf{token grammar} maps each lexeme class produced by the lexeme
+grammar to a named token type. Table~\ref{tab:token-specification} lists all
+token types recognised by the language together with their categories; the
+lexeme patterns are those defined formally in
+Section~\ref{sec:lexeme-grammar}.
 
 \begin{table}[H]
 \centering
-\caption{Token Specification}
+\caption{Token Grammar: token types and their categories}
 \label{tab:token-specification}
-\begin{tabular}{ll}
+\begin{tabular}{lll}
 \toprule
-Token Category & Example Lexemes \\
+Token Name & Category & Lexeme(s) \\
 \midrule
-\texttt{INT\_LITERAL} & \texttt{0}, \texttt{10}, \texttt{42} \\
-\texttt{FLOAT\_LITERAL} & \texttt{3.14}, \texttt{20.5} \\
-\texttt{BOOL\_LITERAL} & \texttt{true}, \texttt{false} \\
-\texttt{STRING\_LITERAL} & \texttt{"hello"} \\
-\texttt{IDENTIFIER} & variable and function names such as \texttt{x}, \texttt{add} \\
-Arithmetic operators (integer) & \texttt{+}, \texttt{-}, \texttt{*}, \texttt{/} \\
-Float arithmetic operators & \texttt{+.}, \texttt{-.}, \texttt{*.}, \texttt{/.} \\
-Comparison operators & \texttt{==}, \texttt{!=} \\
-Assignment operator & \texttt{=} \\
-Keywords & \texttt{if}, \texttt{else}, \texttt{while}, \texttt{def}, \texttt{return} \\
-Delimiters & \texttt{( ) \{ \} , ;} \\
+\texttt{INT\_LITERAL}   & Integer literal   & one or more decimal digits, e.g.\ \texttt{0}, \texttt{10}, \texttt{42} \\
+\texttt{FLOAT\_LITERAL} & Float literal     & digits with decimal point, e.g.\ \texttt{3.14}, \texttt{20.5} \\
+\texttt{BOOL\_LITERAL}  & Boolean literal   & \texttt{true}, \texttt{false} \\
+\texttt{STRING\_LITERAL}& String literal    & double-quoted text, e.g.\ \texttt{"hello"} \\
+\texttt{IDENTIFIER}     & Identifier        & letter or \texttt{\_} followed by letters, digits, or \texttt{\_} \\
+\midrule
+\texttt{IF}             & Keyword           & \texttt{if} \\
+\texttt{ELSE}           & Keyword           & \texttt{else} \\
+\texttt{WHILE}          & Keyword           & \texttt{while} \\
+\texttt{DEF}            & Keyword           & \texttt{def} \\
+\texttt{RETURN}         & Keyword           & \texttt{return} \\
+\midrule
+\texttt{PLUS}           & Integer arithmetic & \texttt{+} \\
+\texttt{MINUS}          & Integer arithmetic & \texttt{-} \\
+\texttt{STAR}           & Integer arithmetic & \texttt{*} \\
+\texttt{SLASH}          & Integer arithmetic & \texttt{/} \\
+\texttt{PLUS\_DOT}      & Float arithmetic  & \texttt{+.} \\
+\texttt{MINUS\_DOT}     & Float arithmetic  & \texttt{-.} \\
+\texttt{STAR\_DOT}      & Float arithmetic  & \texttt{*.} \\
+\texttt{SLASH\_DOT}     & Float arithmetic  & \texttt{/.} \\
+\texttt{EQUAL\_EQUAL}   & Comparison        & \texttt{==} \\
+\texttt{BANG\_EQUAL}    & Comparison        & \texttt{!=} \\
+\texttt{ASSIGN}         & Assignment        & \texttt{=} \\
+\midrule
+\texttt{LPAREN}         & Delimiter         & \texttt{(} \\
+\texttt{RPAREN}         & Delimiter         & \texttt{)} \\
+\texttt{LBRACE}         & Delimiter         & \texttt{\{} \\
+\texttt{RBRACE}         & Delimiter         & \texttt{\}} \\
+\texttt{COMMA}          & Delimiter         & \texttt{,} \\
+\texttt{SEMICOLON}      & Delimiter         & \texttt{;} \\
+\texttt{EOF}            & End of input      & (end of source) \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -126,29 +209,52 @@ implementation.
 \begin{lstlisting}
 program   -> stmt_list EOF
 statement -> assignment
-	   | if_stmt
-	   | while_stmt
-	   | func_def
-	   | return_stmt
-	   | expr ';'
+           | if_stmt
+           | while_stmt
+           | func_def
+           | return_stmt
+           | expr SEMICOLON
 stmt_list -> statement stmt_list | epsilon
 \end{lstlisting}
 
 \subsection{Expressions}
+An \textbf{expression} is any syntactic construct that evaluates to a value of
+one of the four programmer-visible types: \texttt{Integer}, \texttt{Float},
+\texttt{Boolean}, or \texttt{String}. Concretely, an expression is one of:
+
+\begin{itemize}
+  \item a literal value (\texttt{INT\_LITERAL}, \texttt{FLOAT\_LITERAL},
+        \texttt{BOOL\_LITERAL}, or \texttt{STRING\_LITERAL});
+  \item a variable reference (\texttt{IDENTIFIER});
+  \item a function call (\texttt{IDENTIFIER} followed by a parenthesised
+        argument list);
+  \item a unary arithmetic negation (\texttt{MINUS} or \texttt{MINUS\_DOT}
+        applied to an expression);
+  \item a binary arithmetic operation (addition, subtraction, multiplication,
+        or division, in integer or float variants);
+  \item a comparison (\texttt{EQUAL\_EQUAL} or \texttt{BANG\_EQUAL}) between
+        two arithmetic expressions, yielding a \texttt{Boolean}; or
+  \item a parenthesised expression.
+\end{itemize}
+
+\noindent Expressions are the only constructs that carry a type; statements do
+not produce values. The grammar rules below define the precise structure and
+operator-precedence hierarchy of expressions:
+
 \begin{lstlisting}
 expr        -> comparison | additive
-comparison  -> additive ('==' | '!=') additive
-additive    -> term (('+' | '-' | '+.' | '-.') term)*
-term        -> factor (('*' | '/' | '*.' | '/.') factor)*
-factor      -> '-'  factor     (* integer unary negation *)
-	     | '-.' factor    (* float unary negation *)
-	     | INT_LITERAL
-	     | FLOAT_LITERAL
-	     | STRING_LITERAL
-	     | BOOL_LITERAL
-	     | IDENTIFIER
-	     | IDENTIFIER '(' args? ')'
-	     | '(' expr ')'
+comparison  -> additive (EQUAL_EQUAL | BANG_EQUAL) additive
+additive    -> term ((PLUS | MINUS | PLUS_DOT | MINUS_DOT) term)*
+term        -> factor ((STAR | SLASH | STAR_DOT | SLASH_DOT) factor)*
+factor      -> MINUS factor              (* integer unary negation *)
+             | MINUS_DOT factor          (* float unary negation *)
+             | INT_LITERAL
+             | FLOAT_LITERAL
+             | STRING_LITERAL
+             | BOOL_LITERAL
+             | IDENTIFIER
+             | IDENTIFIER LPAREN args? RPAREN
+             | LPAREN expr RPAREN
 \end{lstlisting}
 
 The \texttt{comparison} non-terminal is introduced so that the parse-tree
@@ -208,12 +314,12 @@ no implicit coercion. Therefore
 
 \subsection{Statements}
 \begin{lstlisting}
-assignment  -> IDENTIFIER '=' expr ';'
-if_stmt     -> 'if' '(' expr ')' block else_part
-else_part   -> 'else' block | epsilon
-while_stmt  -> 'while' '(' expr ')' block
-return_stmt -> 'return' expr ';'
-block       -> '{' stmt_list '}'
+assignment  -> IDENTIFIER ASSIGN expr SEMICOLON
+if_stmt     -> IF LPAREN expr RPAREN block else_part
+else_part   -> ELSE block | epsilon
+while_stmt  -> WHILE LPAREN expr RPAREN block
+return_stmt -> RETURN expr SEMICOLON
+block       -> LBRACE stmt_list RBRACE
 stmt_list   -> statement stmt_list | epsilon
 \end{lstlisting}
 
@@ -232,11 +338,11 @@ type annotation or source-level type literal.
 
 \subsection{Function Definitions and Calls}
 \begin{lstlisting}
-func_def    -> 'def' IDENTIFIER '(' params ')' block
+func_def    -> DEF IDENTIFIER LPAREN params RPAREN block
 params      -> IDENTIFIER param_tail | epsilon
-param_tail  -> ',' IDENTIFIER param_tail | epsilon
+param_tail  -> COMMA IDENTIFIER param_tail | epsilon
 args        -> expr arg_tail | epsilon
-arg_tail    -> ',' expr arg_tail | epsilon
+arg_tail    -> COMMA expr arg_tail | epsilon
 \end{lstlisting}
 
 The parser implementation accepts the equivalent EBNF shorthand with optional
