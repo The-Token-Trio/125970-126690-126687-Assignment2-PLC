@@ -5,6 +5,7 @@
 %  Based on AIT Master's Thesis Format template
 % ================================================================
 
+\usepackage{cmap}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{float}
@@ -63,6 +64,10 @@
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit,
                 backgrounds, calc, decorations.pathreplacing, shapes.multipart,
                 trees}
+
+% ---- Proper Unicode mapping for copy-paste from PDF ----
+\input{glyphtounicode}
+\pdfgentounicode=1
 
 \usepackage{hyperref}
 \hypersetup{colorlinks=false, hidelinks}

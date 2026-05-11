@@ -205,6 +205,69 @@ For readability, the presentation below mixes classical CFG productions with
 EBNF shorthand in selected rules; both notations correspond to the same parser
 implementation.
 
+\noindent\textbf{Notation convention.}
+\textbf{Uppercase} identifiers (e.g.\ \texttt{IF}, \texttt{LPAREN},
+\texttt{INT\_LITERAL}) are \emph{terminal token types} exactly as defined in the
+Token Grammar (Table~\ref{tab:token-specification}).  They represent a named
+token emitted by the lexer, not the raw lexeme string.  For example, the
+terminal \texttt{IF} matches the lexeme \texttt{if} (via the
+lexer rule \texttt{IF ::= 'if'}), but the grammar rule itself references the
+\emph{token type}, not the quoted character sequence.
+\textbf{Lowercase} identifiers (e.g.\ \texttt{if\_stmt}, \texttt{block},
+\texttt{expr}) are non-terminal symbols.
+
+\subsection{From input string to CFG terminals}
+\label{sec:input-to-cfg}
+The implementation maintains three distinct layers, which must not be mixed:
+\[
+\text{input source string} \;\rightarrow\; \text{lexeme strings}
+\;\rightarrow\; \text{token types} \;\rightarrow\; \text{CFG productions}
+\]
+
+\begin{lstlisting}
+Input source string:
+if (x == 0) { print(x); } else { print(y); }
+\end{lstlisting}
+
+\begin{lstlisting}
+Lexeme sequence:
+if   (   x   ==   0   )   {   print   (   x   )   ;   }   else
+{   print   (   y   )   ;   }
+\end{lstlisting}
+
+\begin{lstlisting}
+Token sequence:
+IF LPAREN IDENTIFIER EQUAL_EQUAL INT_LITERAL RPAREN
+LBRACE IDENTIFIER LPAREN IDENTIFIER RPAREN SEMICOLON RBRACE
+ELSE
+LBRACE IDENTIFIER LPAREN IDENTIFIER RPAREN SEMICOLON RBRACE
+\end{lstlisting}
+
+\noindent The key mappings are:
+\texttt{'if' -> IF},
+\texttt{'else' -> ELSE},
+\texttt{'(' -> LPAREN},
+\texttt{')' -> RPAREN},
+\texttt{'{' -> LBRACE},
+\texttt{'}' -> RBRACE}.
+The lexeme \texttt{print} is \emph{not} a keyword in this language, so it
+maps to \texttt{IDENTIFIER}, not to a dedicated \texttt{PRINT} token.
+
+\begin{lstlisting}
+CFG productions:
+if_stmt   -> IF LPAREN expr RPAREN block else_part
+else_part -> ELSE block | epsilon
+block     -> LBRACE stmt_list RBRACE
+\end{lstlisting}
+
+\noindent This example shows why a CFG should use token names such as
+\texttt{IF} and \texttt{ELSE} as terminals, rather than quoted source strings
+such as \texttt{"if"} and \texttt{"else"}.
+A complete end-to-end pipeline trace applying these distinctions to a
+concrete factorial program --- covering lexical analysis, tokenisation,
+CFG parsing, type inference, and interpretation --- is provided in the
+supplementary walkthrough document.
+
 \subsection{Program Structure}
 \begin{lstlisting}
 program   -> stmt_list EOF
@@ -451,8 +514,8 @@ each arithmetic meaning. Integer arithmetic uses \texttt{+}, \texttt{-},
 \texttt{*}, \texttt{/}; floating-point arithmetic uses \texttt{+.},
 \texttt{-.}, \texttt{*.}, \texttt{/.}. Each token has exactly one type
 signature. The type of any expression can be determined from the operator token
-alone, without inspecting operand types. This is a strict
-interpretation of ``no overloading.''
+alone, without inspecting operand types. This implementation adopts a strict
+interpretation of the specification's ``no overloading'' requirement.
 
 \textbf{Rejected alternative: implicit numeric promotion.}
 An alternative design would use a single set of operators and silently promote

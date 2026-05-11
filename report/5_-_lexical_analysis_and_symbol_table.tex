@@ -13,7 +13,7 @@ by later stages of the compiler.
 The token system, written in \texttt{components/tokens.py}, establishes the
 vocabulary and structure of all lexical elements in the language. It specifies
 both the types of tokens that can exist and the structure each token must
-follow. This serves as a canonical contract between the lexer and the parser,
+follow. This serves as the canonical interface between lexical analysis and syntax analysis,
 ensuring consistency across all stages of the compiler.
 
 Table~\ref{tab:token-categories} summarises the main categories, example lexemes,

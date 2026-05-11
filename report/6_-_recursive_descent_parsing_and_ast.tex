@@ -222,13 +222,13 @@ parser falls back to an expression statement and enforces a terminating
 semicolon.
 
 \begin{lstlisting}
-# assignment: IDENTIFIER "=" expr ";"
+# assignment: IDENTIFIER ASSIGN expr SEMICOLON
 if (
     tok.token_type == TokenType.IDENTIFIER
     and self._peek_next().token_type == TokenType.ASSIGN
 ):
     return self._assignment()
-# fallback: bare expression statement  expr ";"
+# fallback: bare expression statement  expr SEMICOLON
 node = self._expr()
 self._expect(TokenType.SEMICOLON, "Expected ';' after expression")
 \end{lstlisting}

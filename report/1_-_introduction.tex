@@ -29,6 +29,10 @@ reporting and debugging, while the AST remains the executable intermediate
 representation consumed by the type checker and interpreter. An automated
 regression suite of 77 tests verifies correctness across all
 stages and language features.
+The report explicitly distinguishes source-level lexeme strings, token types
+emitted by the lexer, and CFG terminals consumed by the parser;
+Section~\ref{sec:input-to-cfg} demonstrates this separation concretely through an annotated
+example.
 
 The main contributions of this project are:
 
@@ -58,3 +62,6 @@ Chapter~5 explains the type inference algorithm and semantic rules.
 Chapter~6 presents the system architecture and implementation, including the
 end-to-end pipeline, project layout, and technology stack. Chapter~7 discusses
 testing and verification, and Chapter~8 concludes the report.
+A supplementary walkthrough document traces the complete pipeline end-to-end
+for a concrete factorial program, covering all four stages from lexical
+analysis through to interpreted output.

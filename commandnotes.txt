@@ -1,0 +1,31 @@
+python ui.py -Run walkthrough all tabs
+
+Open script- demo_11_full.txt -Run walkthrough all tabs
+
+Error:
+x = 10;
+x = "hello";
+[line 2, col 1] TypeError: Cannot assign String to variable 'x' of type Integer
+
+
+pi = 3.14;
+r = 2.0;
+result = pi + r;
+[line 3, col 13] TypeError: Operator '+' requires two Integer operands
+
+
+
+CLI
+python main.py
+python main.py demos/demo_01_basics.txt
+python main.py demos/demo_02_type_inference.txt
+python main.py demos/demo_03_if_else.txt
+python main.py demos/demo_04_while.txt
+python main.py demos/demo_05_functions.txt
+python main.py demos/demo_06_unary_minus.txt
+python main.py demos/demo_07_error_type.txt
+python main.py demos/demo_07b_error_operator.txt
+python main.py demos/demo_08_error_runtime.txt
+python main.py demos/demo_09_error_lexer.txt
+python main.py demos/demo_10_error_parse.txt
+python -m unittest discover -s tests -v
